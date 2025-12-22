@@ -686,7 +686,13 @@ body > .info-popover.active {
     -webkit-backdrop-filter: blur(4px);
     align-items: center;
     justify-content: center;
-    z-index: 10;
+    z-index: 10000; /* High z-index to appear above all content */
+}
+
+/* When visible, use flexbox for centering */
+.info-overlay[style*="display: flex"],
+.info-overlay.visible {
+    display: flex !important;
 }
 
 .info-overlay .info-content {
@@ -698,9 +704,12 @@ body > .info-popover.active {
     box-shadow: var(--glass-shadow);
     padding: 24px;
     max-width: 400px;
+    max-height: 85vh; /* Limit height to viewport */
+    overflow-y: auto; /* Scroll if content is too tall */
     position: relative;
     font-size: 14px;
     color: var(--text-color);
+    margin: 20px; /* Ensure some margin from edges */
 }
 
 .info-overlay .close-popup {
@@ -791,6 +800,7 @@ button.info-btn:hover {
 
 .changelog-overlay .info-content {
     max-width: 480px;
+    max-height: 80vh; /* Slightly less to account for padding */
     text-align: left;
 }
 
@@ -4734,7 +4744,9 @@ button.multiplier-btn {
     font-size: var(--font-size-base);
     font-weight: var(--font-weight-bold);
     color: var(--text-color);
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 6px;
     margin-bottom: 6px;
 }
 
@@ -7639,48 +7651,69 @@ button.multiplier-btn {
     gap: 8px;
     margin-top: 12px;
     justify-content: center;
+    align-items: center;
 }
 
-.test-btn {
-    display: inline-flex;
+.test-data-select-wrapper {
+    display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 8px 14px;
-    border-radius: 6px;
+    gap: 8px;
+}
+
+.test-data-label {
     font-size: var(--font-size-sm);
     font-weight: var(--font-weight-semibold);
+    color: var(--text-muted);
+}
+
+.test-data-select {
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
     cursor: pointer;
     transition: all 0.2s ease;
-    border: 1px solid;
+    border: 1px solid rgba(155, 89, 182, 0.4);
+    background: linear-gradient(135deg, rgba(155, 89, 182, 0.1) 0%, rgba(142, 68, 173, 0.15) 100%);
+    color: var(--text-color);
+    min-width: 200px;
 }
 
-.test-btn--load {
-    background: linear-gradient(135deg, rgba(155, 89, 182, 0.2) 0%, rgba(142, 68, 173, 0.3) 100%);
-    border-color: rgba(155, 89, 182, 0.5);
-    color: #8e44ad;
+.test-data-select:hover {
+    border-color: rgba(155, 89, 182, 0.6);
+    background: linear-gradient(135deg, rgba(155, 89, 182, 0.15) 0%, rgba(142, 68, 173, 0.2) 100%);
 }
 
-[data-theme="dark"] .test-btn--load {
-    color: #bb6bd9;
+.test-data-select:focus {
+    outline: none;
+    border-color: rgba(155, 89, 182, 0.8);
+    box-shadow: 0 0 0 3px rgba(155, 89, 182, 0.15);
 }
 
-.test-btn--load:hover {
-    background: linear-gradient(135deg, rgba(155, 89, 182, 0.3) 0%, rgba(142, 68, 173, 0.4) 100%);
-    transform: translateY(-1px);
+.test-data-select optgroup {
+    font-weight: var(--font-weight-bold);
+    color: var(--primary-color);
+    background: var(--glass-bg);
 }
 
-.test-btn--clear {
-    background: rgba(231, 76, 60, 0.1);
-    border-color: rgba(231, 76, 60, 0.3);
-    color: #c0392b;
+.test-data-select option {
+    padding: 8px;
+    background: var(--glass-bg);
+    color: var(--text-color);
 }
 
-[data-theme="dark"] .test-btn--clear {
-    color: #e74c3c;
+[data-theme="dark"] .test-data-select {
+    background: linear-gradient(135deg, rgba(155, 89, 182, 0.15) 0%, rgba(142, 68, 173, 0.2) 100%);
+    border-color: rgba(187, 107, 217, 0.4);
 }
 
-.test-btn--clear:hover {
-    background: rgba(231, 76, 60, 0.2);
+[data-theme="dark"] .test-data-select:hover {
+    border-color: rgba(187, 107, 217, 0.6);
+}
+
+[data-theme="dark"] .test-data-select optgroup,
+[data-theme="dark"] .test-data-select option {
+    background: #2a2a3e;
 }
 
 /* Templates Grid */

@@ -474,49 +474,23 @@
             seasonZeroPriority.addEventListener('change', triggerCascadeUpdate);
         }
 
-        // Test data buttons
-        const loadTestDataBtn = document.getElementById('loadTestDataBtn');
-        const clearTestDataBtn = document.getElementById('clearTestDataBtn');
-        
-        if (loadTestDataBtn) {
-            loadTestDataBtn.addEventListener('click', () => {
-                loadTestData();
-                // Update button state
-                loadTestDataBtn.textContent = '✓ Loaded!';
-                loadTestDataBtn.style.background = 'rgba(39, 174, 96, 0.2)';
-                loadTestDataBtn.style.borderColor = 'rgba(39, 174, 96, 0.5)';
-                loadTestDataBtn.style.color = '#27ae60';
+        // Test data dropdown
+        const testDataSelect = document.getElementById('testDataSelect');
+        if (testDataSelect) {
+            testDataSelect.addEventListener('change', (e) => {
+                const scenario = e.target.value;
+                if (!scenario) return;
+                
+                loadTestScenario(scenario);
+                
+                // Flash success state
+                testDataSelect.style.background = 'rgba(39, 174, 96, 0.2)';
+                testDataSelect.style.borderColor = 'rgba(39, 174, 96, 0.5)';
                 setTimeout(() => {
-                    loadTestDataBtn.textContent = '🧪 Load Test Data';
-                    loadTestDataBtn.style.background = '';
-                    loadTestDataBtn.style.borderColor = '';
-                    loadTestDataBtn.style.color = '';
-                }, 2000);
-            });
-        }
-        
-        if (clearTestDataBtn) {
-            clearTestDataBtn.addEventListener('click', () => {
-                clearTestData();
-            });
-        }
-        
-        // Load 10M test data button
-        const loadTestData10MBtn = document.getElementById('loadTestData10MBtn');
-        if (loadTestData10MBtn) {
-            loadTestData10MBtn.addEventListener('click', () => {
-                loadTestData10M();
-                // Update button state
-                loadTestData10MBtn.textContent = '✓ 10M Loaded!';
-                loadTestData10MBtn.style.background = 'rgba(39, 174, 96, 0.2)';
-                loadTestData10MBtn.style.borderColor = 'rgba(39, 174, 96, 0.5)';
-                loadTestData10MBtn.style.color = '#27ae60';
-                setTimeout(() => {
-                    loadTestData10MBtn.textContent = '🔢 Load 10M';
-                    loadTestData10MBtn.style.background = '';
-                    loadTestData10MBtn.style.borderColor = '';
-                    loadTestData10MBtn.style.color = '';
-                }, 2000);
+                    testDataSelect.style.background = '';
+                    testDataSelect.style.borderColor = '';
+                    testDataSelect.value = ''; // Reset dropdown
+                }, 1500);
             });
         }
 
@@ -989,123 +963,177 @@
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    // TEST DATA - Toggle with loadTestData()
+    // TEST DATA SCENARIOS
     // ═══════════════════════════════════════════════════════════════════════
     
-    const TEST_MATERIALS = {
-        // Basic Materials (12 total)
-        'my-black-iron': 108200000,
-        'my-copper-bar': 91200000,
-        'my-dragonglass': 101400000,
-        'my-goldenheart-wood': 106200000,
-        'my-hide': 97100000,
-        'my-ironwood': 96100000,
-        'my-kingswood-oak': 102200000,
-        'my-leather-straps': 91100000,
-        'my-milk-of-the-poppy': 86900000,
-        'my-silk': 109400000,
-        'my-weirwood': 115800000,
-        'my-wildfire': 92900000,
-        
-        // Season 11 (note: "clow" is the actual ID in materials.js)
-        'my-ash-cloaked-clow': 274600,
-        'my-charred-driftwood': 6000000,
-        'my-frostbitten-leather': 1900,
-        'my-frozen-weirwood-sap': 20200,
-        'my-greenfyre-penny': 1600000,
-        
-        // Season 12
-        'my-burning-stag-hide': 3600000,
-        'my-combusted-leather': 1800000,
-        'my-fireborn-silk': 27600000,
-        'my-frost-crusted-abalone': 182000,
-        'my-frostfang-bronze-discs': 2700000
-    };
+    // Basic material IDs (12 total)
+    const BASIC_MAT_IDS = [
+        'my-black-iron', 'my-copper-bar', 'my-dragonglass', 'my-goldenheart-wood',
+        'my-hide', 'my-ironwood', 'my-kingswood-oak', 'my-leather-straps',
+        'my-milk-of-the-poppy', 'my-silk', 'my-weirwood', 'my-wildfire'
+    ];
     
-    // Simple test data: 10 million of each basic material
-    const TEST_MATERIALS_10M = {
-        'my-black-iron': 10000000,
-        'my-copper-bar': 10000000,
-        'my-dragonglass': 10000000,
-        'my-goldenheart-wood': 10000000,
-        'my-hide': 10000000,
-        'my-ironwood': 10000000,
-        'my-kingswood-oak': 10000000,
-        'my-leather-straps': 10000000,
-        'my-milk-of-the-poppy': 10000000,
-        'my-silk': 10000000,
-        'my-weirwood': 10000000,
-        'my-wildfire': 10000000
+    // Sample seasonal material IDs (S11 + S12)
+    const SEASONAL_MAT_IDS = [
+        // Season 11
+        'my-ash-cloaked-clow', 'my-charred-driftwood', 'my-frostbitten-leather',
+        'my-frozen-weirwood-sap', 'my-greenfyre-penny',
+        // Season 12
+        'my-burning-stag-hide', 'my-combusted-leather', 'my-fireborn-silk',
+        'my-frost-crusted-abalone', 'my-frostfang-bronze-discs'
+    ];
+    
+    // Helper to create materials object with same value for all basic mats
+    function createBasicMaterials(valuePerMat) {
+        const mats = {};
+        BASIC_MAT_IDS.forEach(id => { mats[id] = valuePerMat; });
+        return mats;
+    }
+    
+    // Helper to create seasonal materials with same value
+    function createSeasonalMaterials(valuePerMat) {
+        const mats = {};
+        SEASONAL_MAT_IDS.forEach(id => { mats[id] = valuePerMat; });
+        return mats;
+    }
+    
+    // Test scenarios configuration
+    const TEST_SCENARIOS = {
+        // Clear all
+        'clear': {},
+        
+        // Basic Materials Only
+        'basic-small': createBasicMaterials(1000000),      // 1M each
+        'basic-medium': createBasicMaterials(10000000),    // 10M each
+        'basic-large': createBasicMaterials(50000000),     // 50M each
+        'basic-whale': createBasicMaterials(100000000),    // 100M each
+        
+        // Mixed (Basic + Seasonal)
+        'mixed-starter': {
+            ...createBasicMaterials(5000000),              // 5M basic
+            ...createSeasonalMaterials(1000000)            // 1M seasonal
+        },
+        'mixed-balanced': {
+            ...createBasicMaterials(20000000),             // 20M basic
+            ...createSeasonalMaterials(5000000)            // 5M seasonal
+        },
+        'mixed-endgame': {
+            ...createBasicMaterials(50000000),             // 50M basic
+            ...createSeasonalMaterials(20000000)           // 20M seasonal
+        },
+        
+        // Special Scenarios
+        'bottleneck-iron': {
+            ...createBasicMaterials(20000000),
+            'my-black-iron': 2000000,                      // Only 2M iron (bottleneck)
+            'my-copper-bar': 2000000                       // Low copper too
+        },
+        'bottleneck-leather': {
+            ...createBasicMaterials(20000000),
+            'my-leather-straps': 1500000,                  // Very low leather
+            'my-hide': 3000000                             // Low hide
+        },
+        'seasonal-only': {
+            ...createBasicMaterials(5000000),              // Low basic
+            ...createSeasonalMaterials(50000000)           // High seasonal
+        },
+        
+        // Legacy scenario (original test data)
+        'legacy': {
+            'my-black-iron': 108200000,
+            'my-copper-bar': 91200000,
+            'my-dragonglass': 101400000,
+            'my-goldenheart-wood': 106200000,
+            'my-hide': 97100000,
+            'my-ironwood': 96100000,
+            'my-kingswood-oak': 102200000,
+            'my-leather-straps': 91100000,
+            'my-milk-of-the-poppy': 86900000,
+            'my-silk': 109400000,
+            'my-weirwood': 115800000,
+            'my-wildfire': 92900000,
+            'my-ash-cloaked-clow': 274600,
+            'my-charred-driftwood': 6000000,
+            'my-frostbitten-leather': 1900,
+            'my-frozen-weirwood-sap': 20200,
+            'my-greenfyre-penny': 1600000,
+            'my-burning-stag-hide': 3600000,
+            'my-combusted-leather': 1800000,
+            'my-fireborn-silk': 27600000,
+            'my-frost-crusted-abalone': 182000,
+            'my-frostfang-bronze-discs': 2700000
+        }
     };
 
     /**
-     * Load test data into material inputs
-     * Call from console: loadTestData()
+     * Load a test scenario by name
      */
-    function loadTestData() {
-        console.log('Loading test materials...');
-        console.log('Test data:', TEST_MATERIALS);
+    function loadTestScenario(scenarioName) {
+        const scenario = TEST_SCENARIOS[scenarioName];
+        if (!scenario) {
+            console.warn(`Unknown scenario: ${scenarioName}`);
+            return;
+        }
         
-        // Will update material summary after loading
+        console.log(`🧪 Loading test scenario: ${scenarioName}`);
         
+        // Clear all inputs first
+        document.querySelectorAll('.my-material input.numeric-input').forEach(input => {
+            input.value = '';
+        });
+        
+        // Load scenario values
         let loadedCount = 0;
-        let notFoundInputs = [];
+        let hasSeasonalMaterials = false;
         
-        // First, list all available material inputs for debugging
-        const allInputs = document.querySelectorAll('.my-material input.numeric-input');
-        console.log(`Found ${allInputs.length} material inputs on page`);
-        
-        for (const [inputId, value] of Object.entries(TEST_MATERIALS)) {
+        for (const [inputId, value] of Object.entries(scenario)) {
             const input = document.getElementById(inputId);
-            if (input) {
+            if (input && value > 0) {
                 input.value = value.toLocaleString('en-US');
                 input.dispatchEvent(new Event('input', { bubbles: true }));
                 loadedCount++;
-                console.log(`✓ Loaded ${inputId}: ${value.toLocaleString()}`);
-            } else {
-                notFoundInputs.push(inputId);
-                console.warn(`✗ Input not found: ${inputId}`);
+                
+                // Check if this is a seasonal material
+                if (SEASONAL_MAT_IDS.includes(inputId)) {
+                    hasSeasonalMaterials = true;
+                }
             }
         }
         
         // Expand gear materials accordion if we have seasonal materials
-        const gearToggle = document.getElementById('toggleAdvMaterials');
-        const gearContent = document.getElementById('advMaterials');
-        if (gearToggle && gearContent) {
-            gearToggle.setAttribute('aria-expanded', 'true');
-            gearToggle.classList.add('open');
-            gearContent.style.display = 'block';
+        if (hasSeasonalMaterials) {
+            const gearToggle = document.getElementById('toggleAdvMaterials');
+            const gearContent = document.getElementById('advMaterials');
+            if (gearToggle && gearContent) {
+                gearToggle.setAttribute('aria-expanded', 'true');
+                gearToggle.classList.add('open');
+                gearContent.style.display = 'block';
+            }
         }
         
-        console.log(`✓ Loaded ${loadedCount} material values`);
-        if (notFoundInputs.length > 0) {
-            console.log(`⚠ Could not find inputs for: ${notFoundInputs.join(', ')}`);
+        // Calculate totals for logging
+        const basicTotal = Object.entries(scenario)
+            .filter(([k]) => BASIC_MAT_IDS.includes(k))
+            .reduce((sum, [, v]) => sum + v, 0);
+        
+        const seasonalTotal = Object.entries(scenario)
+            .filter(([k]) => SEASONAL_MAT_IDS.includes(k))
+            .reduce((sum, [, v]) => sum + v, 0);
+        
+        console.log(`✓ Loaded ${loadedCount} materials`);
+        console.log(`📦 Basic: ${basicTotal.toLocaleString()}`);
+        if (seasonalTotal > 0) {
+            console.log(`⚔️ Seasonal: ${seasonalTotal.toLocaleString()}`);
         }
         
-        // Summary
-        const basicTotal = Object.entries(TEST_MATERIALS)
-            .filter(([k]) => !k.includes('season') && !k.includes('ash') && !k.includes('charred') && 
-                           !k.includes('frostbitten') && !k.includes('frozen') && !k.includes('greenfyre') &&
-                           !k.includes('burning') && !k.includes('combusted') && !k.includes('fireborn') &&
-                           !k.includes('frost-crusted') && !k.includes('frostfang'))
-            .reduce((sum, [, v]) => sum + v, 0);
+        // Trigger cascade update
+        triggerCascadeUpdate();
         
-        const seasonalTotal = Object.entries(TEST_MATERIALS)
-            .filter(([k]) => k.includes('ash') || k.includes('charred') || 
-                           k.includes('frostbitten') || k.includes('frozen') || k.includes('greenfyre') ||
-                           k.includes('burning') || k.includes('combusted') || k.includes('fireborn') ||
-                           k.includes('frost-crusted') || k.includes('frostfang'))
-            .reduce((sum, [, v]) => sum + v, 0);
-            
-        console.log(`📊 Basic Materials Total: ${basicTotal.toLocaleString()}`);
-        console.log(`📊 Seasonal Materials Total: ${seasonalTotal.toLocaleString()}`);
-        
-        return { loadedCount, notFoundInputs };
+        return { loadedCount, basicTotal, seasonalTotal };
     }
 
     /**
      * Clear all material inputs
-     * Call from console: clearTestData()
      */
     function clearTestData() {
         document.querySelectorAll('.my-material input.numeric-input').forEach(input => {
@@ -1115,40 +1143,16 @@
         console.log('✓ All materials cleared');
     }
 
-    /**
-     * Load simple 10M test data (10 million of each basic material)
-     * Call from console: loadTestData10M()
-     */
-    function loadTestData10M() {
-        console.log('Loading 10M test materials (10 million each)...');
-        
-        let loadedCount = 0;
-        
-        for (const [inputId, value] of Object.entries(TEST_MATERIALS_10M)) {
-            const input = document.getElementById(inputId);
-            if (input) {
-                input.value = value.toLocaleString('en-US');
-                input.dispatchEvent(new Event('input', { bubbles: true }));
-                loadedCount++;
-                console.log(`✓ Loaded ${inputId}: ${value.toLocaleString()}`);
-            }
-        }
-        
-        console.log(`✓ Loaded ${loadedCount} basic materials with 10,000,000 each`);
-        console.log(`📊 Total: ${(10000000 * 12).toLocaleString()} materials`);
-        
-        // Trigger cascade update
-        triggerCascadeUpdate();
-        
-        return { loadedCount };
-    }
+    // Legacy function aliases for backwards compatibility
+    function loadTestData() { return loadTestScenario('legacy'); }
+    function loadTestData10M() { return loadTestScenario('basic-medium'); }
 
     // Expose test functions globally
+    window.loadTestScenario = loadTestScenario;
     window.loadTestData = loadTestData;
     window.loadTestData10M = loadTestData10M;
     window.clearTestData = clearTestData;
-    window.TEST_MATERIALS = TEST_MATERIALS;
-    window.TEST_MATERIALS_10M = TEST_MATERIALS_10M;
+    window.TEST_SCENARIOS = TEST_SCENARIOS;
 
     // ═══════════════════════════════════════════════════════════════════════
     // MATERIAL INPUT LISTENERS - Update summary when materials change
