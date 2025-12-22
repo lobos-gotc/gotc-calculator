@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 64">
+  <defs>
+    <linearGradient id="wolfGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#6b7280;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#374151;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="textGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#4fc3f7;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0d5c7a;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Stark Direwolf -->
+  <g transform="translate(6, 4) scale(0.11)">
+    <!-- Direwolf silhouette -->
+    <path fill="url(#wolfGrad)" d="M256 8C119 8 8 119 8 256s111 248 248 248 248-111 248-248S393 8 256 8zm0 448c-110.5 0-200-89.5-200-200S145.5 56 256 56s200 89.5 200 200-89.5 200-200 200z"/>
+    <path fill="url(#wolfGrad)" d="M391.5 256c0-74.8-60.7-135.5-135.5-135.5S120.5 181.2 120.5 256 181.2 391.5 256 391.5 391.5 330.8 391.5 256zM256 339c-45.8 0-83-37.2-83-83s37.2-83 83-83 83 37.2 83 83-37.2 83-83 83z"/>
+    <!-- Simplified wolf head -->
+    <path fill="url(#wolfGrad)" d="M256 140c-8 0-15.3 4.8-18.4 12.2l-24 58c-1.7 4.1-1.5 8.7.5 12.6l20 39c2 4 5.8 6.8 10.2 7.6l30 5.4c4.4.8 8.9-.5 12.3-3.4l25-22c3.4-3 5.3-7.3 5.2-11.8l-1-38c-.1-4.5-2.2-8.7-5.7-11.5l-42-34c-3.5-2.8-8-4-12.5-3.5l-19.6 2.4c-3-.9-6.2-.9-9.2 0l-19.6-2.4c-4.5-.5-9 .7-12.5 3.5l-42 34c-3.5 2.8-5.6 7-5.7 11.5l-1 38c-.1 4.5 1.8 8.8 5.2 11.8l25 22c3.4 3 7.9 4.2 12.3 3.4l30-5.4c4.4-.8 8.2-3.6 10.2-7.6l20-39c2-3.9 2.2-8.5.5-12.6l-24-58C271.3 144.8 264 140 256 140z"/>
+  </g>
+  
+  <!-- Stark Wolf - Simple iconic version -->
+  <g transform="translate(2, 2)">
+    <circle cx="30" cy="30" r="28" fill="none" stroke="url(#wolfGrad)" stroke-width="3"/>
+    <!-- Wolf head silhouette -->
+    <path fill="url(#wolfGrad)" d="
+      M30 10
+      L22 18 L18 14 L20 24
+      L12 28 L20 32
+      L18 42 L24 38 L30 48
+      L36 38 L42 42 L40 32
+      L48 28 L40 24
+      L42 14 L38 18
+      Z
+    "/>
+    <!-- Wolf eyes -->
+    <circle cx="24" cy="26" r="2" fill="#4fc3f7"/>
+    <circle cx="36" cy="26" r="2" fill="#4fc3f7"/>
+  </g>
+  
+  <!-- Text: GOTC -->
+  <text x="72" y="40" font-family="'Segoe UI', 'SF Pro Display', sans-serif" font-size="32" font-weight="700" fill="url(#textGrad)">GOTC</text>
+  
+  <!-- Text: Calculators -->
+  <text x="156" y="40" font-family="'Segoe UI', 'SF Pro Display', sans-serif" font-size="24" font-weight="400" fill="currentColor" opacity="0.85">Calculators</text>
+</svg>

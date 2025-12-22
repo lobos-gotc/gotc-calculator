@@ -1,0 +1,2173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GOTC Calculators</title>
+	<meta property="og:title" content="GOTC Calculators">
+	<meta property="og:type" content="website">
+	<meta property="og:url" content="https://marksmangotc.github.io/crafting/">
+	<meta property="og:image" content="image.png">
+	<meta property="og:description" content="Game of Thrones Conquest calculators for template crafting and march size optimization. Plan your materials, optimize gear loadouts, and maximize your march capacity.">
+	<meta property="og:site_name" content="GOTC Calculators">
+	<link rel="icon" type="image/png" sizes="64x64" href="stark-favicon.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="stark-favicon.png">
+	<link rel="apple-touch-icon" sizes="180x180" href="stark-logo.png">
+    <link rel="stylesheet" href="style.css?v=2.0">
+        <script>
+                (function () {
+                        const params = new URLSearchParams(window.location.search);
+                        if (params.get('debug') !== 'true') {
+                                const noop = () => {};
+                                console.log = noop;
+                        }
+                })();
+                // Apply saved theme immediately to prevent flash
+                (function() {
+                        const savedTheme = localStorage.getItem('theme');
+                        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                        if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                                document.documentElement.setAttribute('data-theme', 'dark');
+                        }
+                })();
+        </script>
+        <script src="seasons/season0.js?v=2"></script>
+	<script src="seasons/season1.js?v=2"></script>
+        <script src="seasons/season2.js?v=2"></script>
+        <script src="seasons/season3.js?v=2"></script>
+        <script src="seasons/seasonctw.js?v=2"></script>
+        <script src="seasons/season4.js?v=2"></script>
+	<script src="seasons/season5.js?v=2"></script>
+	<script src="seasons/season6.js?v=2"></script>
+	<script src="seasons/season7.js?v=2"></script>
+	<script src="seasons/season8.js?v=2"></script>
+	<script src="seasons/season9.js?v=2"></script>
+	<script src="seasons/season10.js?v=2"></script>
+	<script src="seasons/season11.js?v=2"></script>
+	<script src="seasons/season12.js?v=2"></script>
+    <script src="products.js"></script>
+    <script src="materials.js"></script>
+    <script src="crafting-data.js?v=1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <script defer src="craftparse.js?v=2.0"></script>
+    <script defer src="ocr-scanner.js?v=1.0"></script>
+    <script defer src="optimizer.js?v=1.0"></script>
+    <script defer src="template-planner.js?v=1.0"></script>
+    <script defer src="wizard.js?v=1.0"></script>
+    <script defer src="history.js?v=1.0"></script>
+    <script defer src="march-size/ms-data.js?v=4.2"></script>
+    <script defer src="march-size/ms-calculator.js?v=4.2"></script>
+</head>
+<body>
+    <div class="wrapper">
+        <!-- Header Actions -->
+        <div class="header-actions">
+            <div class="history-trigger">
+                <button id="openHistoryBtn" type="button" aria-label="View calculation history" aria-haspopup="dialog" aria-expanded="false">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg>
+                </button>
+            </div>
+            <div class="update-log-trigger">
+                <button id="openUpdateLog" type="button" aria-label="View the latest updates" aria-haspopup="dialog" aria-expanded="false">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path d="M518.6 109.3L530.7 121.4C543.2 133.9 543.2 154.2 530.7 166.7L504 193.4L446.6 136L473.4 109.3C485.9 96.8 506.2 96.8 518.7 109.3zM253 329.6L424 158.7L481.4 216.1L310.4 387.1C306.2 391.3 300.8 394.3 295 395.7L229.4 410.8L244.5 345.2C245.8 339.4 248.8 334 253.1 329.8zM450.7 86.6L230.4 307C221.9 315.5 216 326.2 213.3 337.9L192.4 428.5C191.2 433.9 192.8 439.5 196.7 443.4C200.6 447.3 206.2 448.9 211.6 447.7L302.2 426.8C313.9 424.1 324.6 418.2 333.1 409.7L553.4 189.3C578.4 164.3 578.4 123.8 553.4 98.8L541.3 86.6C516.3 61.6 475.8 61.6 450.8 86.6zM144 128C99.8 128 64 163.8 64 208L64 496C64 540.2 99.8 576 144 576L432 576C476.2 576 512 540.2 512 496L512 368C512 359.2 504.8 352 496 352C487.2 352 480 359.2 480 368L480 496C480 522.5 458.5 544 432 544L144 544C117.5 544 96 522.5 96 496L96 208C96 181.5 117.5 160 144 160L272 160C280.8 160 288 152.8 288 144C288 135.2 280.8 128 272 128L144 128z"/></svg>
+                </button>
+            </div>
+            <div class="theme-toggle">
+                <button id="themeToggle" type="button" aria-label="Toggle dark mode">
+                    <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path d="M223.5 32C100 32 0 132.3 0 256S100 480 223.5 480c60.6 0 115.5-24.2 155.8-63.4c5-4.9 6.3-12.5 3.1-18.7s-10.1-9.7-17-8.5c-9.8 1.7-19.8 2.6-30.1 2.6c-96.9 0-175.5-78.8-175.5-176c0-65.8 36-123.1 89.3-153.3c6.1-3.5 9.2-10.5 7.7-17.3s-7.3-11.9-14.3-12.5c-6.3-.5-12.6-.8-19-.8z"/></svg>
+                    <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M361.5 1.2c5 2.1 8.6 6.6 9.6 11.9L391 121l107.9 19.8c5.3 1 9.8 4.6 11.9 9.6s1.5 10.7-1.6 15.2L446.9 256l62.3 90.3c3.1 4.5 3.7 10.2 1.6 15.2s-6.6 8.6-11.9 9.6L391 391l-19.8 107.9c-1 5.3-4.6 9.8-9.6 11.9s-10.7 1.5-15.2-1.6L256 446.9l-90.3 62.3c-4.5 3.1-10.2 3.7-15.2 1.6s-8.6-6.6-9.6-11.9L121 391 13.1 371.1c-5.3-1-9.8-4.6-11.9-9.6s-1.5-10.7 1.6-15.2L65.1 256 2.8 165.7c-3.1-4.5-3.7-10.2-1.6-15.2s6.6-8.6 11.9-9.6L121 121 140.9 13.1c1-5.3 4.6-9.8 9.6-11.9s10.7-1.5 15.2 1.6L256 65.1 346.3 2.8c4.5-3.1 10.2-3.7 15.2-1.6zM256 160a96 96 0 1 1 0 192 96 96 0 1 1 0-192z"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="site-logo">
+            <img src="resources/stark-logo.png" alt="GOTC Calculators" class="site-logo__wolf">
+            <span class="site-logo__text">GOTC Calculators</span>
+        </div>
+
+        <!-- Calculator Mode Selector -->
+        <div class="calculator-mode-selector">
+            <button type="button" class="calc-mode-btn active" data-mode="template">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" width="18" height="18"><path fill="currentColor" d="M413.5 237.5c-28.2 4.8-58.2-3.6-80-25.4l-38.1-38.1C280.4 159 272 138.8 272 117.6V105.5L192.3 62c-5.3-2.9-8.6-8.6-8.3-14.7s3.9-11.5 9.5-14l47.2-21C259.1 4.2 279 0 299.2 0h18.1c36.7 0 72 14 98.7 39.1l44.6 42c24.2 22.8 33.2 55.7 26.6 86L503 183l-31-26-48 48-24-24-48 48-24-24zm-43.2 90.5L296 252.6V400H192V192c0-35.3-28.7-64-64-64H72c-32.6 0-60.5 19.1-73.3 47.1C-1.1 190.4 0 198.2 0 208V432c0 44.2 35.8 80 80 80H536c22.1 0 40-17.9 40-40s-17.9-40-40-40H344c-30.9 0-56-25.1-56-56V328z"/></svg>
+                Template Calculator
+            </button>
+            <button type="button" class="calc-mode-btn" data-mode="march-size">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" width="16" height="16"><path fill="currentColor" d="M224 0a128 128 0 1 1 0 256A128 128 0 1 1 224 0zM178.3 304h91.4c11.8 0 23.4 1.2 34.5 3.3c-2.1 18.5 7.4 35.6 21.8 44.8c-16.6 10.6-26.7 31.6-20 53.3c4 12.9 9.4 25.5 16.4 37.6s15.2 23.1 24.4 33c15.7 16.9 39.6 18.4 57.2 8.7v.9c0 9.2 2.7 18.5 7.9 26.3H29.7C13.3 512 0 498.7 0 482.3C0 383.8 79.8 304 178.3 304zM436 218.2c0-7 4.5-13.3 11.3-14.8c10.5-2.4 21.5-3.7 32.7-3.7s22.2 1.3 32.7 3.7c6.8 1.5 11.3 7.8 11.3 14.8v30.6c7.9 3.4 15.4 7.7 22.3 12.8l24.9-14.3c6.1-3.5 13.7-2.7 18.5 2.4c7.6 8.1 14.3 17.2 20.1 27.2s10.3 20.4 13.5 31c2.1 6.7-1.1 13.7-7.2 17.2l-25 14.4c.4 4 .7 8.1 .7 12.3s-.2 8.2-.7 12.3l25 14.4c6.1 3.5 9.2 10.5 7.2 17.2c-3.3 10.6-7.8 21-13.5 31s-12.5 19.1-20.1 27.2c-4.8 5.1-12.5 5.9-18.5 2.4l-24.9-14.3c-6.9 5.1-14.3 9.4-22.3 12.8l0 30.6c0 7-4.5 13.3-11.3 14.8c-10.5 2.4-21.5 3.7-32.7 3.7s-22.2-1.3-32.7-3.7c-6.8-1.5-11.3-7.8-11.3-14.8V454.8c-7.9-3.4-15.4-7.7-22.3-12.8l-24.9 14.3c-6.1 3.5-13.7 2.7-18.5-2.4c-7.6-8.1-14.3-17.2-20.1-27.2s-10.3-20.4-13.5-31c-2.1-6.7 1.1-13.7 7.2-17.2l25-14.4c-.4-4-.7-8.1-.7-12.3s.2-8.2 .7-12.3l-25-14.4c-6.1-3.5-9.2-10.5-7.2-17.2c3.3-10.6 7.8-21 13.5-31s12.5-19.1 20.1-27.2c4.8-5.1 12.5-5.9 18.5-2.4l24.9 14.3c6.9-5.1 14.3-9.4 22.3-12.8V218.2zm92 152c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48z"/></svg>
+                March Size Calculator
+            </button>
+        </div>
+
+        <!-- ========== TEMPLATE CALCULATOR SECTION ========== -->
+        <div id="templateCalculator" class="calculator-section active">
+
+        <!-- Wizard Progress Indicator (3 steps: Materials → Strategy → Results) -->
+        <div class="wizard-progress">
+            <div class="wizard-progress__step active" data-step="1">
+                <div class="wizard-progress__number">1</div>
+                <span class="wizard-progress__label">Materials</span>
+            </div>
+            <div class="wizard-progress__connector"></div>
+            <div class="wizard-progress__step" data-step="2">
+                <div class="wizard-progress__number">2</div>
+                <span class="wizard-progress__label">Strategy</span>
+            </div>
+            <div class="wizard-progress__connector"></div>
+            <div class="wizard-progress__step" data-step="3">
+                <div class="wizard-progress__number">3</div>
+                <span class="wizard-progress__label">Results</span>
+            </div>
+        </div>
+
+        <!-- Wizard Content Container -->
+        <div class="wizard-content">
+            
+            <!-- Step 1: Materials -->
+            <div class="wizard-step active" id="step-materials" data-step="1">
+                <div class="wizard-step__header">
+                    <h2>Enter Your Materials</h2>
+                    <p>Input your available materials or upload screenshots to auto-detect them</p>
+                    <!-- Test Data Toggle (DEV) -->
+                    <div class="test-data-toggle" id="testDataToggle">
+                        <button type="button" class="test-btn test-btn--load" id="loadTestDataBtn" title="Load test materials">
+                            🧪 Load Test Data
+                        </button>
+                        <button type="button" class="test-btn test-btn--load" id="loadTestData10MBtn" title="Load 10M each basic material">
+                            🔢 Load 10M
+                        </button>
+                        <button type="button" class="test-btn test-btn--clear" id="clearTestDataBtn" title="Clear all materials">
+                            🗑️ Clear
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Scale Selector -->
+                <div class="glass-card scale-card">
+                    <div class="scale-card__header">
+                        <span class="scale-card__label">Scale Mode</span>
+                        <span class="info-btn-wrapper">
+                            <button id="scaleInfoBtn" class="info-btn" aria-label="Scale info">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M256 48a208 208 0 1 1 0 416 208 208 0 1 1 0-416zm0 464A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM216 336c-13.3 0-24 10.7-24 24s10.7 24 24 24l80 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-8 0 0-88c0-13.3-10.7-24-24-24l-48 0c-13.3 0-24 10.7-24 24s10.7 24 24 24l24 0 0 64-24 0zm40-144a32 32 0 1 0 0-64 32 32 0 1 0 0 64z"/></svg>
+                            </button>
+                            <div class="info-popover"><b>Normal (1:1)</b>Enter materials exactly as shown in-game.<br><b>Million Scale (1:1M)</b>Shorthand — enter 12.5 = 12,500,000 units.<br><i>Applies to Basic and Gear materials.</i></div>
+                        </span>
+                    </div>
+                    <select id="scaleSelect" class="temps scale-select">
+                        <option value="1">Normal (1:1)</option>
+                        <option value="1000000">Million Scale (1:1,000,000)</option>
+                    </select>
+                </div>
+
+                <!-- Screenshot OCR Upload -->
+                <div class="glass-card ocr-card">
+                    <div class="screenshot-upload-section">
+                        <div class="screenshot-upload-area" id="screenshotDropZone">
+                            <input type="file" id="screenshotInput" accept="image/*" multiple hidden>
+                            <div class="upload-content">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="upload-icon">
+                                    <path d="M149.1 64.8L138.7 96 64 96C28.7 96 0 124.7 0 160L0 416c0 35.3 28.7 64 64 64l384 0c35.3 0 64-28.7 64-64l0-256c0-35.3-28.7-64-64-64l-74.7 0L362.9 64.8C356.4 45.2 338.1 32 317.4 32L194.6 32c-20.7 0-39 13.2-45.5 32.8zM256 192a96 96 0 1 1 0 192 96 96 0 1 1 0-192z"/>
+                                </svg>
+                                <p class="upload-text">Drop screenshots here or <span>click to upload</span></p>
+                                <p class="upload-hint">Upload multiple screenshots to scan all your materials</p>
+                            </div>
+                        </div>
+                        <div class="screenshots-gallery" id="screenshotsGallery" style="display: none;">
+                            <div class="gallery-header">
+                                <span class="gallery-count" id="galleryCount">0 screenshots</span>
+                                <button type="button" id="addMoreScreenshots" class="add-more-btn">+ Add more</button>
+                                <button type="button" id="clearAllScreenshots" class="clear-all-btn">Clear all</button>
+                            </div>
+                            <div class="gallery-images" id="galleryImages"></div>
+                        </div>
+                        <div class="ocr-progress" id="ocrProgress" style="display: none;">
+                            <div class="ocr-progress-bar">
+                                <div class="ocr-progress-fill" id="ocrProgressFill"></div>
+                            </div>
+                            <p class="ocr-status" id="ocrStatus">Initializing OCR...</p>
+                        </div>
+                        <div class="ocr-results" id="ocrResults" style="display: none;">
+                            <div class="ocr-accordion">
+                                <button type="button" class="ocr-accordion-header" id="detectedMaterialsToggle">
+                                    <span class="ocr-accordion-title">Detected Materials</span>
+                                    <span class="ocr-accordion-count" id="detectedMaterialsCount"></span>
+                                    <svg class="ocr-accordion-arrow" viewBox="0 0 24 24" width="20" height="20">
+                                        <path fill="currentColor" d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+                                    </svg>
+                                </button>
+                                <div class="ocr-accordion-content" id="detectedMaterials"></div>
+                            </div>
+                            <button type="button" id="applyDetectedMaterials" class="apply-materials-btn">Apply to fields</button>
+                            <details class="ocr-debug">
+                                <summary>Show OCR debug info</summary>
+                                <pre id="ocrDebugText"></pre>
+                            </details>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Materials Grid -->
+                <div class="glass-card materials-card" id="yourMaterials">
+                    <div class="materials-card__header">
+                        <h3>Basic Materials</h3>
+                        <span class="info-btn-wrapper">
+                            <button id="yourMaterialsInfoBtn" class="info-btn" aria-label="Your materials info">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M256 48a208 208 0 1 1 0 416 208 208 0 1 1 0-416zm0 464A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM216 336c-13.3 0-24 10.7-24 24s10.7 24 24 24l80 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-8 0 0-88c0-13.3-10.7-24-24-24l-48 0c-13.3 0-24 10.7-24 24s10.7 24 24 24l24 0 0 64-24 0zm40-144a32 32 0 1 0 0-64 32 32 0 1 0 0 64z"/></svg>
+                            </button>
+                            <div class="info-popover">Enter materials at <b>Poor</b> quality. Downgrade higher-tier materials in-game first.</div>
+                        </span>
+                    </div>
+                    
+                    <div class="materials-grid">
+                        <div class="material-item my-material black-iron">
+                            <img src="resources/materials/icon_crafting_blackiron.webp" alt="Black Iron">
+                            <div class="material-item__input">
+                                <span>Black Iron</span>
+                                <input type="text" class="numeric-input" id="my-black-iron" name="my-black-iron" placeholder="0" pattern="[0-9]*" inputmode="numeric">
+                            </div>
+                        </div>
+                        <div class="material-item my-material copper-bar">
+                            <img src="resources/materials/icon_crafting_copper_bar.webp" alt="Copper bar">
+                            <div class="material-item__input">
+                                <span>Copper bar</span>
+                                <input type="text" class="numeric-input" id="my-copper-bar" name="my-copper-bar" placeholder="0" pattern="[0-9]*" inputmode="numeric">
+                            </div>
+                        </div>
+                        <div class="material-item my-material dragonglass">
+                            <img src="resources/materials/icon_crafting_dragonglass.webp" alt="Dragonglass">
+                            <div class="material-item__input">
+                                <span>Dragonglass</span>
+                                <input type="text" class="numeric-input" id="my-dragonglass" name="my-dragonglass" placeholder="0" pattern="[0-9]*" inputmode="numeric">
+                            </div>
+                        </div>
+                        <div class="material-item my-material goldenheart-wood">
+                            <img src="resources/materials/icon_crafting_goldenheart_wood.webp" alt="Goldenheart wood">
+                            <div class="material-item__input">
+                                <span>Goldenheart</span>
+                                <input type="text" class="numeric-input" id="my-goldenheart-wood" name="my-goldenheart-wood" placeholder="0" pattern="[0-9]*" inputmode="numeric">
+                            </div>
+                        </div>
+                        <div class="material-item my-material hide">
+                            <img src="resources/materials/icon_crafting_hide.webp" alt="Hide">
+                            <div class="material-item__input">
+                                <span>Hide</span>
+                                <input type="text" class="numeric-input" id="my-hide" name="my-hide" placeholder="0" pattern="[0-9]*" inputmode="numeric">
+                            </div>
+                        </div>
+                        <div class="material-item my-material ironwood">
+                            <img src="resources/materials/icon_crafting_ironwood.webp" alt="Ironwood">
+                            <div class="material-item__input">
+                                <span>Ironwood</span>
+                                <input type="text" class="numeric-input" id="my-ironwood" name="my-ironwood" placeholder="0" pattern="[0-9]*" inputmode="numeric">
+                            </div>
+                        </div>
+                        <div class="material-item my-material kingswood-oak">
+                            <img src="resources/materials/icon_crafting_kingswood_oak.webp" alt="Kingswood oak">
+                            <div class="material-item__input">
+                                <span>Kingswood</span>
+                                <input type="text" class="numeric-input" id="my-kingswood-oak" name="my-kingswood-oak" placeholder="0" pattern="[0-9]*" inputmode="numeric">
+                            </div>
+                        </div>
+                        <div class="material-item my-material leather-straps">
+                            <img src="resources/materials/icon_crafting_leather_straps.webp" alt="Leather straps">
+                            <div class="material-item__input">
+                                <span>Leather</span>
+                                <input type="text" class="numeric-input" id="my-leather-straps" name="my-leather-straps" placeholder="0" pattern="[0-9]*" inputmode="numeric">
+                            </div>
+                        </div>
+                        <div class="material-item my-material milk-of-the-poppy">
+                            <img src="resources/materials/icon_crafting_milk_of_the_poppy.webp" alt="Milk of the poppy">
+                            <div class="material-item__input">
+                                <span>Milk</span>
+                                <input type="text" class="numeric-input" id="my-milk-of-the-poppy" name="my-milk-of-the-poppy" placeholder="0" pattern="[0-9]*" inputmode="numeric">
+                            </div>
+                        </div>
+                        <div class="material-item my-material silk">
+                            <img src="resources/materials/icon_crafting_silk.webp" alt="Silk">
+                            <div class="material-item__input">
+                                <span>Silk</span>
+                                <input type="text" class="numeric-input" id="my-silk" name="my-silk" placeholder="0" pattern="[0-9]*" inputmode="numeric">
+                            </div>
+                        </div>
+                        <div class="material-item my-material weirwood">
+                            <img src="resources/materials/icon_crafting_weir_wood.webp" alt="Weirwood">
+                            <div class="material-item__input">
+                                <span>Weirwood</span>
+                                <input type="text" class="numeric-input" id="my-weirwood" name="my-weirwood" placeholder="0" pattern="[0-9]*" inputmode="numeric">
+                            </div>
+                        </div>
+                        <div class="material-item my-material wildfire">
+                            <img src="resources/materials/icon_crafting_wild_fire.webp" alt="Wildfire">
+                            <div class="material-item__input">
+                                <span>Wildfire</span>
+                                <input type="text" class="numeric-input" id="my-wildfire" name="my-wildfire" placeholder="0" pattern="[0-9]*" inputmode="numeric">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gear Materials Accordion -->
+                <div class="glass-card gear-materials-card">
+                    <button class="accordion-toggle" id="toggleAdvMaterials" aria-expanded="false">
+                        <span>Gear Materials</span>
+                        <svg class="accordion-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"/></svg>
+                    </button>
+                    <div id="advMaterials" class="accordion-content materials-grid" style="display:none;"></div>
+                </div>
+            </div>
+
+            <!-- Step 2: Strategy & Settings -->
+            <div class="wizard-step" id="step-templates" data-step="2">
+                <div class="wizard-step__header">
+                    <h2>Crafting Strategy</h2>
+                    <p>Configure your settings and see the projected output based on your materials.</p>
+                </div>
+
+                <!-- Crafting Settings Section -->
+                <div class="crafting-settings" id="strategySettings">
+                    <h3 class="crafting-settings__title">⚙️ Crafting Settings</h3>
+                    
+                    <!-- Three-column grid: Material Usage | Gear Levels | Preferences -->
+                    <div class="crafting-settings__grid">
+                        <!-- Card 1: Material Usage (Full Width) -->
+                        <div class="glass-card settings-card settings-card--usage">
+                            <div class="settings-card__content">
+                                <div class="usage-horizontal">
+                                    <!-- Left: Slider -->
+                                    <div class="usage-horizontal__slider">
+                                        <span class="usage-horizontal__label">Material Usage</span>
+                                        <div class="usage-slider-row">
+                                            <input type="range" id="usageSlider" min="20" max="100" value="60" class="usage-slider__input">
+                                            <span class="usage-slider__value" id="usageValue">60%</span>
+                                        </div>
+                                    </div>
+                                    <!-- Right: Summary -->
+                                    <div class="usage-horizontal__summary" id="materialSummary">
+                                        <div class="usage-summary-inline">
+                                            <span class="usage-summary-item">
+                                                <span class="usage-summary-item__icon">📦</span>
+                                                <span class="usage-summary-item__used" id="basicMatsUsed">0</span>
+                                                <span class="usage-summary-item__sep">/</span>
+                                                <span class="usage-summary-item__total" id="basicMatsTotal">0</span>
+                                            </span>
+                                            <span class="usage-summary-item">
+                                                <span class="usage-summary-item__icon">⚔️</span>
+                                                <span class="usage-summary-item__used" id="gearMatsUsed">0</span>
+                                                <span class="usage-summary-item__sep">/</span>
+                                                <span class="usage-summary-item__total" id="gearMatsTotal">0</span>
+                                            </span>
+                                        </div>
+                                        <div class="material-summary__bar">
+                                            <div class="material-summary__bar-fill" id="usageBarFill" style="width: 60%"></div>
+                                        </div>
+                                    </div>
+                                    <!-- Details Toggle -->
+                                    <button type="button" class="usage-horizontal__toggle" id="materialDetailToggle">
+                                        <span>Details</span>
+                                        <svg class="toggle-arrow" width="10" height="10" viewBox="0 0 12 12"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+                                    </button>
+                                </div>
+                                <!-- Expandable Detail Section -->
+                                <div class="material-detail" id="materialDetail" style="display: none;">
+                                    <div class="material-detail__section">
+                                        <div class="material-detail__section-title">Basic Materials</div>
+                                        <div class="material-detail__grid" id="basicMaterialsGrid"></div>
+                                    </div>
+                                    <div class="material-detail__section" id="gearMaterialsSection" style="display: none;">
+                                        <div class="material-detail__section-title">Season/Gear Materials</div>
+                                        <div class="material-detail__grid" id="gearMaterialsGrid"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 2: Gear Levels -->
+                        <div class="glass-card settings-card settings-card--gear-levels">
+                            <div class="settings-card__header">
+                                <span>Gear Levels</span>
+                                <span class="info-btn-wrapper">
+                                    <button class="info-btn info-btn--small" aria-label="Gear levels info">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="14" height="14"><path d="M256 48a208 208 0 1 1 0 416 208 208 0 1 1 0-416zm0 464A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM216 336c-13.3 0-24 10.7-24 24s10.7 24 24 24l80 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-8 0 0-88c0-13.3-10.7-24-24-24l-48 0c-13.3 0-24 10.7-24 24s10.7 24 24 24l24 0 0 64-24 0zm40-144a32 32 0 1 0 0-64 32 32 0 1 0 0 64z"/></svg>
+                                    </button>
+                                    <div class="info-popover info-popover--compact">Select which levels use <b>seasonal gear materials</b>. Unselected levels use basic materials only.</div>
+                                </span>
+                            </div>
+                            <div class="settings-card__content">
+                                <div class="gear-levels-layout">
+                                    <div class="quick-select-row">
+                                        <span class="quick-select-label">Quick:</span>
+                                        <button type="button" class="quick-select-btn" id="gearSelectL20Plus">L20+</button>
+                                        <button type="button" class="quick-select-btn" id="gearSelectAll">All</button>
+                                        <button type="button" class="quick-select-btn quick-select-btn--clear" id="gearSelectNone">×</button>
+                                    </div>
+                                    <div id="gearLevelsContainer" class="gear-levels-inline">
+                                        <!-- Level buttons will be populated by JS -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 2: Preferences -->
+                        <div class="glass-card settings-card settings-card--preferences">
+                            <div class="settings-card__header">
+                                <span>Preferences</span>
+                                <span class="info-btn-wrapper">
+                                    <button class="info-btn info-btn--small" aria-label="Preferences info">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="14" height="14"><path d="M256 48a208 208 0 1 1 0 416 208 208 0 1 1 0-416zm0 464A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM216 336c-13.3 0-24 10.7-24 24s10.7 24 24 24l80 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-8 0 0-88c0-13.3-10.7-24-24-24l-48 0c-13.3 0-24 10.7-24 24s10.7 24 24 24l24 0 0 64-24 0zm40-144a32 32 0 1 0 0-64 32 32 0 1 0 0 64z"/></svg>
+                                    </button>
+                                    <div class="info-popover info-popover--compact">
+                                        <b>CTW:</b> Ceremonial Targaryen Warlord items<br>
+                                        <b>Odds:</b> Include rare items in calculations<br>
+                                        <b>S0:</b> Prioritize Season 0 (basic) items
+                                    </div>
+                                </span>
+                            </div>
+                            <div class="settings-card__content">
+                                <!-- Row 1: CTW -->
+                                <div class="pref-row">
+                                    <span class="pref-row__label">CTW</span>
+                                    <div class="pref-row__controls">
+                                        <label class="checkbox-inline">
+                                            <input type="checkbox" id="includeWarlords" checked>
+                                            <span class="checkbox-inline__box"></span>
+                                            <span class="checkbox-inline__label">On</span>
+                                        </label>
+                                        <label class="checkbox-inline" id="l20OnlyLabel">
+                                            <input type="checkbox" id="level20OnlyWarlords">
+                                            <span class="checkbox-inline__box"></span>
+                                            <span class="checkbox-inline__label">L20 only</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <!-- Row 2: Odds -->
+                                <div class="pref-row">
+                                    <span class="pref-row__label">Odds</span>
+                                    <div class="pref-row__controls">
+                                        <label class="checkbox-inline">
+                                            <input type="checkbox" id="includeLowOdds">
+                                            <span class="checkbox-inline__box"></span>
+                                            <span class="checkbox-inline__label">Low</span>
+                                        </label>
+                                        <label class="checkbox-inline">
+                                            <input type="checkbox" id="includeMediumOdds">
+                                            <span class="checkbox-inline__box"></span>
+                                            <span class="checkbox-inline__label">Med</span>
+                                        </label>
+                                        <label class="checkbox-inline">
+                                            <input type="checkbox" id="qualityOddsScoring" checked>
+                                            <span class="checkbox-inline__box"></span>
+                                            <span class="checkbox-inline__label">Best</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <!-- Row 3: Season 0 Priority -->
+                                <div class="pref-row">
+                                    <span class="pref-row__label">S0</span>
+                                    <div class="pref-row__controls pref-row__controls--slider">
+                                        <input type="range" min="0" max="3" step="1" value="2" id="seasonZeroPriority" class="pref-slider" aria-label="Season 0 weighting">
+                                        <div class="pref-slider__labels">
+                                            <span>Off</span>
+                                            <span>Low</span>
+                                            <span>Norm</span>
+                                            <span>High</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Template Plan Section - Combined Cascade & Manual Config -->
+                <div class="template-plan glass-card" id="templatePlanSection">
+                    <div class="template-plan__header">
+                        <h3 class="template-plan__title">
+                            <span class="template-plan__icon">📊</span>
+                            Template Plan
+                        </h3>
+                        <button type="button" class="template-plan__reset" id="resetToAutoBtn" title="Reset all to auto-calculated values">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="14" height="14"><path fill="currentColor" d="M105.1 202.6c7.7-21.8 20.2-42.3 37.8-59.8c62.5-62.5 163.8-62.5 226.3 0L386.3 160H352c-17.7 0-32 14.3-32 32s14.3 32 32 32H463.5c0 0 0 0 0 0h.4c17.7 0 32-14.3 32-32V80c0-17.7-14.3-32-32-32s-32 14.3-32 32v35.2L414.4 97.6c-87.5-87.5-229.3-87.5-316.8 0C73.2 122 55.6 150.7 44.8 181.4c-5.9 16.7 2.9 34.9 19.5 40.8s34.9-2.9 40.8-19.5zM39 289.3c-5 1.5-9.8 4.2-13.7 8.2c-4 4-6.7 8.8-8.1 14c-.3 1.2-.6 2.5-.8 3.8c-.3 1.7-.4 3.4-.4 5.1V432c0 17.7 14.3 32 32 32s32-14.3 32-32V396.9l17.6 17.5 0 0c87.5 87.4 229.3 87.4 316.7 0c24.4-24.4 42.1-53.1 52.9-83.7c5.9-16.7-2.9-34.9-19.5-40.8s-34.9 2.9-40.8 19.5c-7.7 21.8-20.2 42.3-37.8 59.8c-62.5 62.5-163.8 62.5-226.3 0l-.1-.1L125.6 352H160c17.7 0 32-14.3 32-32s-14.3-32-32-32H48.4c-1.6 0-3.2 .1-4.8 .3s-3.1 .5-4.6 1z"/></svg>
+                            Reset
+                        </button>
+                    </div>
+                    <p class="template-plan__desc">Edit template counts per level. Auto-calculated values update based on your materials and settings.</p>
+
+                    <!-- Quality Legend -->
+                    <div class="template-plan__legend">
+                        <div class="legend-item legend-item--legendary"><span class="legend-dot"></span>Legendary</div>
+                        <div class="legend-item legend-item--exquisite"><span class="legend-dot"></span>Exquisite</div>
+                        <div class="legend-item legend-item--fine"><span class="legend-dot"></span>Fine</div>
+                        <div class="legend-item legend-item--common"><span class="legend-dot"></span>Common</div>
+                    </div>
+
+                    <!-- Template Cards Grid - 4 per row -->
+                    <div class="template-cards" id="templateChips">
+                        <!-- Cards will be generated dynamically by JS, but here's the static structure -->
+                        <div class="template-card-wrapper" data-level="1">
+                            <div class="template-card__label">Level 1</div>
+                            <div class="template-card" data-level="1">
+                                <input type="number" class="template-card__input" id="templateAmount1" placeholder="0" min="0">
+                                <select class="template-card__quality temps" id="temp1" name="temp1">
+                                    <option value="legendary" selected>Legendary</option>
+                                    <option value="epic">Epic</option>
+                                    <option value="exquisite">Exquisite</option>
+                                    <option value="fine">Fine</option>
+                                    <option value="common">Common</option>
+                                    <option value="poor">Poor</option>
+                                </select>
+                                <div class="template-card__pieces" id="pieces1">
+                                    <div class="piece-carousel">
+                                        <div class="piece-slide active">
+                                            <img src="resources/item/icon_eq_standard_helmet_woodenbucket.webp" alt="Template" class="piece-img">
+                                            <div class="piece-name">Loading...</div>
+                                            <div class="piece-count">x0</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="template-card__nav">
+                                    <button type="button" class="nav-arrow nav-arrow--prev" data-level="1">←</button>
+                                    <button type="button" class="nav-arrow nav-arrow--next" data-level="1">→</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="template-card-wrapper" data-level="5">
+                            <div class="template-card__label">Level 5</div>
+                            <div class="template-card" data-level="5">
+                                <input type="number" class="template-card__input" id="templateAmount5" placeholder="0" min="0">
+                                <select class="template-card__quality temps" id="temp5" name="temp5">
+                                    <option value="legendary" selected>Legendary</option>
+                                    <option value="epic">Epic</option>
+                                    <option value="exquisite">Exquisite</option>
+                                    <option value="fine">Fine</option>
+                                    <option value="common">Common</option>
+                                    <option value="poor">Poor</option>
+                                </select>
+                                <div class="template-card__pieces" id="pieces5">
+                                    <div class="piece-carousel">
+                                        <div class="piece-slide active">
+                                            <img src="resources/item/icon_eq_standard_helmet_woolbandana.webp" alt="Template" class="piece-img">
+                                            <div class="piece-name">Loading...</div>
+                                            <div class="piece-count">x0</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="template-card__nav">
+                                    <button type="button" class="nav-arrow nav-arrow--prev" data-level="5">←</button>
+                                    <button type="button" class="nav-arrow nav-arrow--next" data-level="5">→</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="template-card-wrapper" data-level="10">
+                            <div class="template-card__label">Level 10</div>
+                            <div class="template-card" data-level="10">
+                                <input type="number" class="template-card__input" id="templateAmount10" placeholder="0" min="0">
+                                <select class="template-card__quality temps" id="temp10" name="temp10">
+                                    <option value="legendary" selected>Legendary</option>
+                                    <option value="epic">Epic</option>
+                                    <option value="exquisite">Exquisite</option>
+                                    <option value="fine">Fine</option>
+                                    <option value="common">Common</option>
+                                    <option value="poor">Poor</option>
+                                </select>
+                                <div class="template-card__pieces" id="pieces10">
+                                    <div class="piece-carousel">
+                                        <div class="piece-slide active">
+                                            <img src="resources/item/icon_eq_standard_helmet_strawhat.webp" alt="Template" class="piece-img">
+                                            <div class="piece-name">Loading...</div>
+                                            <div class="piece-count">x0</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="template-card__nav">
+                                    <button type="button" class="nav-arrow nav-arrow--prev" data-level="10">←</button>
+                                    <button type="button" class="nav-arrow nav-arrow--next" data-level="10">→</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="template-card-wrapper" data-level="15">
+                            <div class="template-card__label">Level 15</div>
+                            <div class="template-card" data-level="15">
+                                <input type="number" class="template-card__input" id="templateAmount15" placeholder="0" min="0">
+                                <select class="template-card__quality temps" id="temp15" name="temp15">
+                                    <option value="legendary">Legendary</option>
+                                    <option value="epic">Epic</option>
+                                    <option value="exquisite" selected>Exquisite</option>
+                                    <option value="fine">Fine</option>
+                                    <option value="common">Common</option>
+                                    <option value="poor">Poor</option>
+                                </select>
+                                <div class="template-card__pieces" id="pieces15">
+                                    <div class="piece-carousel">
+                                        <div class="piece-slide active">
+                                            <img src="resources/item/15-25/icon_eq_standard_helmet_ironskullcap.png" alt="Template" class="piece-img">
+                                            <div class="piece-name">Loading...</div>
+                                            <div class="piece-count">x0</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="template-card__nav">
+                                    <button type="button" class="nav-arrow nav-arrow--prev" data-level="15">←</button>
+                                    <button type="button" class="nav-arrow nav-arrow--next" data-level="15">→</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="template-card-wrapper" data-level="20">
+                            <div class="template-card__label">Level 20</div>
+                            <div class="template-card" data-level="20">
+                                <input type="number" class="template-card__input" id="templateAmount20" placeholder="0" min="0">
+                                <select class="template-card__quality temps" id="temp20" name="temp20">
+                                    <option value="legendary">Legendary</option>
+                                    <option value="epic">Epic</option>
+                                    <option value="exquisite" selected>Exquisite</option>
+                                    <option value="fine">Fine</option>
+                                    <option value="common">Common</option>
+                                    <option value="poor">Poor</option>
+                                </select>
+                                <div class="template-card__pieces" id="pieces20">
+                                    <div class="piece-carousel">
+                                        <div class="piece-slide active">
+                                            <img src="resources/item/15-25/icon_eq_standard_helmet_halfhelm.png" alt="Template" class="piece-img">
+                                            <div class="piece-name">Loading...</div>
+                                            <div class="piece-count">x0</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="template-card__nav">
+                                    <button type="button" class="nav-arrow nav-arrow--prev" data-level="20">←</button>
+                                    <button type="button" class="nav-arrow nav-arrow--next" data-level="20">→</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="template-card-wrapper" data-level="25">
+                            <div class="template-card__label">Level 25</div>
+                            <div class="template-card" data-level="25">
+                                <input type="number" class="template-card__input" id="templateAmount25" placeholder="0" min="0">
+                                <select class="template-card__quality temps" id="temp25" name="temp25">
+                                    <option value="legendary">Legendary</option>
+                                    <option value="epic">Epic</option>
+                                    <option value="exquisite" selected>Exquisite</option>
+                                    <option value="fine">Fine</option>
+                                    <option value="common">Common</option>
+                                    <option value="poor">Poor</option>
+                                </select>
+                                <div class="template-card__pieces" id="pieces25">
+                                    <div class="piece-carousel">
+                                        <div class="piece-slide active">
+                                            <img src="resources/item/15-25/icon_eq_standard_helmet_piratetricorne.png" alt="Template" class="piece-img">
+                                            <div class="piece-name">Loading...</div>
+                                            <div class="piece-count">x0</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="template-card__nav">
+                                    <button type="button" class="nav-arrow nav-arrow--prev" data-level="25">←</button>
+                                    <button type="button" class="nav-arrow nav-arrow--next" data-level="25">→</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="template-card-wrapper" data-level="30">
+                            <div class="template-card__label">Level 30</div>
+                            <div class="template-card" data-level="30">
+                                <input type="number" class="template-card__input" id="templateAmount30" placeholder="0" min="0">
+                                <select class="template-card__quality temps" id="temp30" name="temp30">
+                                    <option value="legendary">Legendary</option>
+                                    <option value="epic">Epic</option>
+                                    <option value="exquisite">Exquisite</option>
+                                    <option value="fine" selected>Fine</option>
+                                    <option value="common">Common</option>
+                                    <option value="poor">Poor</option>
+                                </select>
+                                <div class="template-card__pieces" id="pieces30">
+                                    <div class="piece-carousel">
+                                        <div class="piece-slide active">
+                                            <img src="resources/item/30-45/icon_eq_standard_helmet_kettlehelm.png" alt="Template" class="piece-img">
+                                            <div class="piece-name">Loading...</div>
+                                            <div class="piece-count">x0</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="template-card__nav">
+                                    <button type="button" class="nav-arrow nav-arrow--prev" data-level="30">←</button>
+                                    <button type="button" class="nav-arrow nav-arrow--next" data-level="30">→</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="template-card-wrapper" data-level="35">
+                            <div class="template-card__label">Level 35</div>
+                            <div class="template-card" data-level="35">
+                                <input type="number" class="template-card__input" id="templateAmount35" placeholder="0" min="0">
+                                <select class="template-card__quality temps" id="temp35" name="temp35">
+                                    <option value="legendary">Legendary</option>
+                                    <option value="epic">Epic</option>
+                                    <option value="exquisite">Exquisite</option>
+                                    <option value="fine" selected>Fine</option>
+                                    <option value="common">Common</option>
+                                    <option value="poor">Poor</option>
+                                </select>
+                                <div class="template-card__pieces" id="pieces35">
+                                    <div class="piece-carousel">
+                                        <div class="piece-slide active">
+                                            <img src="resources/item/30-45/icon_eq_standard_helmet_casque.png" alt="Template" class="piece-img">
+                                            <div class="piece-name">Loading...</div>
+                                            <div class="piece-count">x0</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="template-card__nav">
+                                    <button type="button" class="nav-arrow nav-arrow--prev" data-level="35">←</button>
+                                    <button type="button" class="nav-arrow nav-arrow--next" data-level="35">→</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="template-card-wrapper" data-level="40">
+                            <div class="template-card__label">Level 40</div>
+                            <div class="template-card" data-level="40">
+                                <input type="number" class="template-card__input" id="templateAmount40" placeholder="0" min="0">
+                                <select class="template-card__quality temps" id="temp40" name="temp40">
+                                    <option value="legendary">Legendary</option>
+                                    <option value="epic">Epic</option>
+                                    <option value="exquisite">Exquisite</option>
+                                    <option value="fine">Fine</option>
+                                    <option value="common" selected>Common</option>
+                                    <option value="poor">Poor</option>
+                                </select>
+                                <div class="template-card__pieces" id="pieces40">
+                                    <div class="piece-carousel">
+                                        <div class="piece-slide active">
+                                            <img src="resources/item/30-45/icon_eq_standard_helmet_goldencrown.png" alt="Template" class="piece-img">
+                                            <div class="piece-name">Loading...</div>
+                                            <div class="piece-count">x0</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="template-card__nav">
+                                    <button type="button" class="nav-arrow nav-arrow--prev" data-level="40">←</button>
+                                    <button type="button" class="nav-arrow nav-arrow--next" data-level="40">→</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="template-card-wrapper" data-level="45">
+                            <div class="template-card__label">Level 45</div>
+                            <div class="template-card" data-level="45">
+                                <input type="number" class="template-card__input" id="templateAmount45" placeholder="0" min="0">
+                                <select class="template-card__quality temps" id="temp45" name="temp45">
+                                    <option value="legendary">Legendary</option>
+                                    <option value="epic">Epic</option>
+                                    <option value="exquisite">Exquisite</option>
+                                    <option value="fine">Fine</option>
+                                    <option value="common" selected>Common</option>
+                                    <option value="poor">Poor</option>
+                                </select>
+                                <div class="template-card__pieces" id="pieces45">
+                                    <div class="piece-carousel">
+                                        <div class="piece-slide active">
+                                            <img src="resources/item/30-45/icon_eq_standard_helmet_jewelencrustedtiara.png" alt="Template" class="piece-img">
+                                            <div class="piece-name">Loading...</div>
+                                            <div class="piece-count">x0</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="template-card__nav">
+                                    <button type="button" class="nav-arrow nav-arrow--prev" data-level="45">←</button>
+                                    <button type="button" class="nav-arrow nav-arrow--next" data-level="45">→</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Summary -->
+                    <div class="template-plan__summary" id="templatePlanSummary">
+                        <div class="summary-stat">
+                            <span class="summary-stat__label">Starting Templates</span>
+                            <span class="summary-stat__value" id="summaryStart">--</span>
+                        </div>
+                        <div class="summary-stat">
+                            <span class="summary-stat__label">Final L45</span>
+                            <span class="summary-stat__value" id="summaryFinal">--</span>
+                        </div>
+                        <div class="summary-stat">
+                            <span class="summary-stat__label">Survival Rate</span>
+                            <span class="summary-stat__value" id="summarySurvival">--%</span>
+                        </div>
+                    </div>
+
+                    <!-- No Materials Warning -->
+                    <div class="template-plan__empty" id="templatePlanEmpty">
+                        <div class="template-plan__empty-icon">📦</div>
+                        <p class="template-plan__empty-text">Enter your materials in Step 1 to see auto-calculated projections.</p>
+                        <button type="button" class="template-plan__back-btn" onclick="wizardGoToStep(1)">
+                            ← Go to Materials
+                        </button>
+                    </div>
+                </div><!-- /.templates-section -->
+
+            </div>
+
+            <!-- Step 3: Results (was Step 4) -->
+            <div class="wizard-step" id="step-results" data-step="3">
+                <div class="wizard-step__header">
+                    <h2>Crafting Results</h2>
+                    <p>Your optimized crafting plan</p>
+                </div>
+
+                <div id="results" class="results-container"></div>
+            </div>
+        </div>
+
+        <!-- Wizard Navigation -->
+        <div class="wizard-navigation">
+            <button type="button" class="wizard-btn wizard-btn--prev" id="wizardPrev" disabled>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg>
+                <span>Back</span>
+            </button>
+            <button type="button" class="wizard-btn wizard-btn--next" id="wizardNext">
+                <span>Next</span>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8-12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg>
+            </button>
+            <button type="button" class="wizard-btn wizard-btn--calculate" id="calculateWithPreferences" style="display: none;">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path d="M64 0C28.7 0 0 28.7 0 64V448c0 35.3 28.7 64 64 64H320c35.3 0 64-28.7 64-64V64c0-35.3-28.7-64-64-64H64zM96 64H288c17.7 0 32 14.3 32 32v32c0 17.7-14.3 32-32 32H96c-17.7 0-32-14.3-32-32V96c0-17.7 14.3-32 32-32zm32 160a32 32 0 1 1 -64 0 32 32 0 1 1 64 0zM96 352a32 32 0 1 1 0-64 32 32 0 1 1 0 64zM64 416c0-17.7 14.3-32 32-32h96c17.7 0 32 14.3 32 32s-14.3 32-32 32H96c-17.7 0-32-14.3-32-32zM192 256a32 32 0 1 1 0-64 32 32 0 1 1 0 64zm32 64a32 32 0 1 1 -64 0 32 32 0 1 1 64 0zm64-64a32 32 0 1 1 0-64 32 32 0 1 1 0 64zm32 64a32 32 0 1 1 -64 0 32 32 0 1 1 64 0zM288 448a32 32 0 1 1 0-64 32 32 0 1 1 0 64z"/></svg>
+                <span>Calculate</span>
+            </button>
+            <button type="button" class="wizard-btn wizard-btn--new" id="wizardNewCalc" style="display: none;">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M463.5 224H472c13.3 0 24-10.7 24-24V72c0-9.7-5.8-18.5-14.8-22.2s-19.3-1.7-26.2 5.2L413.4 96.6c-87.6-86.5-228.7-86.2-315.8 1c-87.5 87.5-87.5 229.3 0 316.8s229.3 87.5 316.8 0c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0c-62.5 62.5-163.8 62.5-226.3 0s-62.5-163.8 0-226.3c62.2-62.2 162.7-62.5 225.3-1L327 183c-6.9 6.9-8.9 17.2-5.2 26.2s12.5 14.8 22.2 14.8H463.5z"/></svg>
+                <span>New Calculation</span>
+            </button>
+        </div>
+
+        <!-- Hidden elements for compatibility -->
+        <div id="generatebychoice" style="display: none;"></div>
+        <div id="manualInput" style="display: none;"></div>
+
+        </div><!-- End Template Calculator Section -->
+
+        <!-- ========== MARCH SIZE CALCULATOR SECTION ========== -->
+        <div id="marchSizeCalculator" class="calculator-section" style="display: none;">
+            
+            <!-- March Size Progress Indicator -->
+            <div class="wizard-progress ms-progress">
+                <div class="wizard-progress__step active" data-step="1">
+                    <div class="wizard-progress__number">1</div>
+                    <span class="wizard-progress__label">Scenario</span>
+                </div>
+                <div class="wizard-progress__connector"></div>
+                <div class="wizard-progress__step" data-step="2">
+                    <div class="wizard-progress__number">2</div>
+                    <span class="wizard-progress__label">Input</span>
+                </div>
+                <div class="wizard-progress__connector"></div>
+                <div class="wizard-progress__step" data-step="3">
+                    <div class="wizard-progress__number">3</div>
+                    <span class="wizard-progress__label">Results</span>
+                </div>
+            </div>
+
+            <!-- March Size Wizard Content -->
+            <div class="wizard-content ms-wizard-content">
+                
+                <!-- MS Step 1: Scenario Selection -->
+                <div class="wizard-step active" id="ms-step-scenario" data-step="1">
+                    <div class="wizard-step__header">
+                        <h2>Select Your Scenario</h2>
+                        <p>Choose what you're optimizing your march size for</p>
+                    </div>
+
+                    <!-- Regular March Size Section -->
+                    <div class="ms-scenario-section">
+                        <h3 class="ms-scenario-section__title">
+                            <img src="resources/research/icon_research_command.png" alt="Command" class="ms-scenario-section__icon">
+                            Regular March Size
+                        </h3>
+                        <div class="ms-scenario-grid ms-scenario-grid--section">
+                        <button type="button" class="ms-scenario-card glass-card active" data-scenario="ms-vs-sop">
+                            <div class="ms-scenario-card__icon">
+                                <img src="resources/research/icon_research_march_size_vs_sop.png" alt="March Size vs SOP">
+                            </div>
+                            <div class="ms-scenario-card__content">
+                                <h3>March Size vs Seat of Power</h3>
+                            </div>
+                            <div class="ms-scenario-card__check">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="24" height="24"><path fill="currentColor" d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM369 209L241 337c-9.4 9.4-24.6 9.4-33.9 0l-64-64c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l47 47L335 175c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9z"/></svg>
+                            </div>
+                        </button>
+
+                        <button type="button" class="ms-scenario-card glass-card ms-scenario-card--disabled" data-scenario="ms-vs-keep" disabled>
+                            <div class="ms-scenario-card__icon">
+                                <img src="resources/research/icon_research_adv_marchSize.png" alt="March Size vs Keep">
+                            </div>
+                            <div class="ms-scenario-card__content">
+                                <h3>March Size vs Keep</h3>
+                            </div>
+                            <div class="ms-scenario-card__overlay">
+                                <span>🚧 Coming Soon</span>
+                            </div>
+                        </button>
+
+                        <button type="button" class="ms-scenario-card glass-card ms-scenario-card--disabled" data-scenario="ms-reinforce" disabled>
+                            <div class="ms-scenario-card__icon">
+                                <img src="resources/research/dragon_talent_hatchling_reinforcement_march_speed.png" alt="March Size Reinforcing">
+                            </div>
+                            <div class="ms-scenario-card__content">
+                                <h3>March Size vs Reinforcing</h3>
+                            </div>
+                            <div class="ms-scenario-card__overlay">
+                                <span>🚧 Coming Soon</span>
+                            </div>
+                        </button>
+                        </div>
+                    </div>
+
+                    <!-- Dragon March Size Section -->
+                    <div class="ms-scenario-section">
+                        <h3 class="ms-scenario-section__title">
+                            <img src="resources/dragons/icon_dragon.png" alt="Dragon" class="ms-scenario-section__icon">
+                            Dragon March Size
+                        </h3>
+                        <div class="ms-scenario-grid ms-scenario-grid--section">
+
+                        <button type="button" class="ms-scenario-card glass-card ms-scenario-card--disabled" data-scenario="dragon-vs-sop" disabled>
+                            <div class="ms-scenario-card__icon">
+                                <img src="resources/research/icon_dragon_care_research_march_size_vs_pvp_sop.png" alt="Dragon March vs SOP">
+                            </div>
+                            <div class="ms-scenario-card__content">
+                                <h3>Dragon March vs Seat of Power</h3>
+                            </div>
+                            <div class="ms-scenario-card__overlay">
+                                <span>🚧 Coming Soon</span>
+                            </div>
+                        </button>
+
+                        <button type="button" class="ms-scenario-card glass-card ms-scenario-card--disabled" data-scenario="dragon-vs-keep" disabled>
+                            <div class="ms-scenario-card__icon">
+                                <img src="resources/research/dragon_research_strength_in_numbers.png" alt="Dragon March vs Keep">
+                            </div>
+                            <div class="ms-scenario-card__content">
+                                <h3>Dragon March vs Keep</h3>
+                            </div>
+                            <div class="ms-scenario-card__overlay">
+                                <span>🚧 Coming Soon</span>
+                            </div>
+                        </button>
+
+                        <button type="button" class="ms-scenario-card glass-card ms-scenario-card--disabled" data-scenario="dragon-reinforce" disabled>
+                            <div class="ms-scenario-card__icon">
+                                <img src="resources/research/dragon_research_enable_reinforce_ally.png" alt="Dragon Reinforcing">
+                            </div>
+                            <div class="ms-scenario-card__content">
+                                <h3>Dragon March vs Reinforcing</h3>
+                            </div>
+                            <div class="ms-scenario-card__overlay">
+                                <span>🚧 Coming Soon</span>
+                            </div>
+                        </button>
+                        </div>
+                    </div>
+
+                    <!-- Account Configuration Section -->
+                    <div class="ms-account-config">
+                        <h3 class="ms-account-config__title">Your Account Stats</h3>
+                        
+                        <!-- Total Base March Size Display -->
+                        <div class="ms-base-total">
+                            <div class="ms-base-total__main">
+                                <span class="ms-base-total__label">Base March Size:</span>
+                                <span class="ms-base-total__value" id="msBaseMarchSizeTotal">0</span>
+                            </div>
+                            <div class="ms-base-total__breakdown" id="msBreakdownDisplay">
+                                <span class="ms-breakdown__flat">0 base</span>
+                                <span class="ms-breakdown__plus">+</span>
+                                <span class="ms-breakdown__pct">0 (0%)</span>
+                            </div>
+                            <div class="ms-base-total__pct">
+                                <span class="ms-base-total__pct-label">Total Bonus:</span>
+                                <span class="ms-base-total__pct-value" id="msPercentageTotal">+0.00%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Buildings Section -->
+                    <div class="glass-card ms-input-card">
+                        <button class="accordion-toggle" aria-expanded="false" data-target="ms-buildings">
+                            <span>Building Levels</span>
+                            <span class="ms-section-total" id="msBuildingsTotal">(+0 / 94,600)</span>
+                            <svg class="accordion-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"/></svg>
+                        </button>
+                        <div id="ms-buildings" class="accordion-content ms-armories-content" style="display:none;">
+                            <div class="ms-armory-category">
+                                <h4 class="ms-armory-category__title">Building Levels <span class="ms-stat-hint">(34-40 range)</span></h4>
+                                <div class="ms-building-grid">
+                                    <div class="ms-building-card">
+                                        <div class="ms-building-card__image">
+                                            <img src="resources/buildings/structures_keep_icon_02.png" alt="Keep">
+                                        </div>
+                                        <div class="ms-building-card__content">
+                                            <label for="msKeepLevel" class="ms-building-card__title">Keep</label>
+                                            <div class="ms-building-card__slider">
+                                                <input type="range" id="msKeepLevel" class="ms-armory-slider" min="1" max="40" value="35">
+                                                <span class="ms-armory-value" id="msKeepLevelDisplay">Lv 35</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="ms-building-card">
+                                        <div class="ms-building-card__image">
+                                            <img src="resources/buildings/structures_trainingyard_icon_01.png" alt="Training Yard">
+                                        </div>
+                                        <div class="ms-building-card__content">
+                                            <label for="msTrainingYardLevel" class="ms-building-card__title">Training Yard</label>
+                                            <div class="ms-building-card__slider">
+                                                <input type="range" id="msTrainingYardLevel" class="ms-armory-slider" min="0" max="40" value="0">
+                                                <span class="ms-armory-value" id="msTrainingYardLevelDisplay">Lv 0</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Enhancements Section -->
+                    <div class="glass-card ms-input-card">
+                        <button class="accordion-toggle" aria-expanded="false" data-target="ms-enhancements">
+                            <span>Enhancements</span>
+                            <span class="ms-section-total" id="msEnhancementsTotal">(+0 / 7,500)</span>
+                            <svg class="accordion-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"/></svg>
+                        </button>
+                        <div id="ms-enhancements" class="accordion-content ms-armories-content" style="display:none;">
+                            <div class="ms-armory-category">
+                                <h4 class="ms-armory-category__title">Building Enhancements</h4>
+                                <div class="ms-building-grid ms-building-grid--3col">
+                                    <div class="ms-building-card">
+                                        <div class="ms-building-card__image">
+                                            <img src="resources/buildings/structures_greathall_icon_01.png" alt="Great Hall">
+                                        </div>
+                                        <div class="ms-building-card__content">
+                                            <label for="msGreatHallLevel" class="ms-building-card__title">Great Hall</label>
+                                            <div class="ms-building-card__slider">
+                                                <input type="range" id="msGreatHallLevel" class="ms-armory-slider" min="0" max="25" value="0">
+                                                <span class="ms-armory-value" id="msGreatHallLevelDisplay">Lv 0</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="ms-building-card">
+                                        <div class="ms-building-card__image">
+                                            <img src="resources/buildings/structures_watchtower_icon_01.png" alt="Watchtower">
+                                        </div>
+                                        <div class="ms-building-card__content">
+                                            <label for="msWatchtowerLevel" class="ms-building-card__title">Watchtower</label>
+                                            <div class="ms-building-card__slider">
+                                                <input type="range" id="msWatchtowerLevel" class="ms-armory-slider" min="0" max="20" value="0">
+                                                <span class="ms-armory-value" id="msWatchtowerLevelDisplay">Lv 0</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="ms-building-card">
+                                        <div class="ms-building-card__image">
+                                            <img src="resources/buildings/structures_keep_icon_02.png" alt="Keep Enhancement">
+                                        </div>
+                                        <div class="ms-building-card__content">
+                                            <label for="msKeepEnhancementLevel" class="ms-building-card__title">Keep (March Size %)</label>
+                                            <div class="ms-building-card__slider">
+                                                <input type="range" id="msKeepEnhancementLevel" class="ms-armory-slider" min="0" max="40" value="0">
+                                                <span class="ms-armory-value" id="msKeepEnhancementLevelDisplay">Lv 0</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Armories Section -->
+                    <div class="glass-card ms-input-card">
+                        <button class="accordion-toggle" aria-expanded="false" data-target="ms-armories">
+                            <span>Armories</span>
+                            <span class="ms-section-total" id="msArmoriesTotal">(+0 / 42,481)</span>
+                            <svg class="accordion-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"/></svg>
+                        </button>
+                        <div id="ms-armories" class="accordion-content ms-armories-content" style="display:none;">
+                            <!-- Standard Armories -->
+                            <div class="ms-armory-category" data-category="standard">
+                                <h4 class="ms-armory-category__title">Standard Armories <span class="ms-category-total" id="msStandardArmoriesTotal">(+0 / 34,672)</span></h4>
+                                <div class="ms-armory-grid ms-armory-grid--vertical">
+                                    <!-- Ordered by game season (newest first) -->
+                                    <div class="ms-armory-item ms-armory-item--vertical">
+                                        <label for="msArmoryOneEyedPrince">One Eyed Prince</label>
+                                        <img src="resources/armories/oneEyedPrince.png" alt="OneEyedPrince" class="ms-armory-icon">
+                                        <div class="ms-armory-slider-group">
+                                            <input type="range" id="msArmoryOneEyedPrince" class="ms-armory-slider" min="0" max="236" value="0" data-armory="oneEyedPrince">
+                                            <span class="ms-armory-value" id="msArmoryOneEyedPrinceDisplay">0</span>
+                                        </div>
+                                    </div>
+                                    <div class="ms-armory-item ms-armory-item--vertical">
+                                        <label for="msArmoryFrozenStark">Frozen Stark</label>
+                                        <img src="resources/armories/frozenStark.png" alt="FrozenStark" class="ms-armory-icon">
+                                        <div class="ms-armory-slider-group">
+                                            <input type="range" id="msArmoryFrozenStark" class="ms-armory-slider" min="0" max="236" value="0" data-armory="frozenStark">
+                                            <span class="ms-armory-value" id="msArmoryFrozenStarkDisplay">0</span>
+                                        </div>
+                                    </div>
+                                    <div class="ms-armory-item ms-armory-item--vertical">
+                                        <label for="msArmoryThenn">Thenn</label>
+                                        <img src="resources/armories/thenn.png" alt="Thenn" class="ms-armory-icon">
+                                        <div class="ms-armory-slider-group">
+                                            <input type="range" id="msArmoryThenn" class="ms-armory-slider" min="0" max="236" value="0" data-armory="thenn">
+                                            <span class="ms-armory-value" id="msArmoryThennDisplay">0</span>
+                                        </div>
+                                    </div>
+                                    <div class="ms-armory-item ms-armory-item--vertical">
+                                        <label for="msArmoryFestivalCarouser">Festival Carouser</label>
+                                        <img src="resources/armories/festivalCarouser.png" alt="FestivalCarouser" class="ms-armory-icon">
+                                        <div class="ms-armory-slider-group">
+                                            <input type="range" id="msArmoryFestivalCarouser" class="ms-armory-slider" min="0" max="236" value="0" data-armory="festivalCarouser">
+                                            <span class="ms-armory-value" id="msArmoryFestivalCarouserDisplay">0</span>
+                                        </div>
+                                    </div>
+                                    <div class="ms-armory-item ms-armory-item--vertical">
+                                        <label for="msArmoryTargRoyal">Targ Royal</label>
+                                        <img src="resources/armories/targRoyal.png" alt="TargRoyal" class="ms-armory-icon">
+                                        <div class="ms-armory-slider-group">
+                                            <input type="range" id="msArmoryTargRoyal" class="ms-armory-slider" min="0" max="236" value="0" data-armory="targRoyal">
+                                            <span class="ms-armory-value" id="msArmoryTargRoyalDisplay">0</span>
+                                        </div>
+                                    </div>
+                                    <div class="ms-armory-item ms-armory-item--vertical">
+                                        <label for="msArmoryLaughingKnight">Laughing Knight</label>
+                                        <img src="resources/armories/laughingKnight.png" alt="LaughingKnight" class="ms-armory-icon">
+                                        <div class="ms-armory-slider-group">
+                                            <input type="range" id="msArmoryLaughingKnight" class="ms-armory-slider" min="0" max="236" value="0" data-armory="laughingKnight">
+                                            <span class="ms-armory-value" id="msArmoryLaughingKnightDisplay">0</span>
+                                        </div>
+                                    </div>
+                                    <div class="ms-armory-item ms-armory-item--vertical">
+                                        <label for="msArmoryDrownedDisciple">Drowned Disciple</label>
+                                        <img src="resources/armories/drownedDisciple.png" alt="DrownedDisciple" class="ms-armory-icon">
+                                        <div class="ms-armory-slider-group">
+                                            <input type="range" id="msArmoryDrownedDisciple" class="ms-armory-slider" min="0" max="236" value="0" data-armory="drownedDisciple">
+                                            <span class="ms-armory-value" id="msArmoryDrownedDiscipleDisplay">0</span>
+                                        </div>
+                                    </div>
+                                    <div class="ms-armory-item ms-armory-item--vertical">
+                                        <label for="msArmoryLostRanger">Lost Ranger</label>
+                                        <img src="resources/armories/lostRanger.png" alt="LostRanger" class="ms-armory-icon">
+                                        <div class="ms-armory-slider-group">
+                                            <input type="range" id="msArmoryLostRanger" class="ms-armory-slider" min="0" max="236" value="0" data-armory="lostRanger">
+                                            <span class="ms-armory-value" id="msArmoryLostRangerDisplay">0</span>
+                                        </div>
+                                    </div>
+                                    <div class="ms-armory-item ms-armory-item--vertical">
+                                        <label for="msArmoryBlackwater">Blackwater</label>
+                                        <img src="resources/armories/blackwater.png" alt="Blackwater" class="ms-armory-icon">
+                                        <div class="ms-armory-slider-group">
+                                            <input type="range" id="msArmoryBlackwater" class="ms-armory-slider" min="0" max="236" value="0" data-armory="blackwater">
+                                            <span class="ms-armory-value" id="msArmoryBlackwaterDisplay">0</span>
+                                        </div>
+                                    </div>
+                                    <div class="ms-armory-item ms-armory-item--vertical">
+                                        <label for="msArmoryTyrell">Tyrell</label>
+                                        <img src="resources/armories/tyrell.png" alt="Tyrell" class="ms-armory-icon">
+                                        <div class="ms-armory-slider-group">
+                                            <input type="range" id="msArmoryTyrell" class="ms-armory-slider" min="0" max="236" value="0" data-armory="tyrell">
+                                            <span class="ms-armory-value" id="msArmoryTyrellDisplay">0</span>
+                                        </div>
+                                    </div>
+                                    <div class="ms-armory-item ms-armory-item--vertical">
+                                        <label for="msArmoryCeremonial">Ceremonial</label>
+                                        <img src="resources/armories/ceremonial.png" alt="Ceremonial" class="ms-armory-icon">
+                                        <div class="ms-armory-slider-group">
+                                            <input type="range" id="msArmoryCeremonial" class="ms-armory-slider" min="0" max="236" value="0" data-armory="ceremonial">
+                                            <span class="ms-armory-value" id="msArmoryCeremonialDisplay">0</span>
+                                        </div>
+                                    </div>
+                                    <div class="ms-armory-item ms-armory-item--vertical">
+                                        <label for="msArmoryBattleScarred">Battle-Scarred</label>
+                                        <img src="resources/armories/battleScarred.png" alt="BattleScarred" class="ms-armory-icon">
+                                        <div class="ms-armory-slider-group">
+                                            <input type="range" id="msArmoryBattleScarred" class="ms-armory-slider" min="0" max="236" value="0" data-armory="battleScarred">
+                                            <span class="ms-armory-value" id="msArmoryBattleScarredDisplay">0</span>
+                                        </div>
+                                    </div>
+                                    <div class="ms-armory-item ms-armory-item--vertical">
+                                        <label for="msArmorySiegeEngineer">Siege Engineer</label>
+                                        <img src="resources/armories/siegeEngineer.png" alt="SiegeEngineer" class="ms-armory-icon">
+                                        <div class="ms-armory-slider-group">
+                                            <input type="range" id="msArmorySiegeEngineer" class="ms-armory-slider" min="0" max="236" value="0" data-armory="siegeEngineer">
+                                            <span class="ms-armory-value" id="msArmorySiegeEngineerDisplay">0</span>
+                                        </div>
+                                    </div>
+                                    <div class="ms-armory-item ms-armory-item--vertical">
+                                        <label for="msArmoryBraavosi">Braavosi</label>
+                                        <img src="resources/armories/braavosi.png" alt="Braavosi" class="ms-armory-icon">
+                                        <div class="ms-armory-slider-group">
+                                            <input type="range" id="msArmoryBraavosi" class="ms-armory-slider" min="0" max="236" value="0" data-armory="braavosi">
+                                            <span class="ms-armory-value" id="msArmoryBraavosiDisplay">0</span>
+                                        </div>
+                                    </div>
+                                    <div class="ms-armory-item ms-armory-item--vertical">
+                                        <label for="msArmoryFaithMilitant">Faith Militant</label>
+                                        <img src="resources/armories/faithMilitant.png" alt="FaithMilitant" class="ms-armory-icon">
+                                        <div class="ms-armory-slider-group">
+                                            <input type="range" id="msArmoryFaithMilitant" class="ms-armory-slider" min="0" max="236" value="0" data-armory="faithMilitant">
+                                            <span class="ms-armory-value" id="msArmoryFaithMilitantDisplay">0</span>
+                                        </div>
+                                    </div>
+                                    <div class="ms-armory-item ms-armory-item--vertical">
+                                        <label for="msArmoryStark">Stark</label>
+                                        <img src="resources/armories/stark.png" alt="Stark" class="ms-armory-icon">
+                                        <div class="ms-armory-slider-group">
+                                            <input type="range" id="msArmoryStark" class="ms-armory-slider" min="0" max="236" value="0" data-armory="stark">
+                                            <span class="ms-armory-value" id="msArmoryStarkDisplay">0</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Trinket Armories -->
+                            <div class="ms-armory-category" data-category="trinket">
+                                <h4 class="ms-armory-category__title">Trinket Armories <span class="ms-category-total" id="msTrinketArmoriesTotal">(+0 / 5,124)</span></h4>
+                                <div class="ms-armory-grid ms-armory-grid--vertical">
+                                    <!-- Ordered by season (newest first) -->
+                                    <div class="ms-armory-item ms-armory-item--vertical">
+                                        <label for="msArmoryAncientOrders">Ancient Order's</label>
+                                        <div class="ms-armory-icons">
+                                            <img src="resources/trinkets/icon_eq_events_freedom3_trinket_1.png" alt="Golden Mask" class="ms-armory-icon">
+                                            <img src="resources/trinkets/icon_eq_events_margaery_trinket_1.png" alt="Margaery Necklace" class="ms-armory-icon">
+                                            <img src="resources/trinkets/icon_eq_events_nymeria2_trinket_1.png" alt="Nymeria Headdress" class="ms-armory-icon">
+                                        </div>
+                                        <div class="ms-armory-slider-group">
+                                            <input type="range" id="msArmoryAncientOrders" class="ms-armory-slider" min="0" max="150" value="0" data-armory="ancientOrders">
+                                            <span class="ms-armory-value" id="msArmoryAncientOrdersDisplay">0</span>
+                                        </div>
+                                    </div>
+                                    <div class="ms-armory-item ms-armory-item--vertical">
+                                        <label for="msArmoryNorthernArtifacts">Northern Artifacts</label>
+                                        <div class="ms-armory-icons">
+                                            <img src="resources/trinkets/icon_eq_events_kingsguard2_trinket_1.png" alt="Mormont Coin" class="ms-armory-icon">
+                                            <img src="resources/trinkets/icon_eq_events_Harrenhal_trinket02_1.png" alt="Harrenhal Necklace" class="ms-armory-icon">
+                                            <img src="resources/trinkets/icon_eq_events_Mormont_trinket02_1.png" alt="Mormont Collar" class="ms-armory-icon">
+                                        </div>
+                                        <div class="ms-armory-slider-group">
+                                            <input type="range" id="msArmoryNorthernArtifacts" class="ms-armory-slider" min="0" max="150" value="0" data-armory="northernArtifacts">
+                                            <span class="ms-armory-value" id="msArmoryNorthernArtifactsDisplay">0</span>
+                                        </div>
+                                    </div>
+                                    <div class="ms-armory-item ms-armory-item--vertical">
+                                        <label for="msArmoryArtifactsWinter">Artifacts Winter</label>
+                                        <div class="ms-armory-icons">
+                                            <img src="resources/trinkets/icon_eq_events_oldnan3_trinket_1.png" alt="Revenant Sigil" class="ms-armory-icon">
+                                            <img src="resources/trinkets/icon_eq_events_harvest_trinket_1.png" alt="Floral Brooch" class="ms-armory-icon">
+                                            <img src="resources/trinkets/icon_eq_events_yara_trinket_1.png" alt="Kraken Beak" class="ms-armory-icon">
+                                        </div>
+                                        <div class="ms-armory-slider-group">
+                                            <input type="range" id="msArmoryArtifactsWinter" class="ms-armory-slider" min="0" max="150" value="0" data-armory="artifactsWinter">
+                                            <span class="ms-armory-value" id="msArmoryArtifactsWinterDisplay">0</span>
+                                        </div>
+                                    </div>
+                                    <div class="ms-armory-item ms-armory-item--vertical">
+                                        <label for="msArmoryArtifactsRhllor">Artifacts R'hllor</label>
+                                        <div class="ms-armory-icons">
+                                            <img src="resources/trinkets/icon_eq_events_rhllor_trinket_1.png" alt="R'hllor Chalice" class="ms-armory-icon">
+                                            <img src="resources/trinkets/icon_eq_events_cersei_trinket_1.png" alt="Cersei Choker" class="ms-armory-icon">
+                                            <img src="resources/trinkets/icon_eq_events_kingsmoot_trinket_1.png" alt="Kingsmoot Jawbone" class="ms-armory-icon">
+                                        </div>
+                                        <div class="ms-armory-slider-group">
+                                            <input type="range" id="msArmoryArtifactsRhllor" class="ms-armory-slider" min="0" max="150" value="0" data-armory="artifactsRhllor">
+                                            <span class="ms-armory-value" id="msArmoryArtifactsRhllorDisplay">0</span>
+                                        </div>
+                                    </div>
+                                    <div class="ms-armory-item ms-armory-item--vertical">
+                                        <label for="msArmoryLannisterHeirlooms">Lannister Heirlooms</label>
+                                        <div class="ms-armory-icons">
+                                            <img src="resources/trinkets/icon_eq_events_eyepatch_trinket_1.png" alt="Eyepatch" class="ms-armory-icon">
+                                            <img src="resources/trinkets/icon_eq_events_books_trinket_1.png" alt="Books & Wine" class="ms-armory-icon">
+                                            <img src="resources/trinkets/icon_eq_events_BloodyCrown_trinket_1.png" alt="Bloody Crown" class="ms-armory-icon">
+                                        </div>
+                                        <div class="ms-armory-slider-group">
+                                            <input type="range" id="msArmoryLannisterHeirlooms" class="ms-armory-slider" min="0" max="150" value="0" data-armory="lannisterHeirlooms">
+                                            <span class="ms-armory-value" id="msArmoryLannisterHeirloomsDisplay">0</span>
+                                        </div>
+                                    </div>
+                                    <div class="ms-armory-item ms-armory-item--vertical">
+                                        <label for="msArmoryMormontHeirlooms">Mormont Heirlooms</label>
+                                        <div class="ms-armory-icons">
+                                            <img src="resources/trinkets/icon_eq_events_vintner_goblet_trinket_1.png" alt="Vintner's Goblet" class="ms-armory-icon">
+                                            <img src="resources/trinkets/icon_eq_events_Harrenhal_trinket02_1.png" alt="Harrenhal Necklace" class="ms-armory-icon">
+                                            <img src="resources/trinkets/icon_eq_events_Mormont_trinket02_1.png" alt="Mormont Coin" class="ms-armory-icon">
+                                        </div>
+                                        <div class="ms-armory-slider-group">
+                                            <input type="range" id="msArmoryMormontHeirlooms" class="ms-armory-slider" min="0" max="150" value="0" data-armory="mormontHeirlooms">
+                                            <span class="ms-armory-value" id="msArmoryMormontHeirloomsDisplay">0</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Dragon Armories -->
+                            <div class="ms-armory-category" data-category="dragon">
+                                <h4 class="ms-armory-category__title">Dragon Armories <span class="ms-category-total" id="msDragonArmoriesTotal">(+0 / 2,685)</span></h4>
+                                <div class="ms-armory-grid ms-armory-grid--vertical">
+                                    <div class="ms-armory-item ms-armory-item--vertical">
+                                        <label for="msArmoryTideBreaker">Tide Breaker</label>
+                                        <img src="resources/armories/tideBreaker.png" alt="TideBreaker" class="ms-armory-icon">
+                                        <div class="ms-armory-slider-group">
+                                            <input type="range" id="msArmoryTideBreaker" class="ms-armory-slider" min="0" max="150" value="0" data-armory="tideBreaker">
+                                            <span class="ms-armory-value" id="msArmoryTideBreakerDisplay">0</span>
+                                        </div>
+                                    </div>
+                                    <div class="ms-armory-item ms-armory-item--vertical">
+                                        <label for="msArmoryRegalSerpent">Regal Serpent</label>
+                                        <img src="resources/armories/regalSerpent.png" alt="RegalSerpent" class="ms-armory-icon">
+                                        <div class="ms-armory-slider-group">
+                                            <input type="range" id="msArmoryRegalSerpent" class="ms-armory-slider" min="0" max="150" value="0" data-armory="regalSerpent">
+                                            <span class="ms-armory-value" id="msArmoryRegalSerpentDisplay">0</span>
+                                        </div>
+                                    </div>
+                                    <div class="ms-armory-item ms-armory-item--vertical">
+                                        <label for="msArmoryTarnishedSeafarer">Tarnished Seafarer</label>
+                                        <img src="resources/armories/tarnishedSeafarer.png" alt="TarnishedSeafarer" class="ms-armory-icon">
+                                        <div class="ms-armory-slider-group">
+                                            <input type="range" id="msArmoryTarnishedSeafarer" class="ms-armory-slider" min="0" max="150" value="0" data-armory="tarnishedSeafarer">
+                                            <span class="ms-armory-value" id="msArmoryTarnishedSeafarerDisplay">0</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Research Section -->
+                    <div class="glass-card ms-input-card">
+                        <button class="accordion-toggle" aria-expanded="false" data-target="ms-research">
+                            <span>Research</span>
+                            <span class="ms-section-total" id="msResearchTotal">(+0 / 60,000)</span>
+                            <svg class="accordion-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"/></svg>
+                        </button>
+                        <div id="ms-research" class="accordion-content ms-research-grid" style="display:none;">
+                            <!-- Military I -->
+                            <div class="ms-research-category" data-category="military1">
+                                <div class="ms-research-category__header">
+                                    <img src="resources/research/marchSize.png" alt="Military I" class="ms-research-icon">
+                                    <h4>Military I <span class="ms-category-total" id="msMilitary1Total">(+0 / 30,000)</span></h4>
+                                </div>
+                                <div class="ms-research-sliders">
+                                    <div class="ms-research-slider-item">
+                                        <img src="resources/research/icon_research_command.png" alt="Command" class="ms-research-slider-icon">
+                                        <div class="ms-research-slider-content">
+                                            <div class="ms-research-slider-header">
+                                                <span class="ms-research-slider-name">Command</span>
+                                                <span class="ms-research-slider-value" id="msCommandValue">0 / 6,000</span>
+                                            </div>
+                                            <input type="range" id="msCommand" class="ms-research-range" min="0" max="3" value="0">
+                                        </div>
+                                    </div>
+                                    <div class="ms-research-slider-item">
+                                        <img src="resources/research/icon_research_command.png" alt="Command II" class="ms-research-slider-icon">
+                                        <div class="ms-research-slider-content">
+                                            <div class="ms-research-slider-header">
+                                                <span class="ms-research-slider-name">Command II</span>
+                                                <span class="ms-research-slider-value" id="msCommand2Value">0 / 10,000</span>
+                                            </div>
+                                            <input type="range" id="msCommand2" class="ms-research-range" min="0" max="5" value="0">
+                                        </div>
+                                    </div>
+                                    <div class="ms-research-slider-item">
+                                        <img src="resources/research/icon_research_command.png" alt="Command III" class="ms-research-slider-icon">
+                                        <div class="ms-research-slider-content">
+                                            <div class="ms-research-slider-header">
+                                                <span class="ms-research-slider-name">Command III</span>
+                                                <span class="ms-research-slider-value" id="msCommand3Value">0 / 14,000</span>
+                                            </div>
+                                            <input type="range" id="msCommand3" class="ms-research-range" min="0" max="7" value="0">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Military II -->
+                            <div class="ms-research-category" data-category="military2">
+                                <div class="ms-research-category__header">
+                                    <img src="resources/research/advMarchSize.png" alt="Military II" class="ms-research-icon">
+                                    <h4>Military II <span class="ms-category-total" id="msMilitary2Total">(+0 / 22,500)</span></h4>
+                                </div>
+                                <div class="ms-research-sliders">
+                                    <div class="ms-research-slider-item">
+                                        <img src="resources/research/icon_research_command.png" alt="Army Expertise" class="ms-research-slider-icon">
+                                        <div class="ms-research-slider-content">
+                                            <div class="ms-research-slider-header">
+                                                <span class="ms-research-slider-name">Command of Army Expertise</span>
+                                                <span class="ms-research-slider-value" id="msArmyExpertiseValue">0 / 10,000</span>
+                                            </div>
+                                            <input type="range" id="msArmyExpertise" class="ms-research-range" min="0" max="4" value="0">
+                                        </div>
+                                    </div>
+                                    <div class="ms-research-slider-item">
+                                        <img src="resources/research/icon_research_march_size_vs_sop.png" alt="March Size vs SoP" class="ms-research-slider-icon">
+                                        <div class="ms-research-slider-content">
+                                            <div class="ms-research-slider-header">
+                                                <span class="ms-research-slider-name">March Size vs. SoP</span>
+                                                <span class="ms-research-slider-value" id="msSopValue">0 / 1,250</span>
+                                            </div>
+                                            <input type="range" id="msSop" class="ms-research-range" min="0" max="5" value="0">
+                                        </div>
+                                    </div>
+                                    <div class="ms-research-slider-item">
+                                        <img src="resources/research/icon_research_command.png" alt="Army Expertise II" class="ms-research-slider-icon">
+                                        <div class="ms-research-slider-content">
+                                            <div class="ms-research-slider-header">
+                                                <span class="ms-research-slider-name">Command of Army Expertise II</span>
+                                                <span class="ms-research-slider-value" id="msArmyExpertise2Value">0 / 10,000</span>
+                                            </div>
+                                            <input type="range" id="msArmyExpertise2" class="ms-research-range" min="0" max="4" value="0">
+                                        </div>
+                                    </div>
+                                    <div class="ms-research-slider-item">
+                                        <img src="resources/research/icon_research_march_size_vs_sop.png" alt="March Size vs SoP II" class="ms-research-slider-icon">
+                                        <div class="ms-research-slider-content">
+                                            <div class="ms-research-slider-header">
+                                                <span class="ms-research-slider-name">March Size vs. SoP II</span>
+                                                <span class="ms-research-slider-value" id="msSop2Value">0 / 1,250</span>
+                                            </div>
+                                            <input type="range" id="msSop2" class="ms-research-range" min="0" max="5" value="0">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Advanced Military -->
+                            <div class="ms-research-category" data-category="advancedMilitary">
+                                <div class="ms-research-category__header">
+                                    <img src="resources/research/eliteMarchSize.png" alt="Advanced Military" class="ms-research-icon">
+                                    <h4>Advanced Military <span class="ms-category-total" id="msAdvancedMilitaryTotal">(+0 / 7,500)</span></h4>
+                                </div>
+                                <div class="ms-research-sliders">
+                                    <div class="ms-research-slider-item">
+                                        <img src="resources/research/icon_research_command.png" alt="Troop Surge I" class="ms-research-slider-icon">
+                                        <div class="ms-research-slider-content">
+                                            <div class="ms-research-slider-header">
+                                                <span class="ms-research-slider-name">Troop Surge I</span>
+                                                <span class="ms-research-slider-value" id="msTroopSurge1Value">0 / 2,500</span>
+                                            </div>
+                                            <input type="range" id="msTroopSurge1" class="ms-research-range" min="0" max="5" value="0">
+                                        </div>
+                                    </div>
+                                    <div class="ms-research-slider-item">
+                                        <img src="resources/research/icon_research_command.png" alt="Troop Surge II" class="ms-research-slider-icon">
+                                        <div class="ms-research-slider-content">
+                                            <div class="ms-research-slider-header">
+                                                <span class="ms-research-slider-name">Troop Surge II</span>
+                                                <span class="ms-research-slider-value" id="msTroopSurge2Value">0 / 2,500</span>
+                                            </div>
+                                            <input type="range" id="msTroopSurge2" class="ms-research-range" min="0" max="5" value="0">
+                                        </div>
+                                    </div>
+                                    <div class="ms-research-slider-item">
+                                        <img src="resources/research/icon_research_command.png" alt="Troop Surge III" class="ms-research-slider-icon">
+                                        <div class="ms-research-slider-content">
+                                            <div class="ms-research-slider-header">
+                                                <span class="ms-research-slider-name">Troop Surge III</span>
+                                                <span class="ms-research-slider-value" id="msTroopSurge3Value">0 / 2,500</span>
+                                            </div>
+                                            <input type="range" id="msTroopSurge3" class="ms-research-range" min="0" max="5" value="0">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Heroes Section -->
+                    <div class="glass-card ms-input-card">
+                        <button class="accordion-toggle" aria-expanded="false" data-target="ms-heroes">
+                            <span>Heroes</span>
+                            <span class="ms-section-total" id="msHeroesAccordionTotal">(+0)</span>
+                            <svg class="accordion-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"/></svg>
+                        </button>
+                        <div id="ms-heroes" class="accordion-content ms-heroes-content" style="display:none;">
+                            
+                            <!-- ========== COUNCIL HEROES SECTION ========== -->
+                            <div class="ms-heroes-category" data-category="council">
+                                <h4 class="ms-heroes-category__title">
+                                    <img src="resources/heroes/icon-council.png" alt="Council" class="ms-heroes-category__icon" onerror="this.style.display='none'">
+                                    Council Heroes
+                                    <span class="ms-category-total" id="msCouncilHeroesTotal">(+0)</span>
+                                </h4>
+                                <p class="ms-section-description">Heroes assigned to council positions with march size bonuses</p>
+                                
+                                <!-- Top Row: Hand, War, Coin, Whispers -->
+                                <div class="ms-heroes-row">
+                                <div class="ms-hero-slot" data-position="hand">
+                                    <div class="ms-hero-slot__visual">
+                                        <img id="msHeroImg-hand" src="resources/heroes/icon-hand.png" alt="Hand" class="ms-hero-slot__image" data-default="heroes/icon-hand.png">
+                                    </div>
+                                    <div class="ms-hero-slot__controls">
+                                        <span class="ms-hero-slot__title">Hand</span>
+                                        <select id="msHeroSelect-hand" class="ms-input ms-hero-select" data-position="hand">
+                                            <option value="">-- None --</option>
+                                        </select>
+                                        <div class="ms-hero-slider-wrapper">
+                                            <input type="range" id="msHeroLevel-hand" class="ms-hero-slider" min="0" max="60" step="10" value="0" disabled data-position="hand">
+                                            <span class="ms-hero-level-display" id="msHeroLevelDisplay-hand">Lv 0</span>
+                                        </div>
+                                        <span class="ms-hero-slot__bonus" id="msHeroBonus-hand"></span>
+                                    </div>
+                                </div>
+                                <div class="ms-hero-slot" data-position="war">
+                                    <div class="ms-hero-slot__visual">
+                                        <img id="msHeroImg-war" src="resources/heroes/icon-war.png" alt="War" class="ms-hero-slot__image" data-default="heroes/icon-war.png">
+                                    </div>
+                                    <div class="ms-hero-slot__controls">
+                                        <span class="ms-hero-slot__title">War</span>
+                                        <select id="msHeroSelect-war" class="ms-input ms-hero-select" data-position="war">
+                                            <option value="">-- None --</option>
+                                        </select>
+                                        <div class="ms-hero-slider-wrapper">
+                                            <input type="range" id="msHeroLevel-war" class="ms-hero-slider" min="0" max="60" step="10" value="0" disabled data-position="war">
+                                            <span class="ms-hero-level-display" id="msHeroLevelDisplay-war">Lv 0</span>
+                                        </div>
+                                        <span class="ms-hero-slot__bonus" id="msHeroBonus-war"></span>
+                                    </div>
+                                </div>
+                                <div class="ms-hero-slot" data-position="coin">
+                                    <div class="ms-hero-slot__visual">
+                                        <img id="msHeroImg-coin" src="resources/heroes/icon-coin.png" alt="Coin" class="ms-hero-slot__image" data-default="heroes/icon-coin.png">
+                                    </div>
+                                    <div class="ms-hero-slot__controls">
+                                        <span class="ms-hero-slot__title">Coin</span>
+                                        <select id="msHeroSelect-coin" class="ms-input ms-hero-select" data-position="coin">
+                                            <option value="">-- None --</option>
+                                        </select>
+                                        <div class="ms-hero-slider-wrapper">
+                                            <input type="range" id="msHeroLevel-coin" class="ms-hero-slider" min="0" max="60" step="10" value="0" disabled data-position="coin">
+                                            <span class="ms-hero-level-display" id="msHeroLevelDisplay-coin">Lv 0</span>
+                                        </div>
+                                        <span class="ms-hero-slot__bonus" id="msHeroBonus-coin"></span>
+                                    </div>
+                                </div>
+                                <div class="ms-hero-slot" data-position="whispers">
+                                    <div class="ms-hero-slot__visual">
+                                        <img id="msHeroImg-whispers" src="resources/heroes/icon-whispers.png" alt="Whispers" class="ms-hero-slot__image" data-default="heroes/icon-whispers.png">
+                                    </div>
+                                    <div class="ms-hero-slot__controls">
+                                        <span class="ms-hero-slot__title">Whispers</span>
+                                        <select id="msHeroSelect-whispers" class="ms-input ms-hero-select" data-position="whispers">
+                                            <option value="">-- None --</option>
+                                        </select>
+                                        <div class="ms-hero-slider-wrapper">
+                                            <input type="range" id="msHeroLevel-whispers" class="ms-hero-slider" min="0" max="60" step="10" value="0" disabled data-position="whispers">
+                                            <span class="ms-hero-level-display" id="msHeroLevelDisplay-whispers">Lv 0</span>
+                                        </div>
+                                        <span class="ms-hero-slot__bonus" id="msHeroBonus-whispers"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Bottom Row: Law, Ships, Commander, Maester -->
+                            <div class="ms-heroes-row">
+                                <div class="ms-hero-slot" data-position="law">
+                                    <div class="ms-hero-slot__visual">
+                                        <img id="msHeroImg-law" src="resources/heroes/icon-law.png" alt="Law" class="ms-hero-slot__image" data-default="heroes/icon-law.png">
+                                    </div>
+                                    <div class="ms-hero-slot__controls">
+                                        <span class="ms-hero-slot__title">Law</span>
+                                        <select id="msHeroSelect-law" class="ms-input ms-hero-select" data-position="law">
+                                            <option value="">-- None --</option>
+                                        </select>
+                                        <div class="ms-hero-slider-wrapper">
+                                            <input type="range" id="msHeroLevel-law" class="ms-hero-slider" min="0" max="60" step="10" value="0" disabled data-position="law">
+                                            <span class="ms-hero-level-display" id="msHeroLevelDisplay-law">Lv 0</span>
+                                        </div>
+                                        <span class="ms-hero-slot__bonus" id="msHeroBonus-law"></span>
+                                    </div>
+                                </div>
+                                <div class="ms-hero-slot" data-position="ships">
+                                    <div class="ms-hero-slot__visual">
+                                        <img id="msHeroImg-ships" src="resources/heroes/icon-ships.png" alt="Ships" class="ms-hero-slot__image" data-default="heroes/icon-ships.png">
+                                    </div>
+                                    <div class="ms-hero-slot__controls">
+                                        <span class="ms-hero-slot__title">Ships</span>
+                                        <select id="msHeroSelect-ships" class="ms-input ms-hero-select" data-position="ships">
+                                            <option value="">-- None --</option>
+                                        </select>
+                                        <div class="ms-hero-slider-wrapper">
+                                            <input type="range" id="msHeroLevel-ships" class="ms-hero-slider" min="0" max="60" step="10" value="0" disabled data-position="ships">
+                                            <span class="ms-hero-level-display" id="msHeroLevelDisplay-ships">Lv 0</span>
+                                        </div>
+                                        <span class="ms-hero-slot__bonus" id="msHeroBonus-ships"></span>
+                                    </div>
+                                </div>
+                                <div class="ms-hero-slot" data-position="commander">
+                                    <div class="ms-hero-slot__visual">
+                                        <img id="msHeroImg-commander" src="resources/heroes/icon-commander.png" alt="Commander" class="ms-hero-slot__image" data-default="heroes/icon-commander.png">
+                                    </div>
+                                    <div class="ms-hero-slot__controls">
+                                        <span class="ms-hero-slot__title">Commander</span>
+                                        <select id="msHeroSelect-commander" class="ms-input ms-hero-select" data-position="commander">
+                                            <option value="">-- None --</option>
+                                        </select>
+                                        <div class="ms-hero-slider-wrapper">
+                                            <input type="range" id="msHeroLevel-commander" class="ms-hero-slider" min="0" max="60" step="10" value="0" disabled data-position="commander">
+                                            <span class="ms-hero-level-display" id="msHeroLevelDisplay-commander">Lv 0</span>
+                                        </div>
+                                        <span class="ms-hero-slot__bonus" id="msHeroBonus-commander"></span>
+                                    </div>
+                                </div>
+                                <div class="ms-hero-slot" data-position="maester">
+                                    <div class="ms-hero-slot__visual">
+                                        <img id="msHeroImg-maester" src="resources/heroes/icon-maester.png" alt="Maester" class="ms-hero-slot__image" data-default="heroes/icon-maester.png">
+                                    </div>
+                                    <div class="ms-hero-slot__controls">
+                                        <span class="ms-hero-slot__title">Maester</span>
+                                        <select id="msHeroSelect-maester" class="ms-input ms-hero-select" data-position="maester">
+                                            <option value="">-- None --</option>
+                                        </select>
+                                        <div class="ms-hero-slider-wrapper">
+                                            <input type="range" id="msHeroLevel-maester" class="ms-hero-slider" min="0" max="60" step="10" value="0" disabled data-position="maester">
+                                            <span class="ms-hero-level-display" id="msHeroLevelDisplay-maester">Lv 0</span>
+                                        </div>
+                                        <span class="ms-hero-slot__bonus" id="msHeroBonus-maester"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            </div>
+                            
+                            <!-- ========== MARCHING HERO SECTION ========== -->
+                            <div class="ms-heroes-category" data-category="marching">
+                                <h4 class="ms-heroes-category__title">
+                                    <img src="resources/heroes/icon-march.png" alt="Marching" class="ms-heroes-category__icon" onerror="this.style.display='none'">
+                                    Marching Hero
+                                    <span class="ms-category-total" id="msMarchingHeroTotal">(+0 / 8,813)</span>
+                                </h4>
+                                <p class="ms-section-description">March capacity bonus from the hero leading your march</p>
+                                
+                                <div class="ms-marching-hero-container">
+                                    <div class="ms-marching-hero__visual">
+                                        <img id="msMarchingHeroImg" src="resources/heroes/daenerys.png" alt="Marching Hero" class="ms-marching-hero__image">
+                                    </div>
+                                    <div class="ms-marching-hero__controls">
+                                        <label for="msMarchingHeroLevel">Hero Level</label>
+                                        <div class="ms-marching-slider-group">
+                                            <input type="range" id="msMarchingHeroLevel" class="ms-marching-slider" min="1" max="60" value="60" data-marching="level">
+                                            <span class="ms-marching-value" id="msMarchingHeroLevelDisplay">Lv 60 | (8,813 / 8,813)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- ========== HALL OF HEROES SECTION ========== -->
+                            <div class="ms-heroes-category" data-category="hall">
+                                <h4 class="ms-heroes-category__title">
+                                    <img src="resources/heroes/icon-hall.png" alt="Hall" class="ms-heroes-category__icon" onerror="this.style.display='none'">
+                                    Hall of Heroes
+                                    <span class="ms-category-total" id="msHallHeroesTotal">(+0 / 2,000)</span>
+                                </h4>
+                                <p class="ms-section-description">Single March Size vs. Player from Rising Adventurer rank</p>
+                                
+                                <div class="ms-hall-heroes-container">
+                                    <!-- Rising Adventurer Card Visual -->
+                                    <div class="ms-rising-adventurer-card">
+                                        <div class="ms-rising-adventurer-header">
+                                            <span class="ms-rising-adventurer-icon">⚔</span>
+                                            <span class="ms-rising-adventurer-title">Rising Adventurer</span>
+                                            <span class="ms-rising-adventurer-bonus" id="msRisingAdventurerBonus">+2,000</span>
+                                        </div>
+                                        <div class="ms-hero-deck">
+                                            <!-- Common (Green) Heroes for Rising Adventurer Deck -->
+                                            <div class="ms-hero-deck__portrait ms-hero-deck__portrait--common" data-slot="1" data-hero="Hot Pie">
+                                                <img src="resources/heroes/hotpie.png" alt="Hot Pie">
+                                            </div>
+                                            <div class="ms-hero-deck__portrait ms-hero-deck__portrait--common" data-slot="2" data-hero="Shae">
+                                                <img src="resources/heroes/shae.png" alt="Shae">
+                                            </div>
+                                            <div class="ms-hero-deck__portrait ms-hero-deck__portrait--common" data-slot="3" data-hero="Pyat Pree">
+                                                <img src="resources/heroes/pyat.png" alt="Pyat Pree">
+                                            </div>
+                                            <div class="ms-hero-deck__portrait ms-hero-deck__portrait--common" data-slot="4" data-hero="Hodor">
+                                                <img src="resources/heroes/hodor_common.png" alt="Hodor">
+                                            </div>
+                                            <div class="ms-hero-deck__portrait ms-hero-deck__portrait--common" data-slot="5" data-hero="Podrick">
+                                                <img src="resources/heroes/podrick.png" alt="Podrick">
+                                            </div>
+                                            <div class="ms-hero-deck__portrait ms-hero-deck__portrait--common" data-slot="6" data-hero="Lancel">
+                                                <img src="resources/heroes/lancel.png" alt="Lancel">
+                                            </div>
+                                            <div class="ms-hero-deck__portrait ms-hero-deck__portrait--common" data-slot="7" data-hero="Eddison">
+                                                <img src="resources/heroes/eddison.png" alt="Eddison">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Slider Controls -->
+                                    <div class="ms-hall-controls">
+                                        <label for="msHallLevel">Rising Adventurer Rank (13-21)</label>
+                                        <div class="ms-hall-slider-group">
+                                            <input type="range" id="msHallLevel" class="ms-hall-slider" min="0" max="21" value="21" data-hall="level">
+                                            <span class="ms-hall-value" id="msHallLevelDisplay">Lv 21 | (2,000 / 2,000)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Heroes Aggregate Total -->
+                            <div class="ms-heroes-aggregate">
+                                <span>Total Hero Bonuses:</span>
+                                <strong id="msHeroesTotal">+0 troops</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Manual Total Override -->
+                    <div class="glass-card ms-input-card">
+                        <div class="ms-manual-total">
+                            <label for="msManualTotal">Or Enter Base March Size Directly</label>
+                            <p class="ms-manual-total__hint">Check your march size in-game with gear unequipped</p>
+                            <input type="number" id="msManualTotal" class="ms-input ms-input--large" min="0" placeholder="e.g. 500000">
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- MS Step 2: Gear Selection -->
+                <div class="wizard-step" id="ms-step-input" data-step="2">
+                    <div class="wizard-step__header">
+                        <h2>Select Your Gear</h2>
+                        <p>Choose the gear you want to calculate march size for</p>
+                    </div>
+
+                    <!-- Gear Selection -->
+                    <div class="glass-card ms-input-card ms-gear-card">
+                        <div class="ms-input-card__header">
+                            <h3>Equipped Gear</h3>
+                            <span class="ms-input-card__subtitle">Select your gear for each slot</span>
+                        </div>
+                        <div class="ms-gear-visual" id="msGearVisual">
+                            <!-- Left Column: Helmet, Chest, Pants -->
+                            <div class="ms-gear-column ms-gear-column--left">
+                                <div class="ms-gear-slot-visual" data-slot="helmet">
+                                    <div class="ms-gear-slot-visual__image">
+                                        <img src="resources/item/helmet.png" alt="Helmet" id="msGearImg-helmet">
+                                    </div>
+                                    <div class="ms-gear-slot-visual__info">
+                                        <span class="ms-gear-slot-visual__label">Helmet</span>
+                                        <select class="ms-gear-slot-visual__select" id="msGearSelect-helmet" data-slot="helmet">
+                                            <option value="">-- None --</option>
+                                        </select>
+                                        <div class="ms-gear-slot-visual__row">
+                                            <select class="ms-gear-slot-visual__level-select" id="msGearLevelSelect-helmet" data-slot="helmet">
+                                                <option value="35">Lv. 35</option>
+                                                <option value="40">Lv. 40</option>
+                                                <option value="45" selected>Lv. 45</option>
+                                                <option value="50">Lv. 50</option>
+                                            </select>
+                                            <select class="ms-gear-slot-visual__quality" id="msGearQuality-helmet" data-slot="helmet">
+                                                <option value="poor">Poor</option>
+                                                <option value="common">Common</option>
+                                                <option value="fine">Fine</option>
+                                                <option value="exquisite">Exquisite</option>
+                                                <option value="epic">Epic</option>
+                                                <option value="legendary" selected>Legendary</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="ms-gear-slot-visual" data-slot="chest">
+                                    <div class="ms-gear-slot-visual__image">
+                                        <img src="resources/item/plate.png" alt="Chest" id="msGearImg-chest">
+                                    </div>
+                                    <div class="ms-gear-slot-visual__info">
+                                        <span class="ms-gear-slot-visual__label">Chest</span>
+                                        <select class="ms-gear-slot-visual__select" id="msGearSelect-chest" data-slot="chest">
+                                            <option value="">-- None --</option>
+                                        </select>
+                                        <div class="ms-gear-slot-visual__row">
+                                            <select class="ms-gear-slot-visual__level-select" id="msGearLevelSelect-chest" data-slot="chest">
+                                                <option value="35">Lv. 35</option>
+                                                <option value="40">Lv. 40</option>
+                                                <option value="45" selected>Lv. 45</option>
+                                                <option value="50">Lv. 50</option>
+                                            </select>
+                                            <select class="ms-gear-slot-visual__quality" id="msGearQuality-chest" data-slot="chest">
+                                                <option value="poor">Poor</option>
+                                                <option value="common">Common</option>
+                                                <option value="fine">Fine</option>
+                                                <option value="exquisite">Exquisite</option>
+                                                <option value="epic">Epic</option>
+                                                <option value="legendary" selected>Legendary</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="ms-gear-slot-visual" data-slot="pants">
+                                    <div class="ms-gear-slot-visual__image">
+                                        <img src="resources/item/pants.png" alt="Pants" id="msGearImg-pants">
+                                    </div>
+                                    <div class="ms-gear-slot-visual__info">
+                                        <span class="ms-gear-slot-visual__label">Pants</span>
+                                        <select class="ms-gear-slot-visual__select" id="msGearSelect-pants" data-slot="pants">
+                                            <option value="">-- None --</option>
+                                        </select>
+                                        <div class="ms-gear-slot-visual__row">
+                                            <select class="ms-gear-slot-visual__level-select" id="msGearLevelSelect-pants" data-slot="pants">
+                                                <option value="35">Lv. 35</option>
+                                                <option value="40">Lv. 40</option>
+                                                <option value="45" selected>Lv. 45</option>
+                                                <option value="50">Lv. 50</option>
+                                            </select>
+                                            <select class="ms-gear-slot-visual__quality" id="msGearQuality-pants" data-slot="pants">
+                                                <option value="poor">Poor</option>
+                                                <option value="common">Common</option>
+                                                <option value="fine">Fine</option>
+                                                <option value="exquisite">Exquisite</option>
+                                                <option value="epic">Epic</option>
+                                                <option value="legendary" selected>Legendary</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="ms-gear-slot-visual ms-gear-slot-visual--dragon-trinket" data-slot="dragonTrinket">
+                                    <div class="ms-gear-slot-visual__image">
+                                        <img src="resources/item/ring.png" alt="Dragon Trinket" id="msGearImg-dragonTrinket">
+                                    </div>
+                                    <div class="ms-gear-slot-visual__info">
+                                        <span class="ms-gear-slot-visual__label">Dragon Trinket</span>
+                                        <select class="ms-gear-slot-visual__select" id="msGearSelect-dragonTrinket" data-slot="dragonTrinket">
+                                            <option value="">-- None --</option>
+                                        </select>
+                                        <div class="ms-gear-slot-visual__row">
+                                            <select class="ms-gear-slot-visual__level-select" id="msGearLevelSelect-dragonTrinket" data-slot="dragonTrinket">
+                                                <option value="35">Lv. 35</option>
+                                                <option value="40">Lv. 40</option>
+                                                <option value="45" selected>Lv. 45</option>
+                                                <option value="50">Lv. 50</option>
+                                            </select>
+                                            <select class="ms-gear-slot-visual__quality" id="msGearQuality-dragonTrinket" data-slot="dragonTrinket">
+                                                <option value="poor">Poor</option>
+                                                <option value="common">Common</option>
+                                                <option value="fine">Fine</option>
+                                                <option value="exquisite">Exquisite</option>
+                                                <option value="epic">Epic</option>
+                                                <option value="legendary" selected>Legendary</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Center: Character placeholder -->
+                            <div class="ms-gear-center">
+                                <div class="ms-gear-center__avatar">
+                                    <img src="resources/stark-logo.png" alt="Character" class="ms-gear-center__image">
+                                </div>
+                            </div>
+                            
+                            <!-- Right Column: Weapon, Ring, Boots, Trinket -->
+                            <div class="ms-gear-column ms-gear-column--right">
+                                <div class="ms-gear-slot-visual" data-slot="weapon">
+                                    <div class="ms-gear-slot-visual__info">
+                                        <span class="ms-gear-slot-visual__label">Weapon</span>
+                                        <select class="ms-gear-slot-visual__select" id="msGearSelect-weapon" data-slot="weapon">
+                                            <option value="">-- None --</option>
+                                        </select>
+                                        <div class="ms-gear-slot-visual__row">
+                                            <select class="ms-gear-slot-visual__level-select" id="msGearLevelSelect-weapon" data-slot="weapon">
+                                                <option value="35">Lv. 35</option>
+                                                <option value="40">Lv. 40</option>
+                                                <option value="45" selected>Lv. 45</option>
+                                                <option value="50">Lv. 50</option>
+                                            </select>
+                                            <select class="ms-gear-slot-visual__quality" id="msGearQuality-weapon" data-slot="weapon">
+                                                <option value="poor">Poor</option>
+                                                <option value="common">Common</option>
+                                                <option value="fine">Fine</option>
+                                                <option value="exquisite">Exquisite</option>
+                                                <option value="epic">Epic</option>
+                                                <option value="legendary" selected>Legendary</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="ms-gear-slot-visual__image">
+                                        <img src="resources/item/dagger.png" alt="Weapon" id="msGearImg-weapon">
+                                    </div>
+                                </div>
+                                <div class="ms-gear-slot-visual" data-slot="ring">
+                                    <div class="ms-gear-slot-visual__info">
+                                        <span class="ms-gear-slot-visual__label">Ring</span>
+                                        <select class="ms-gear-slot-visual__select" id="msGearSelect-ring" data-slot="ring">
+                                            <option value="">-- None --</option>
+                                        </select>
+                                        <div class="ms-gear-slot-visual__row">
+                                            <select class="ms-gear-slot-visual__level-select" id="msGearLevelSelect-ring" data-slot="ring">
+                                                <option value="35">Lv. 35</option>
+                                                <option value="40">Lv. 40</option>
+                                                <option value="45" selected>Lv. 45</option>
+                                                <option value="50">Lv. 50</option>
+                                            </select>
+                                            <select class="ms-gear-slot-visual__quality" id="msGearQuality-ring" data-slot="ring">
+                                                <option value="poor">Poor</option>
+                                                <option value="common">Common</option>
+                                                <option value="fine">Fine</option>
+                                                <option value="exquisite">Exquisite</option>
+                                                <option value="epic">Epic</option>
+                                                <option value="legendary" selected>Legendary</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="ms-gear-slot-visual__image">
+                                        <img src="resources/item/ring.png" alt="Ring" id="msGearImg-ring">
+                                    </div>
+                                </div>
+                                <div class="ms-gear-slot-visual" data-slot="boots">
+                                    <div class="ms-gear-slot-visual__info">
+                                        <span class="ms-gear-slot-visual__label">Boots</span>
+                                        <select class="ms-gear-slot-visual__select" id="msGearSelect-boots" data-slot="boots">
+                                            <option value="">-- None --</option>
+                                        </select>
+                                        <div class="ms-gear-slot-visual__row">
+                                            <select class="ms-gear-slot-visual__level-select" id="msGearLevelSelect-boots" data-slot="boots">
+                                                <option value="35">Lv. 35</option>
+                                                <option value="40">Lv. 40</option>
+                                                <option value="45" selected>Lv. 45</option>
+                                                <option value="50">Lv. 50</option>
+                                            </select>
+                                            <select class="ms-gear-slot-visual__quality" id="msGearQuality-boots" data-slot="boots">
+                                                <option value="poor">Poor</option>
+                                                <option value="common">Common</option>
+                                                <option value="fine">Fine</option>
+                                                <option value="exquisite">Exquisite</option>
+                                                <option value="epic">Epic</option>
+                                                <option value="legendary" selected>Legendary</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="ms-gear-slot-visual__image">
+                                        <img src="resources/item/shoos.png" alt="Boots" id="msGearImg-boots">
+                                    </div>
+                                </div>
+                                <div class="ms-gear-slot-visual" data-slot="trinket">
+                                    <div class="ms-gear-slot-visual__info">
+                                        <span class="ms-gear-slot-visual__label">Trinket</span>
+                                        <select class="ms-gear-slot-visual__select" id="msGearSelect-trinket" data-slot="trinket">
+                                            <option value="">-- None --</option>
+                                        </select>
+                                        <div class="ms-gear-slot-visual__row">
+                                            <select class="ms-gear-slot-visual__level-select" id="msGearLevelSelect-trinket" data-slot="trinket">
+                                                <option value="35">Lv. 35</option>
+                                                <option value="40">Lv. 40</option>
+                                                <option value="45" selected>Lv. 45</option>
+                                                <option value="50">Lv. 50</option>
+                                            </select>
+                                            <select class="ms-gear-slot-visual__quality" id="msGearQuality-trinket" data-slot="trinket">
+                                                <option value="poor">Poor</option>
+                                                <option value="common">Common</option>
+                                                <option value="fine">Fine</option>
+                                                <option value="exquisite">Exquisite</option>
+                                                <option value="epic">Epic</option>
+                                                <option value="legendary" selected>Legendary</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="ms-gear-slot-visual__image">
+                                        <img src="resources/item/ring.png" alt="Trinket" id="msGearImg-trinket">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MS Step 3: Results -->
+                <div class="wizard-step" id="ms-step-results" data-step="3">
+                    <div class="wizard-step__header">
+                        <h2>March Size Results</h2>
+                        <p>Your total march size and gear recommendations</p>
+                    </div>
+
+                    <!-- Total March Size Display -->
+                    <div class="glass-card ms-total-card">
+                        <div class="ms-total-card__main">
+                            <span class="ms-total-card__label">Total March Size</span>
+                            <span class="ms-total-card__value" id="msTotalValue">0</span>
+                        </div>
+                        <div class="ms-total-card__breakdown">
+                            <div class="ms-breakdown-item">
+                                <span class="ms-breakdown-item__label">Base</span>
+                                <span class="ms-breakdown-item__value" id="msBaseValue">0</span>
+                            </div>
+                            <div class="ms-breakdown-item">
+                                <span class="ms-breakdown-item__label">From Gear</span>
+                                <span class="ms-breakdown-item__value" id="msGearValue">0</span>
+                            </div>
+                            <div class="ms-breakdown-item">
+                                <span class="ms-breakdown-item__label">From Bonuses</span>
+                                <span class="ms-breakdown-item__value" id="msBonusValue">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Gear Recommendations -->
+                    <div class="glass-card ms-recommendations-card">
+                        <h3 class="ms-recommendations-card__title">
+                            <span id="msRecommendationScenario">Defense</span> Gear Recommendations
+                        </h3>
+                        <p class="ms-recommendations-card__subtitle">Best gear pieces for maximum march size in your scenario</p>
+                        <div class="ms-recommendations-grid" id="msRecommendationsGrid">
+                            <!-- Recommendations will be populated by JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Source Breakdown Chart -->
+                    <div class="glass-card ms-breakdown-card">
+                        <h3 class="ms-breakdown-card__title">March Size Breakdown</h3>
+                        <div class="ms-breakdown-chart" id="msBreakdownChart">
+                            <!-- Chart bars will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- March Size Navigation -->
+            <div class="wizard-navigation ms-navigation">
+                <button type="button" class="wizard-btn wizard-btn--prev" id="msPrev" disabled>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg>
+                    <span>Back</span>
+                </button>
+                <button type="button" class="wizard-btn wizard-btn--next" id="msNext">
+                    <span>Next</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8-12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg>
+                </button>
+                <button type="button" class="wizard-btn wizard-btn--calculate" id="msCalculate" style="display: none;">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path d="M64 0C28.7 0 0 28.7 0 64V448c0 35.3 28.7 64 64 64H320c35.3 0 64-28.7 64-64V64c0-35.3-28.7-64-64-64H64zM96 64H288c17.7 0 32 14.3 32 32v32c0 17.7-14.3 32-32 32H96c-17.7 0-32-14.3-32-32V96c0-17.7 14.3-32 32-32z"/></svg>
+                    <span>Calculate</span>
+                </button>
+                <button type="button" class="wizard-btn wizard-btn--new" id="msNewCalc" style="display: none;">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M463.5 224H472c13.3 0 24-10.7 24-24V72c0-9.7-5.8-18.5-14.8-22.2s-19.3-1.7-26.2 5.2L413.4 96.6c-87.6-86.5-228.7-86.2-315.8 1c-87.5 87.5-87.5 229.3 0 316.8s229.3 87.5 316.8 0c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0c-62.5 62.5-163.8 62.5-226.3 0s-62.5-163.8 0-226.3c62.2-62.2 162.7-62.5 225.3-1L327 183c-6.9 6.9-8.9 17.2-5.2 26.2s12.5 14.8 22.2 14.8H463.5z"/></svg>
+                    <span>New Calculation</span>
+                </button>
+            </div>
+        </div><!-- End March Size Calculator Section -->
+
+        <!-- Loading Spinner -->
+        <div class="spinner-wrap">
+            <div class="loading">
+                <div class="loader-animation">
+                    <div class="loader-ring"></div>
+                    <div class="loader-ring"></div>
+                    <div class="loader-ring"></div>
+                    <svg class="loader-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="32" height="32">
+                        <path fill="currentColor" d="M495.9 166.6c3.2 8.7 .5 18.4-6.4 24.6l-43.3 39.4c1.1 8.3 1.7 16.8 1.7 25.4s-.6 17.1-1.7 25.4l43.3 39.4c6.9 6.2 9.6 15.9 6.4 24.6c-4.4 11.9-9.7 23.3-15.8 34.3l-4.7 8.1c-6.6 11-14 21.4-22.1 31.2c-5.9 7.2-15.7 9.6-24.5 6.8l-55.7-17.7c-13.4 10.3-28.2 18.9-44 25.4l-12.5 57.1c-2 9.1-9 16.3-18.2 17.8c-13.8 2.3-28 3.5-42.5 3.5s-28.7-1.2-42.5-3.5c-9.2-1.5-16.2-8.7-18.2-17.8l-12.5-57.1c-15.8-6.5-30.6-15.1-44-25.4L83.1 425.9c-8.8 2.8-18.6 .3-24.5-6.8c-8.1-9.8-15.5-20.2-22.1-31.2l-4.7-8.1c-6.1-11-11.4-22.4-15.8-34.3c-3.2-8.7-.5-18.4 6.4-24.6l43.3-39.4C64.6 273.1 64 264.6 64 256s.6-17.1 1.7-25.4L22.4 191.2c-6.9-6.2-9.6-15.9-6.4-24.6c4.4-11.9 9.7-23.3 15.8-34.3l4.7-8.1c6.6-11 14-21.4 22.1-31.2c5.9-7.2 15.7-9.6 24.5-6.8l55.7 17.7c13.4-10.3 28.2-18.9 44-25.4l12.5-57.1c2-9.1 9-16.3 18.2-17.8C227.3 1.2 241.5 0 256 0s28.7 1.2 42.5 3.5c9.2 1.5 16.2 8.7 18.2 17.8l12.5 57.1c15.8 6.5 30.6 15.1 44 25.4l55.7-17.7c8.8-2.8 18.6-.3 24.5 6.8c8.1 9.8 15.5 20.2 22.1 31.2l4.7 8.1c6.1 11 11.4 22.4 15.8 34.3zM256 336a80 80 0 1 0 0-160 80 80 0 1 0 0 160z"/>
+                    </svg>
+                </div>
+                <p class="loading-message">Calculating...</p>
+                <div class="spinner-progress" aria-live="polite">
+                    <div class="spinner-progress__track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                        <div class="spinner-progress__bar"></div>
+                    </div>
+                    <span class="spinner-progress__label">Preparing templates…</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Update Log Overlay -->
+        <div id="updateLogOverlay" class="info-overlay changelog-overlay" role="dialog" aria-modal="true" aria-labelledby="updateLogTitle" aria-hidden="true">
+            <div class="info-content changelog-content">
+                <button class="close-popup" type="button" aria-label="Close update log">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path d="M345 137c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0l-119 119L73 103c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l119 119L39 375c-9.4 9.4-9.4 24.6 0 33.9s24.6 9.4 33.9 0l119-119L311 409c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-119-119L345 137z"/></svg>
+                </button>
+                <h2 id="updateLogTitle">What&rsquo;s new</h2>
+                <div class="changelog-entries">
+                    <div class="changelog-entry">
+                        <button class="changelog-toggle" id="changelog-toggle-2025-12-15" aria-expanded="true" aria-controls="changelog-panel-2025-12-15">
+                            <span class="changelog-date">15/12/2025</span>
+                            <svg class="changelog-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512" aria-hidden="true" focusable="false"><path d="M41.4 150.6c12.5-12.5 32.8-12.5 45.3 0L160 223.9l73.4-73.4c12.5-12.5 32.8-12.5 45.3 0s12.5 32.8 0 45.3l-96 96c-12.5 12.5-32.8 12.5-45.3 0l-96-96c-12.5-12.5-12.5-32.8 0-45.3z"/></svg>
+                        </button>
+                        <div id="changelog-panel-2025-12-15" class="changelog-panel open" role="region" aria-labelledby="changelog-toggle-2025-12-15">
+                            <ul>
+                                <li><strong>New Wizard UI:</strong> Completely redesigned interface with a step-by-step wizard for better user experience.</li>
+                                <li><strong>Glassmorphism Design:</strong> Modern frosted glass aesthetics with beautiful gradients.</li>
+                                <li><strong>Improved Mobile Experience:</strong> Touch-friendly controls and responsive layout.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SVG Symbols -->
+        <svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+            <symbol id="checkbox-30" viewBox="0 0 22 22">
+                <path fill="none" stroke="currentColor" d="M5.5,11.3L9,14.8L20.2,3.3l0,0c-0.5-1-1.5-1.8-2.7-1.8h-13c-1.7,0-3,1.3-3,3v13c0,1.7,1.3,3,3,3h13 c1.7,0,3-1.3,3-3v-13c0-0.4-0.1-0.8-0.3-1.2"/>
+            </symbol>
+        </svg>
+    </div>
+
+    <!-- History Modal -->
+    <div id="historyModal" class="history-modal" role="dialog" aria-modal="true" aria-labelledby="historyTitle" aria-hidden="true">
+        <div class="history-modal__content">
+            <div class="history-modal__header">
+                <h2 id="historyTitle">Calculation History</h2>
+                <button class="history-modal__close" type="button" aria-label="Close history" onclick="closeHistoryModal()">
+                    ✕
+                </button>
+            </div>
+            <div class="history-modal__body">
+                <div id="historyList" class="history-list">
+                    <!-- History items will be populated by JavaScript -->
+                </div>
+            </div>
+            <div class="history-modal__footer">
+                <div class="history-actions">
+                    <input type="file" id="historyImportInput" accept=".json" style="display: none;">
+                    <button id="historyImportBtn" class="history-btn history-btn--secondary" type="button">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="14" height="14"><path fill="currentColor" d="M288 109.3V352c0 17.7-14.3 32-32 32s-32-14.3-32-32V109.3l-73.4 73.4c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l128-128c12.5-12.5 32.8-12.5 45.3 0l128 128c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L288 109.3zM64 352H192c0 35.3 28.7 64 64 64s64-28.7 64-64H448c35.3 0 64 28.7 64 64v32c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V416c0-35.3 28.7-64 64-64zM432 456a24 24 0 1 0 0-48 24 24 0 1 0 0 48z"/></svg>
+                        Import
+                    </button>
+                    <button id="historyExportBtn" class="history-btn history-btn--secondary" type="button">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="14" height="14"><path fill="currentColor" d="M288 32c0-17.7-14.3-32-32-32s-32 14.3-32 32V274.7l-73.4-73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l128 128c12.5 12.5 32.8 12.5 45.3 0l128-128c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L288 274.7V32zM64 352c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V416c0-35.3-28.7-64-64-64H346.5l-45.3 45.3c-25 25-65.5 25-90.5 0L165.5 352H64zm368 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48z"/></svg>
+                        Export
+                    </button>
+                </div>
+                <button id="historyClearBtn" class="history-btn history-btn--danger" type="button">
+                    Clear All
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <footer></footer>
+
+    <script>
+        // Theme toggle functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('themeToggle');
+            
+            function setTheme(theme) {
+                if (theme === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    document.documentElement.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                }
+            }
+            
+            function toggleTheme() {
+                const currentTheme = document.documentElement.getAttribute('data-theme');
+                setTheme(currentTheme === 'dark' ? 'light' : 'dark');
+            }
+            
+            if (themeToggle) {
+                themeToggle.addEventListener('click', toggleTheme);
+            }
+            
+            // Listen for system theme changes
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+                if (!localStorage.getItem('theme')) {
+                    setTheme(e.matches ? 'dark' : 'light');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
