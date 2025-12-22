@@ -1832,6 +1832,10 @@ function renderResults(templateCounts, materialCounts) {
 
     generateDiv.after(itemsDiv);
     
+    // Calculate and render Material Combination Guide
+    const materialCombinations = calculateMaterialCombinations(templateCounts);
+    renderMaterialCombinationGuide(resultsDiv, materialCombinations);
+    
     createResultsActions(resultsDiv);
 
     const seasonTotals = {};
@@ -1871,6 +1875,279 @@ function renderResults(templateCounts, materialCounts) {
             ctwMediumNotice: ctwMediumNotice,
             level20OnlyWarlordsActive: level20OnlyWarlordsActive
         });
+    }
+}
+
+/**
+ * Calculate material combinations needed by quality tier
+ * Based on crafting levels:
+ * - L1-10: Legendary quality
+ * - L15-25: Exquisite quality
+ * - L30-35: Fine quality
+ * - L40-45: Common/Poor quality
+ * 
+ * Shows:
+ * - count: Number of COMBINED materials needed at that quality tier
+ * - poorEquivalent: How many POOR materials needed to create those combined materials
+ * 
+ * @param {Object} templateCounts - Object with level keys and arrays of crafted items
+ * @returns {Object} - Material combinations grouped by quality tier
+ */
+function calculateMaterialCombinations(templateCounts) {
+    // Quality tier definitions by level
+    const QUALITY_TIERS = {
+        legendary: { levels: [1, 5, 10], label: 'Legendary', order: 0 },
+        exquisite: { levels: [15, 20, 25], label: 'Exquisite', order: 1 },
+        fine: { levels: [30, 35], label: 'Fine', order: 2 },
+        common: { levels: [40, 45], label: 'Common', order: 3 }
+    };
+    
+    // Helper to get quality tier for a level
+    const getQualityTierForLevel = (level) => {
+        const lvl = parseInt(level, 10);
+        for (const [tierName, tierData] of Object.entries(QUALITY_TIERS)) {
+            if (tierData.levels.includes(lvl)) {
+                return tierName;
+            }
+        }
+        return 'common'; // Default fallback
+    };
+    
+    // Result structure: { materialName: { legendary: { count, poorEquivalent }, ... } }
+    const materialCombinations = {};
+    
+    // Process each level
+    Object.entries(templateCounts).forEach(([level, templates]) => {
+        const qualityTier = getQualityTierForLevel(level);
+        
+        templates.forEach(template => {
+            const itemCount = template.amount || 0;
+            const qualityMultiplier = template.multiplier || 1; // This is the 4^n multiplier (e.g., 1024 for Legendary)
+            
+            // Process each material in the item
+            Object.entries(template.materials || {}).forEach(([materialName, baseMaterialCost]) => {
+                // Normalize material name
+                const normalizedName = materialKeyMap[normalizeKey(materialName)] || materialName;
+                
+                // count = base materials needed (number of COMBINED quality materials needed)
+                const combinedMaterialsNeeded = baseMaterialCost * itemCount;
+                
+                // poorEquivalent = how many POOR materials needed to create those combined materials
+                // This equals baseCost * itemCount * qualityMultiplier
+                const poorEquivalent = combinedMaterialsNeeded * qualityMultiplier;
+                
+                // Initialize material entry if not exists
+                if (!materialCombinations[normalizedName]) {
+                    materialCombinations[normalizedName] = {
+                        legendary: { count: 0, poorEquivalent: 0 },
+                        exquisite: { count: 0, poorEquivalent: 0 },
+                        fine: { count: 0, poorEquivalent: 0 },
+                        common: { count: 0, poorEquivalent: 0 },
+                        totalPoor: 0,
+                        img: allMaterials[normalizedName]?.img || '',
+                        originalName: allMaterials[normalizedName]?.["Original-name"] || normalizedName,
+                        season: materialToSeason[normalizedName] || 0
+                    };
+                }
+                
+                // Add to the appropriate quality tier
+                materialCombinations[normalizedName][qualityTier].count += combinedMaterialsNeeded;
+                materialCombinations[normalizedName][qualityTier].poorEquivalent += poorEquivalent;
+                materialCombinations[normalizedName].totalPoor += poorEquivalent;
+            });
+        });
+    });
+    
+    return materialCombinations;
+}
+
+/**
+ * Render the Material Combination Guide section in results
+ * @param {HTMLElement} resultsDiv - The results container
+ * @param {Object} combinationData - Output from calculateMaterialCombinations
+ */
+function renderMaterialCombinationGuide(resultsDiv, combinationData) {
+    if (!combinationData || Object.keys(combinationData).length === 0) {
+        return;
+    }
+    
+    const guideDiv = document.createElement('div');
+    guideDiv.className = 'material-combination-guide';
+    
+    // Header
+    const header = document.createElement('h3');
+    header.className = 'combination-guide__header';
+    header.innerHTML = '<span>🔗</span> Material Combination Guide';
+    guideDiv.appendChild(header);
+    
+    // Description
+    const desc = document.createElement('p');
+    desc.className = 'combination-guide__desc';
+    desc.innerHTML = 'Materials need to be combined at a <strong>4:1 ratio</strong> per quality tier. Below shows how many of each material you need at each quality level.';
+    guideDiv.appendChild(desc);
+    
+    // Quality tier legend
+    const legend = document.createElement('div');
+    legend.className = 'combination-guide__legend';
+    legend.innerHTML = `
+        <div class="legend-item legendary"><span class="legend-dot"></span>Legendary (L1-10) × 1024</div>
+        <div class="legend-item exquisite"><span class="legend-dot"></span>Exquisite (L15-25) × 64</div>
+        <div class="legend-item fine"><span class="legend-dot"></span>Fine (L30-35) × 16</div>
+        <div class="legend-item common"><span class="legend-dot"></span>Common (L40-45) × 4</div>
+    `;
+    guideDiv.appendChild(legend);
+    
+    // Separate basic and seasonal materials
+    const basicMaterials = {};
+    const seasonalMaterials = {};
+    
+    Object.entries(combinationData).forEach(([matName, data]) => {
+        // Skip materials with no usage
+        if (data.totalPoor === 0) return;
+        
+        if (data.season === 0) {
+            basicMaterials[matName] = data;
+        } else {
+            seasonalMaterials[matName] = data;
+        }
+    });
+    
+    // Helper to create material cards section
+    const createMaterialSection = (title, materials) => {
+        if (Object.keys(materials).length === 0) return null;
+        
+        const section = document.createElement('div');
+        section.className = 'combination-guide__section';
+        
+        const sectionTitle = document.createElement('h4');
+        sectionTitle.className = 'combination-guide__section-title';
+        sectionTitle.textContent = title;
+        section.appendChild(sectionTitle);
+        
+        const cardsGrid = document.createElement('div');
+        cardsGrid.className = 'combination-cards-grid';
+        
+        // Sort by season first, then alphabetically by name (same as Materials page)
+        const sortedMaterials = Object.entries(materials)
+            .sort(([aName, aData], [bName, bData]) => {
+                const seasonA = aData.season || 0;
+                const seasonB = bData.season || 0;
+                if (seasonA !== seasonB) {
+                    return seasonA - seasonB;
+                }
+                return aName.localeCompare(bName);
+            });
+        
+        sortedMaterials.forEach(([matName, data]) => {
+            const card = document.createElement('div');
+            card.className = 'combination-material-card';
+            
+            // Material header (icon + name)
+            const cardHeader = document.createElement('div');
+            cardHeader.className = 'combination-card__header';
+            
+            if (data.img) {
+                const img = document.createElement('img');
+                img.src = data.img;
+                img.alt = data.originalName;
+                img.className = 'combination-card__img';
+                cardHeader.appendChild(img);
+            }
+            
+            const nameWrapper = document.createElement('div');
+            nameWrapper.className = 'combination-card__name-wrapper';
+            
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'combination-card__name';
+            nameSpan.textContent = data.originalName;
+            nameWrapper.appendChild(nameSpan);
+            
+            if (data.season > 0) {
+                const seasonBadge = document.createElement('span');
+                seasonBadge.className = 'season-badge';
+                seasonBadge.textContent = `S${data.season}`;
+                nameWrapper.appendChild(seasonBadge);
+            }
+            
+            cardHeader.appendChild(nameWrapper);
+            card.appendChild(cardHeader);
+            
+            // Quality tiers breakdown
+            const tiersDiv = document.createElement('div');
+            tiersDiv.className = 'combination-card__tiers';
+            
+            const tiers = ['legendary', 'exquisite', 'fine', 'common'];
+            const tierLabels = {
+                legendary: { label: 'Legendary', levels: 'L1-10' },
+                exquisite: { label: 'Exquisite', levels: 'L15-25' },
+                fine: { label: 'Fine', levels: 'L30-35' },
+                common: { label: 'Common', levels: 'L40-45' }
+            };
+            
+            tiers.forEach(tier => {
+                const tierData = data[tier];
+                if (tierData.count > 0) {
+                    const tierRow = document.createElement('div');
+                    tierRow.className = `combination-tier tier-${tier}`;
+                    
+                    // Combined materials count
+                    const tierCount = document.createElement('span');
+                    tierCount.className = 'tier-count';
+                    tierCount.textContent = new Intl.NumberFormat('en-US').format(tierData.count);
+                    
+                    // Poor equivalent
+                    const tierPoor = document.createElement('span');
+                    tierPoor.className = 'tier-poor';
+                    tierPoor.textContent = new Intl.NumberFormat('en-US').format(tierData.poorEquivalent);
+                    
+                    tierRow.appendChild(tierCount);
+                    tierRow.appendChild(tierPoor);
+                    tiersDiv.appendChild(tierRow);
+                }
+            });
+            
+            card.appendChild(tiersDiv);
+            
+            // Total poor
+            const totalDiv = document.createElement('div');
+            totalDiv.className = 'combination-card__total';
+            totalDiv.innerHTML = `<strong>Total Poor:</strong> <span>${new Intl.NumberFormat('en-US').format(data.totalPoor)}</span>`;
+            card.appendChild(totalDiv);
+            
+            cardsGrid.appendChild(card);
+        });
+        
+        section.appendChild(cardsGrid);
+        return section;
+    };
+    
+    // Add sections
+    const basicSection = createMaterialSection('Basic Materials', basicMaterials);
+    if (basicSection) guideDiv.appendChild(basicSection);
+    
+    const seasonalSection = createMaterialSection('Seasonal / Gear Materials', seasonalMaterials);
+    if (seasonalSection) guideDiv.appendChild(seasonalSection);
+    
+    // Grand total summary
+    const grandTotal = Object.values(combinationData).reduce((sum, data) => sum + data.totalPoor, 0);
+    if (grandTotal > 0) {
+        const summaryDiv = document.createElement('div');
+        summaryDiv.className = 'combination-guide__summary';
+        summaryDiv.innerHTML = `
+            <div class="summary-stat">
+                <span class="summary-label">Total Poor Materials Needed</span>
+                <span class="summary-value">${new Intl.NumberFormat('en-US').format(grandTotal)}</span>
+            </div>
+        `;
+        guideDiv.appendChild(summaryDiv);
+    }
+    
+    // Insert after items section
+    const itemsDiv = resultsDiv.querySelector('.items');
+    if (itemsDiv) {
+        itemsDiv.after(guideDiv);
+    } else {
+        resultsDiv.appendChild(guideDiv);
     }
 }
 
