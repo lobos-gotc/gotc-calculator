@@ -1992,6 +1992,10 @@
         // Get current quality settings from UI for accurate cascade calculation
         const qualitySettings = getQualitySettingsFromUI();
         
+        // Check if the source level is user-modified (cascade from user input)
+        const sourceInput = document.getElementById(`templateAmount${fromLevel}`);
+        const isUserInitiated = sourceInput?.getAttribute('data-user-modified') === 'true';
+        
         // For levels 1-10: they're all legendary, so count stays the same
         if (fromLevel <= 10) {
             // Update L1, L5, L10 with the same count (no loss between them)
@@ -2002,6 +2006,11 @@
                         levelInput.value = startCount > 0 ? startCount.toString() : '';
                         levelInput.placeholder = startCount > 0 ? startCount.toString() : '0';
                         recommendedValues[level] = startCount;
+                        // Mark as user-modified if cascading from user input
+                        if (isUserInitiated) {
+                            levelInput.setAttribute('data-user-modified', 'true');
+                            console.log(`[Cascade] L${level} marked as user-modified (from L${fromLevel}): ${startCount}`);
+                        }
                         updatePiecesCarousel(level);
                     }
                 }
@@ -2018,6 +2027,11 @@
                             levelInput.value = stage.count > 0 ? stage.count.toString() : '';
                             levelInput.placeholder = stage.count > 0 ? stage.count.toString() : '0';
                             recommendedValues[stage.level] = stage.count;
+                            // Mark as user-modified if cascading from user input
+                            if (isUserInitiated) {
+                                levelInput.setAttribute('data-user-modified', 'true');
+                                console.log(`[Cascade] L${stage.level} marked as user-modified (from L${fromLevel}): ${stage.count}`);
+                            }
                             updatePiecesCarousel(stage.level);
                         }
                     }
@@ -2035,6 +2049,11 @@
                             levelInput.value = stage.count > 0 ? stage.count.toString() : '';
                             levelInput.placeholder = stage.count > 0 ? stage.count.toString() : '0';
                             recommendedValues[stage.level] = stage.count;
+                            // Mark as user-modified if cascading from user input
+                            if (isUserInitiated) {
+                                levelInput.setAttribute('data-user-modified', 'true');
+                                console.log(`[Cascade] L${stage.level} marked as user-modified (from L${fromLevel}): ${stage.count}`);
+                            }
                             updatePiecesCarousel(stage.level);
                         }
                     }
