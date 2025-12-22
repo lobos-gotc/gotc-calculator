@@ -1832,8 +1832,9 @@ function renderResults(templateCounts, materialCounts) {
 
     generateDiv.after(itemsDiv);
     
-    // Add cascade projection to results
-    renderResultsCascade(resultsDiv, templateCounts);
+    // Calculate and render Material Combination Guide
+    const materialCombinations = calculateMaterialCombinations(templateCounts);
+    renderMaterialCombinationGuide(resultsDiv, materialCombinations);
     
     createResultsActions(resultsDiv);
 
@@ -1878,135 +1879,275 @@ function renderResults(templateCounts, materialCounts) {
 }
 
 /**
- * Get quality class for a level
- * L1-10: Legendary, L15-25: Exquisite, L30-35: Fine, L40-45: Common
+ * Calculate material combinations needed by quality tier
+ * Based on crafting levels:
+ * - L1-10: Legendary quality
+ * - L15-25: Exquisite quality
+ * - L30-35: Fine quality
+ * - L40-45: Common/Poor quality
+ * 
+ * Shows:
+ * - count: Number of COMBINED materials needed at that quality tier
+ * - poorEquivalent: How many POOR materials needed to create those combined materials
+ * 
+ * @param {Object} templateCounts - Object with level keys and arrays of crafted items
+ * @returns {Object} - Material combinations grouped by quality tier
  */
-function getQualityForLevel(level) {
-    if (level <= 10) return { quality: 'legendary', label: 'Legendary' };
-    if (level <= 25) return { quality: 'exquisite', label: 'Exquisite' };
-    if (level <= 35) return { quality: 'fine', label: 'Fine' };
-    return { quality: 'common', label: 'Common' };
+function calculateMaterialCombinations(templateCounts) {
+    // Quality tier definitions by level
+    const QUALITY_TIERS = {
+        legendary: { levels: [1, 5, 10], label: 'Legendary', order: 0 },
+        exquisite: { levels: [15, 20, 25], label: 'Exquisite', order: 1 },
+        fine: { levels: [30, 35], label: 'Fine', order: 2 },
+        common: { levels: [40, 45], label: 'Common', order: 3 }
+    };
+    
+    // Helper to get quality tier for a level
+    const getQualityTierForLevel = (level) => {
+        const lvl = parseInt(level, 10);
+        for (const [tierName, tierData] of Object.entries(QUALITY_TIERS)) {
+            if (tierData.levels.includes(lvl)) {
+                return tierName;
+            }
+        }
+        return 'common'; // Default fallback
+    };
+    
+    // Result structure: { materialName: { legendary: { count, poorEquivalent }, ... } }
+    const materialCombinations = {};
+    
+    // Process each level
+    Object.entries(templateCounts).forEach(([level, templates]) => {
+        const qualityTier = getQualityTierForLevel(level);
+        
+        templates.forEach(template => {
+            const itemCount = template.amount || 0;
+            const qualityMultiplier = template.multiplier || 1; // This is the 4^n multiplier (e.g., 1024 for Legendary)
+            
+            // Process each material in the item
+            Object.entries(template.materials || {}).forEach(([materialName, baseMaterialCost]) => {
+                // Normalize material name
+                const normalizedName = materialKeyMap[normalizeKey(materialName)] || materialName;
+                
+                // count = base materials needed (number of COMBINED quality materials needed)
+                const combinedMaterialsNeeded = baseMaterialCost * itemCount;
+                
+                // poorEquivalent = how many POOR materials needed to create those combined materials
+                // This equals baseCost * itemCount * qualityMultiplier
+                const poorEquivalent = combinedMaterialsNeeded * qualityMultiplier;
+                
+                // Initialize material entry if not exists
+                if (!materialCombinations[normalizedName]) {
+                    materialCombinations[normalizedName] = {
+                        legendary: { count: 0, poorEquivalent: 0 },
+                        exquisite: { count: 0, poorEquivalent: 0 },
+                        fine: { count: 0, poorEquivalent: 0 },
+                        common: { count: 0, poorEquivalent: 0 },
+                        totalPoor: 0,
+                        img: allMaterials[normalizedName]?.img || '',
+                        originalName: allMaterials[normalizedName]?.["Original-name"] || normalizedName,
+                        season: materialToSeason[normalizedName] || 0
+                    };
+                }
+                
+                // Add to the appropriate quality tier
+                materialCombinations[normalizedName][qualityTier].count += combinedMaterialsNeeded;
+                materialCombinations[normalizedName][qualityTier].poorEquivalent += poorEquivalent;
+                materialCombinations[normalizedName].totalPoor += poorEquivalent;
+            });
+        });
+    });
+    
+    return materialCombinations;
 }
 
 /**
- * Render cascade projection in results page
- * Shows the expected legendary templates at each level based on crafted amounts
+ * Render the Material Combination Guide section in results
+ * @param {HTMLElement} resultsDiv - The results container
+ * @param {Object} combinationData - Output from calculateMaterialCombinations
  */
-function renderResultsCascade(resultsDiv, templateCounts) {
-    // Calculate total L10 equivalent templates
-    const levelItemCounts = calculateTotalItemsByLevel(templateCounts);
-    
-    // Find the highest level with templates
-    const levels = Object.keys(levelItemCounts)
-        .map(Number)
-        .filter(l => levelItemCounts[l] > 0)
-        .sort((a, b) => a - b);
-    
-    if (levels.length === 0) return;
-    
-    // Use highest level count as starting point, or total if same
-    const allSame = levels.every(l => levelItemCounts[l] === levelItemCounts[levels[0]]);
-    const startLevel = allSame ? Math.min(...levels) : Math.max(...levels);
-    const startCount = levelItemCounts[startLevel] || 0;
-    
-    if (startCount === 0) return;
-
-    // Check if TemplatePlanner is available
-    if (typeof TemplatePlanner === 'undefined') {
-        console.warn('TemplatePlanner not loaded, skipping cascade');
+function renderMaterialCombinationGuide(resultsDiv, combinationData) {
+    if (!combinationData || Object.keys(combinationData).length === 0) {
         return;
     }
-
-    // Calculate cascade
-    const targetLevel = 45;
-    const cascade = TemplatePlanner.calculateCascade(startLevel, startCount, targetLevel);
     
-    if (!cascade || cascade.length <= 1) return;
-
-    // Create cascade container
-    const cascadeDiv = document.createElement('div');
-    cascadeDiv.className = 'results-cascade';
+    const guideDiv = document.createElement('div');
+    guideDiv.className = 'material-combination-guide';
     
-    const cascadeTitle = document.createElement('h3');
-    cascadeTitle.className = 'results-cascade__title';
-    cascadeTitle.innerHTML = '<span>📈</span> Cascade Projection';
-    cascadeDiv.appendChild(cascadeTitle);
-
-    // Add quality legend
-    const qualityLegend = document.createElement('div');
-    qualityLegend.className = 'cascade-quality-legend';
-    qualityLegend.innerHTML = `
-        <div class="quality-item quality-legendary">
-            <span class="quality-dot"></span>
-            <span class="quality-label">L1-10: Legendary</span>
-        </div>
-        <div class="quality-item quality-exquisite">
-            <span class="quality-dot"></span>
-            <span class="quality-label">L15-25: Exquisite</span>
-        </div>
-        <div class="quality-item quality-fine">
-            <span class="quality-dot"></span>
-            <span class="quality-label">L30-35: Fine</span>
-        </div>
-        <div class="quality-item quality-common">
-            <span class="quality-dot"></span>
-            <span class="quality-label">L40-45: Common</span>
-        </div>
+    // Header
+    const header = document.createElement('h3');
+    header.className = 'combination-guide__header';
+    header.innerHTML = '<span>🔗</span> Material Combination Guide';
+    guideDiv.appendChild(header);
+    
+    // Description
+    const desc = document.createElement('p');
+    desc.className = 'combination-guide__desc';
+    desc.innerHTML = 'Materials need to be combined at a <strong>4:1 ratio</strong> per quality tier. Below shows how many of each material you need at each quality level.';
+    guideDiv.appendChild(desc);
+    
+    // Quality tier legend
+    const legend = document.createElement('div');
+    legend.className = 'combination-guide__legend';
+    legend.innerHTML = `
+        <div class="legend-item legendary"><span class="legend-dot"></span>Legendary (L1-10) × 1024</div>
+        <div class="legend-item exquisite"><span class="legend-dot"></span>Exquisite (L15-25) × 64</div>
+        <div class="legend-item fine"><span class="legend-dot"></span>Fine (L30-35) × 16</div>
+        <div class="legend-item common"><span class="legend-dot"></span>Common (L40-45) × 4</div>
     `;
-    cascadeDiv.appendChild(qualityLegend);
+    guideDiv.appendChild(legend);
     
-    const cascadeVisual = document.createElement('div');
-    cascadeVisual.className = 'results-cascade__visual';
+    // Separate basic and seasonal materials
+    const basicMaterials = {};
+    const seasonalMaterials = {};
     
-    // Level icons
-    const levelIcons = {
-        1: 'resources/item/icon_eq_standard_chest_leathervest.webp',
-        5: 'resources/item/icon_eq_standard_helmet_woolbandana.webp',
-        10: 'resources/item/icon_eq_standard_chest_paddedarmor.webp',
-        15: 'resources/item/15-25/icon_eq_standard_helmet_ironskullcap.png',
-        20: 'resources/item/15-25/icon_eq_standard_helmet_halfhelm.png',
-        25: 'resources/item/15-25/icon_eq_standard_helmet_piratetricorne.png',
-        30: 'resources/item/30-45/icon_eq_standard_helmet_kettlehelm.png',
-        35: 'resources/item/30-45/icon_eq_standard_helmet_casque.png',
-        40: 'resources/item/30-45/icon_eq_standard_helmet_goldencrown.png',
-        45: 'resources/item/30-45/icon_eq_standard_helmet_jewelencrustedtiara.png'
-    };
-    
-    cascade.forEach((stage, index) => {
-        const isFirst = index === 0;
-        const isFinal = index === cascade.length - 1;
-        const icon = levelIcons[stage.level] || levelIcons[10];
-        const qualityInfo = getQualityForLevel(stage.level);
+    Object.entries(combinationData).forEach(([matName, data]) => {
+        // Skip materials with no usage
+        if (data.totalPoor === 0) return;
         
-        if (!isFirst) {
-            const arrow = document.createElement('span');
-            arrow.className = 'cascade-arrow-icon';
-            arrow.textContent = '→';
-            cascadeVisual.appendChild(arrow);
+        if (data.season === 0) {
+            basicMaterials[matName] = data;
+        } else {
+            seasonalMaterials[matName] = data;
         }
-        
-        const stageCard = document.createElement('div');
-        stageCard.className = `cascade-stage-card quality-${qualityInfo.quality}` + 
-            (isFirst ? ' start' : '') + (isFinal ? ' final' : '');
-        
-        stageCard.innerHTML = `
-            <span class="cascade-stage-card__level">L${stage.level}</span>
-            <img src="${icon}" alt="L${stage.level}" class="cascade-stage-card__icon">
-            <span class="cascade-stage-card__count">${new Intl.NumberFormat('en-US').format(stage.count)}</span>
-            <span class="cascade-stage-card__label">${qualityInfo.label}</span>
-        `;
-        
-        cascadeVisual.appendChild(stageCard);
     });
     
-    cascadeDiv.appendChild(cascadeVisual);
+    // Helper to create material cards section
+    const createMaterialSection = (title, materials) => {
+        if (Object.keys(materials).length === 0) return null;
+        
+        const section = document.createElement('div');
+        section.className = 'combination-guide__section';
+        
+        const sectionTitle = document.createElement('h4');
+        sectionTitle.className = 'combination-guide__section-title';
+        sectionTitle.textContent = title;
+        section.appendChild(sectionTitle);
+        
+        const cardsGrid = document.createElement('div');
+        cardsGrid.className = 'combination-cards-grid';
+        
+        // Sort by season first, then alphabetically by name (same as Materials page)
+        const sortedMaterials = Object.entries(materials)
+            .sort(([aName, aData], [bName, bData]) => {
+                const seasonA = aData.season || 0;
+                const seasonB = bData.season || 0;
+                if (seasonA !== seasonB) {
+                    return seasonA - seasonB;
+                }
+                return aName.localeCompare(bName);
+            });
+        
+        sortedMaterials.forEach(([matName, data]) => {
+            const card = document.createElement('div');
+            card.className = 'combination-material-card';
+            
+            // Material header (icon + name)
+            const cardHeader = document.createElement('div');
+            cardHeader.className = 'combination-card__header';
+            
+            if (data.img) {
+                const img = document.createElement('img');
+                img.src = data.img;
+                img.alt = data.originalName;
+                img.className = 'combination-card__img';
+                cardHeader.appendChild(img);
+            }
+            
+            const nameWrapper = document.createElement('div');
+            nameWrapper.className = 'combination-card__name-wrapper';
+            
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'combination-card__name';
+            nameSpan.textContent = data.originalName;
+            nameWrapper.appendChild(nameSpan);
+            
+            if (data.season > 0) {
+                const seasonBadge = document.createElement('span');
+                seasonBadge.className = 'season-badge';
+                seasonBadge.textContent = `S${data.season}`;
+                nameWrapper.appendChild(seasonBadge);
+            }
+            
+            cardHeader.appendChild(nameWrapper);
+            card.appendChild(cardHeader);
+            
+            // Quality tiers breakdown
+            const tiersDiv = document.createElement('div');
+            tiersDiv.className = 'combination-card__tiers';
+            
+            const tiers = ['legendary', 'exquisite', 'fine', 'common'];
+            const tierLabels = {
+                legendary: { label: 'Legendary', levels: 'L1-10' },
+                exquisite: { label: 'Exquisite', levels: 'L15-25' },
+                fine: { label: 'Fine', levels: 'L30-35' },
+                common: { label: 'Common', levels: 'L40-45' }
+            };
+            
+            tiers.forEach(tier => {
+                const tierData = data[tier];
+                if (tierData.count > 0) {
+                    const tierRow = document.createElement('div');
+                    tierRow.className = `combination-tier tier-${tier}`;
+                    
+                    // Combined materials count
+                    const tierCount = document.createElement('span');
+                    tierCount.className = 'tier-count';
+                    tierCount.textContent = new Intl.NumberFormat('en-US').format(tierData.count);
+                    
+                    // Poor equivalent
+                    const tierPoor = document.createElement('span');
+                    tierPoor.className = 'tier-poor';
+                    tierPoor.textContent = new Intl.NumberFormat('en-US').format(tierData.poorEquivalent);
+                    
+                    tierRow.appendChild(tierCount);
+                    tierRow.appendChild(tierPoor);
+                    tiersDiv.appendChild(tierRow);
+                }
+            });
+            
+            card.appendChild(tiersDiv);
+            
+            // Total poor
+            const totalDiv = document.createElement('div');
+            totalDiv.className = 'combination-card__total';
+            totalDiv.innerHTML = `<strong>Total Poor:</strong> <span>${new Intl.NumberFormat('en-US').format(data.totalPoor)}</span>`;
+            card.appendChild(totalDiv);
+            
+            cardsGrid.appendChild(card);
+        });
+        
+        section.appendChild(cardsGrid);
+        return section;
+    };
+    
+    // Add sections
+    const basicSection = createMaterialSection('Basic Materials', basicMaterials);
+    if (basicSection) guideDiv.appendChild(basicSection);
+    
+    const seasonalSection = createMaterialSection('Seasonal / Gear Materials', seasonalMaterials);
+    if (seasonalSection) guideDiv.appendChild(seasonalSection);
+    
+    // Grand total summary
+    const grandTotal = Object.values(combinationData).reduce((sum, data) => sum + data.totalPoor, 0);
+    if (grandTotal > 0) {
+        const summaryDiv = document.createElement('div');
+        summaryDiv.className = 'combination-guide__summary';
+        summaryDiv.innerHTML = `
+            <div class="summary-stat">
+                <span class="summary-label">Total Poor Materials Needed</span>
+                <span class="summary-value">${new Intl.NumberFormat('en-US').format(grandTotal)}</span>
+            </div>
+        `;
+        guideDiv.appendChild(summaryDiv);
+    }
     
     // Insert after items section
     const itemsDiv = resultsDiv.querySelector('.items');
     if (itemsDiv) {
-        itemsDiv.after(cascadeDiv);
+        itemsDiv.after(guideDiv);
     } else {
-        resultsDiv.appendChild(cascadeDiv);
+        resultsDiv.appendChild(guideDiv);
     }
 }
 

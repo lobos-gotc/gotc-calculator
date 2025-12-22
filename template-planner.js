@@ -173,8 +173,49 @@
      * @param {Object} qualitySettings - Quality for each level
      * @returns {Object} - { startingTemplates, estimatedUsage, breakdown }
      */
-    function estimateStartingTemplates(totalMaterials, usagePercent = 0.6, qualitySettings = {}) {
+    /**
+     * Estimate the maximum starting templates for given materials and usage target
+     * Uses binary search to find the optimal starting count
+     * 
+     * @param {number|Object} materialsInput - Total materials (number) OR individual materials object
+     * @param {number} usagePercent - Target usage percentage (0.0 to 1.0)
+     * @param {Object} qualitySettings - Quality for each level
+     * @returns {Object} - { startingTemplates, estimatedUsage, breakdown, bottleneck }
+     */
+    function estimateStartingTemplates(materialsInput, usagePercent = 0.6, qualitySettings = {}) {
+        let totalMaterials = 0;
+        let individualMaterials = null;
+        let bottleneck = null;
+        
+        // Handle both number input (total) and object input (individual materials)
+        if (typeof materialsInput === 'number') {
+            totalMaterials = materialsInput;
+        } else if (typeof materialsInput === 'object' && materialsInput !== null) {
+            individualMaterials = materialsInput;
+            totalMaterials = Object.values(individualMaterials).reduce((sum, val) => sum + (val || 0), 0);
+            
+            // Detect bottleneck material
+            bottleneck = detectBottleneckMaterial(individualMaterials, qualitySettings);
+        }
+        
         const targetUsage = totalMaterials * usagePercent;
+        
+        // If we have individual materials and a bottleneck, use bottleneck-based estimation
+        if (bottleneck && bottleneck.limitedTemplates < Infinity) {
+            // Apply usage percent to bottleneck limit
+            const bottleneckLimit = Math.floor(bottleneck.limitedTemplates * usagePercent);
+            
+            if (bottleneckLimit > 0) {
+                const estimate = estimateMaterialUsage(bottleneckLimit, qualitySettings);
+                return {
+                    startingTemplates: bottleneckLimit,
+                    estimatedUsage: estimate.totalUsage,
+                    usagePercent: totalMaterials > 0 ? estimate.totalUsage / totalMaterials : 0,
+                    breakdown: estimate.breakdown,
+                    bottleneck: bottleneck
+                };
+            }
+        }
         
         // Binary search for the right starting count
         let low = 1;
@@ -189,6 +230,7 @@
                 estimatedUsage: 0,
                 usagePercent: 0,
                 breakdown: {},
+                bottleneck: bottleneck,
                 message: 'Insufficient materials for even 1 template'
             };
         }
@@ -218,9 +260,75 @@
         return {
             startingTemplates: bestEstimate.count,
             estimatedUsage: bestEstimate.totalUsage,
-            usagePercent: bestEstimate.totalUsage / totalMaterials,
-            breakdown: bestEstimate.breakdown
+            usagePercent: totalMaterials > 0 ? bestEstimate.totalUsage / totalMaterials : 0,
+            breakdown: bestEstimate.breakdown,
+            bottleneck: bottleneck
         };
+    }
+    
+    /**
+     * Detect which material is the bottleneck (limits template production the most)
+     * @param {Object} materials - Individual material amounts { 'black-iron': 1000000, ... }
+     * @param {Object} qualitySettings - Quality for each level
+     * @returns {Object|null} - { material, amount, limitedTemplates, reason }
+     */
+    function detectBottleneckMaterial(materials, qualitySettings = {}) {
+        if (!materials || Object.keys(materials).length === 0) return null;
+        
+        // Average material consumption per template across all levels
+        // This is an approximation based on typical gear recipes
+        // Each piece uses 2-4 material types, ~60-100 total per template at early levels
+        const AVG_MATS_PER_TEMPLATE_L1_L10 = 110; // Average across L1+L5+L10 for legendary
+        
+        // Quality multiplier for early levels (L1-L10 are typically legendary)
+        const earlyQuality = qualitySettings[1] || qualitySettings[5] || qualitySettings[10] || 'legendary';
+        const multiplier = QUALITY_MULTIPLIERS[earlyQuality] || 1024;
+        
+        // Adjust based on quality - legendary uses much more materials
+        const adjustedAvgMats = AVG_MATS_PER_TEMPLATE_L1_L10 * (multiplier / 1024);
+        
+        // Find the material with the lowest capacity
+        let bottleneck = null;
+        let minTemplates = Infinity;
+        
+        // Basic materials that are used in most crafting recipes
+        const COMMON_BASIC_MATS = [
+            'black-iron', 'copper-bar', 'dragonglass', 'goldenheart-wood',
+            'hide', 'ironwood', 'kingswood-oak', 'leather-straps',
+            'milk-of-the-poppy', 'silk', 'weirwood', 'wildfire'
+        ];
+        
+        for (const [matId, amount] of Object.entries(materials)) {
+            if (amount <= 0) continue;
+            
+            // Normalize material ID (remove my- prefix if present)
+            const normalizedId = matId.replace(/^my-/, '');
+            
+            // Only check basic materials for bottleneck (they're used more consistently)
+            if (!COMMON_BASIC_MATS.includes(normalizedId)) continue;
+            
+            // Estimate how many templates this material can support
+            // Each basic material is used in roughly 1/4 to 1/2 of recipes
+            // Conservative estimate: assume this material is used in 1/3 of pieces
+            const usageRate = 0.33;
+            const avgUsagePerTemplate = adjustedAvgMats * usageRate;
+            
+            if (avgUsagePerTemplate > 0) {
+                const templatesSupported = Math.floor(amount / avgUsagePerTemplate);
+                
+                if (templatesSupported < minTemplates) {
+                    minTemplates = templatesSupported;
+                    bottleneck = {
+                        material: normalizedId,
+                        amount: amount,
+                        limitedTemplates: templatesSupported,
+                        reason: `Limited by ${normalizedId.replace(/-/g, ' ')}`
+                    };
+                }
+            }
+        }
+        
+        return bottleneck;
     }
 
     // ========================================
@@ -569,7 +677,15 @@
      * Calculate how many templates survive through the cascade
      * Starting from a given level with a given count
      */
-    function calculateCascade(startLevel, startCount, targetLevel = 45) {
+    /**
+     * Calculate cascade projection from a starting level/count to target level
+     * @param {number} startLevel - Starting level (e.g., 10)
+     * @param {number} startCount - Number of templates at start level
+     * @param {number} targetLevel - Target level to cascade to (default 45)
+     * @param {Object} qualitySettings - Quality settings per level (e.g., { 15: 'exquisite', 20: 'epic' })
+     * @returns {Array} - Array of { level, count, legendary, fromCombining, failed }
+     */
+    function calculateCascade(startLevel, startCount, targetLevel = 45, qualitySettings = {}) {
         const levels = [10, 15, 20, 25, 30, 35, 40, 45];
         const results = [];
         
@@ -590,15 +706,19 @@
             if (nextLevel <= currentLevel) continue;
             if (nextLevel > targetLevel) break;
 
-            const survivalRate = CASCADE_SURVIVAL_RATES[nextLevel] || 0.43;
+            // Get quality for this level from settings, or use default
+            const quality = qualitySettings[nextLevel] || DEFAULT_QUALITIES[nextLevel] || 'exquisite';
             
-            // Calculate outputs
+            // Use quality-based effective survival rate (includes combining bonus)
+            const survivalRate = EFFECTIVE_SURVIVAL_RATES[quality] || 0.43;
+            
+            // Calculate outputs based on quality
             const legendary = Math.floor(currentCount * survivalRate);
             const failed = currentCount - legendary;
             
-            // Failed crafts become lower quality that can be combined
-            // 4:1 ratio for combining
-            const fromCombining = Math.floor(failed / 16); // 4 exq → 1 epic, 4 epic → 1 gold
+            // For legendary quality, there's no combining needed (100% success)
+            // For other qualities, combining bonus is already factored into EFFECTIVE_SURVIVAL_RATES
+            const fromCombining = quality === 'legendary' ? 0 : Math.floor(failed / 16);
             
             currentCount = legendary + fromCombining;
             currentLevel = nextLevel;
@@ -608,7 +728,9 @@
                 count: currentCount,
                 legendary: legendary,
                 fromCombining: fromCombining,
-                failed: failed
+                failed: failed,
+                quality: quality,
+                survivalRate: survivalRate
             });
         }
 
@@ -619,7 +741,16 @@
      * Reverse cascade - calculate how many templates needed at start level
      * to achieve a target count at end level
      */
-    function reverseCascade(targetLevel, targetCount, startLevel = 10) {
+    /**
+     * Reverse cascade - calculate how many templates needed at start level
+     * to achieve a target count at end level
+     * @param {number} targetLevel - Target level to achieve
+     * @param {number} targetCount - Desired count at target level
+     * @param {number} startLevel - Starting level (default 10)
+     * @param {Object} qualitySettings - Quality settings per level
+     * @returns {Array} - Array of { level, count, needed }
+     */
+    function reverseCascade(targetLevel, targetCount, startLevel = 10, qualitySettings = {}) {
         const levels = [10, 15, 20, 25, 30, 35, 40, 45];
         
         // Work backwards
@@ -639,18 +770,20 @@
             if (level < startLevel) break;
 
             const nextLevel = levels[i + 1];
-            const survivalRate = CASCADE_SURVIVAL_RATES[nextLevel] || 0.43;
             
-            // Account for combining (roughly 1/16 of failures become legendary)
-            // effective_rate = survivalRate + (1 - survivalRate) / 16
-            const effectiveRate = survivalRate + (1 - survivalRate) / 16;
+            // Get quality for the next level from settings, or use default
+            const quality = qualitySettings[nextLevel] || DEFAULT_QUALITIES[nextLevel] || 'exquisite';
+            
+            // Use quality-based effective survival rate
+            const effectiveRate = EFFECTIVE_SURVIVAL_RATES[quality] || 0.43;
             
             neededAtLevel = Math.ceil(neededAtLevel / effectiveRate);
             
             results.unshift({
                 level: level,
                 count: neededAtLevel,
-                needed: neededAtLevel
+                needed: neededAtLevel,
+                quality: quality
             });
         }
 
@@ -840,6 +973,7 @@
         // Template estimation (lighter simulation)
         estimateStartingTemplates,
         estimateMaterialUsage,
+        detectBottleneckMaterial,
         
         // Utilities
         getAvailablePieces,

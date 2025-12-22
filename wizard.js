@@ -1316,8 +1316,8 @@
         
         if (typeof TemplatePlanner !== 'undefined' && TemplatePlanner.calculateCascade) {
             // L1, L5, L10 are all legendary - same count (no loss)
-            // Then cascade from L10 onwards
-            const cascadeFromL10 = TemplatePlanner.calculateCascade(10, startingTemplates, 45);
+            // Then cascade from L10 onwards with quality-based survival rates
+            const cascadeFromL10 = TemplatePlanner.calculateCascade(10, startingTemplates, 45, qualitySettings);
             
             cascade = [
                 { level: 1, count: startingTemplates, successRate: 1.0 },
@@ -1413,9 +1413,9 @@
         const { includeCTW = true, includeSeasonGear = false, seasonGearLevels = [] } = options;
         
         // Get products database
-        if (typeof craftItem === 'undefined' || !craftItem.products) {
-            console.warn('[Wizard] craftItem not available, using base plan only');
-            return basePlan;
+        const hasProducts = typeof craftItem !== 'undefined' && craftItem.products;
+        if (!hasProducts) {
+            console.warn('[Wizard] craftItem not available, using default pieces');
         }
         
         // Check if CraftScoring API is available
@@ -1439,43 +1439,60 @@
                 return;
             }
             
-            // Use scoring API for preview if available
-            if (useScoringAPI) {
-                const scoredProducts = window.CraftScoring.scoreProductsForLevel(level, materials, {
+            // Try to use scoring API for piece selection (works for all levels)
+            if (useScoringAPI && hasProducts) {
+                try {
+                    const scoredProducts = window.CraftScoring.scoreProductsForLevel(level, materials, {
+                        includeCTW,
+                        includeSeasonGear: includeSeasonGear && seasonGearLevels.includes(level),
+                        seasonGearLevels
+                    });
+                    
+                    if (scoredProducts && scoredProducts.length > 0) {
+                        // Distribute templates across top-scored pieces
+                        const piecesWithCounts = distributeByScore(scoredProducts, levelCount);
+                        if (piecesWithCounts.length > 0) {
+                            fullPlan[level] = piecesWithCounts;
+                            return;
+                        }
+                    }
+                } catch (e) {
+                    console.warn(`[Wizard] Scoring failed for level ${level}:`, e);
+                }
+            }
+            
+            // Fallback: get available pieces and distribute evenly
+            if (hasProducts) {
+                const availablePieces = getAvailablePiecesForLevel(level, {
                     includeCTW,
-                    includeSeasonGear,
-                    seasonGearLevels
+                    includeSeasonGear: includeSeasonGear && seasonGearLevels.includes(level)
                 });
                 
-                if (scoredProducts.length > 0) {
-                    // Distribute templates across top-scored pieces
-                    // Weight distribution by score (higher score = more templates)
-                    const piecesWithCounts = distributeByScore(scoredProducts, levelCount);
+                if (availablePieces.length > 0) {
+                    // Distribute templates evenly across available pieces
+                    const piecesWithCounts = distributeTemplatesAcrossPieces(availablePieces, levelCount);
                     fullPlan[level] = piecesWithCounts;
                     return;
                 }
             }
             
-            // Fallback: get available pieces and distribute evenly
-            const availablePieces = getAvailablePiecesForLevel(level, {
-                includeCTW,
-                includeSeasonGear: includeSeasonGear && seasonGearLevels.includes(level)
-            });
-            
-            if (availablePieces.length === 0) {
-                fullPlan[level] = [{
-                    name: `Level ${level} Template`,
-                    count: levelCount,
-                    img: levelIcons[level],
-                    level: level
-                }];
+            // Final fallback: use default gear pieces (works even without craftItem)
+            const defaultPieces = getDefaultPiecesForLevel(level, levelCount);
+            if (defaultPieces.length > 0) {
+                fullPlan[level] = defaultPieces;
                 return;
             }
             
-            // Distribute templates evenly across available pieces
-            const piecesWithCounts = distributeTemplatesAcrossPieces(availablePieces, levelCount);
-            fullPlan[level] = piecesWithCounts;
+            // Ultimate fallback: generic placeholder
+            fullPlan[level] = [{
+                name: `Level ${level} Template`,
+                count: levelCount,
+                img: levelIcons[level],
+                level: level
+            }];
         });
+        
+        console.log('[Wizard] Generated crafting plan:', Object.keys(fullPlan).length, 'levels');
         
         return fullPlan;
     }
@@ -1658,6 +1675,7 @@
     function updateTemplatePlanUI() {
         console.log('[TemplatePlan] Updating UI with recommended values:', { ...recommendedValues });
         
+        // First pass: update all input values
         TEMPLATE_LEVELS.forEach(level => {
             const input = document.getElementById(`templateAmount${level}`);
             const card = document.querySelector(`.template-card[data-level="${level}"]`);
@@ -1667,7 +1685,13 @@
             
             // Update input with recommended value
             if (input) {
-                input.value = value > 0 ? value.toString() : '';
+                const newValue = value > 0 ? value.toString() : '';
+                // Only update if value actually changed to avoid unnecessary events
+                if (input.value !== newValue) {
+                    input.value = newValue;
+                    // Clear user-modified flag since we're setting from cascade
+                    input.removeAttribute('data-user-modified');
+                }
                 input.placeholder = value > 0 ? value.toString() : '0';
             }
             
@@ -1676,10 +1700,16 @@
                 const quality = qualitySelect?.value || getDefaultQuality(level);
                 card.setAttribute('data-quality', quality);
             }
-            
-            // Update pieces carousel
+        });
+        
+        // Second pass: update all carousels (after all values are set)
+        // This ensures the carousel has access to the latest craftingPlan
+        TEMPLATE_LEVELS.forEach(level => {
             updatePiecesCarousel(level);
         });
+        
+        // Update summary with latest values
+        updateTemplatePlanSummary();
     }
     
     /**
@@ -1869,33 +1899,57 @@
     
     /**
      * Update Template Plan summary
+     * Dynamically finds starting and ending levels based on actual values
      */
     function updateTemplatePlanSummary() {
         const summaryStart = document.getElementById('summaryStart');
         const summaryFinal = document.getElementById('summaryFinal');
         const summarySurvival = document.getElementById('summarySurvival');
+        const summaryStartLabel = document.getElementById('summaryStartLabel');
+        const summaryFinalLabel = document.getElementById('summaryFinalLabel');
         
-        // Get starting count (L1 or first non-zero)
+        // Find first non-zero level (starting point)
+        let startLevel = null;
         let startCount = 0;
         for (const level of TEMPLATE_LEVELS) {
             const input = document.getElementById(`templateAmount${level}`);
             const value = parseInt(input?.value) || 0;
             if (value > 0) {
+                startLevel = level;
                 startCount = value;
                 break;
             }
         }
         
-        // Get final L45 count
-        const finalInput = document.getElementById('templateAmount45');
-        const finalCount = parseInt(finalInput?.value) || recommendedValues[45] || 0;
+        // Find last non-zero level (ending point) - iterate in reverse
+        let endLevel = null;
+        let endCount = 0;
+        for (let i = TEMPLATE_LEVELS.length - 1; i >= 0; i--) {
+            const level = TEMPLATE_LEVELS[i];
+            const input = document.getElementById(`templateAmount${level}`);
+            const value = parseInt(input?.value) || 0;
+            if (value > 0) {
+                endLevel = level;
+                endCount = value;
+                break;
+            }
+        }
         
         // Calculate survival rate
-        const survivalRate = startCount > 0 ? ((finalCount / startCount) * 100).toFixed(1) : 0;
+        const survivalRate = startCount > 0 && endCount > 0 ? ((endCount / startCount) * 100).toFixed(1) : 0;
         
+        // Update labels to show actual levels
+        if (summaryStartLabel) {
+            summaryStartLabel.textContent = startLevel ? `L${startLevel} Start` : 'Start';
+        }
+        if (summaryFinalLabel) {
+            summaryFinalLabel.textContent = endLevel ? `L${endLevel} Final` : 'Final';
+        }
+        
+        // Update values
         if (summaryStart) summaryStart.textContent = startCount > 0 ? formatNumber(startCount) : '--';
-        if (summaryFinal) summaryFinal.textContent = finalCount > 0 ? formatNumber(finalCount) : '--';
-        if (summarySurvival) summarySurvival.textContent = startCount > 0 ? `${survivalRate}%` : '--%';
+        if (summaryFinal) summaryFinal.textContent = endCount > 0 ? formatNumber(endCount) : '--';
+        if (summarySurvival) summarySurvival.textContent = startCount > 0 && endCount > 0 ? `${survivalRate}%` : '--%';
     }
     
     /**
@@ -1904,6 +1958,13 @@
      */
     function onTemplateInputChange(level, value) {
         const count = parseInt(value) || 0;
+        
+        // Mark this input as user-modified
+        const input = document.getElementById(`templateAmount${level}`);
+        if (input) {
+            input.setAttribute('data-user-modified', 'true');
+            console.log(`[Template] L${level} marked as user-modified: ${value}`);
+        }
         
         // Update pieces carousel with new count
         updatePiecesCarousel(level);
@@ -1928,6 +1989,13 @@
         
         if (startCount === 0) return;
         
+        // Get current quality settings from UI for accurate cascade calculation
+        const qualitySettings = getQualitySettingsFromUI();
+        
+        // Check if the source level is user-modified (cascade from user input)
+        const sourceInput = document.getElementById(`templateAmount${fromLevel}`);
+        const isUserInitiated = sourceInput?.getAttribute('data-user-modified') === 'true';
+        
         // For levels 1-10: they're all legendary, so count stays the same
         if (fromLevel <= 10) {
             // Update L1, L5, L10 with the same count (no loss between them)
@@ -1938,14 +2006,19 @@
                         levelInput.value = startCount > 0 ? startCount.toString() : '';
                         levelInput.placeholder = startCount > 0 ? startCount.toString() : '0';
                         recommendedValues[level] = startCount;
+                        // Mark as user-modified if cascading from user input
+                        if (isUserInitiated) {
+                            levelInput.setAttribute('data-user-modified', 'true');
+                            console.log(`[Cascade] L${level} marked as user-modified (from L${fromLevel}): ${startCount}`);
+                        }
                         updatePiecesCarousel(level);
                     }
                 }
             });
             
-            // Calculate cascade from L10 for levels 15+
+            // Calculate cascade from L10 for levels 15+ with quality-based rates
             if (typeof TemplatePlanner !== 'undefined' && TemplatePlanner.calculateCascade) {
-                const cascade = TemplatePlanner.calculateCascade(10, startCount, 45);
+                const cascade = TemplatePlanner.calculateCascade(10, startCount, 45, qualitySettings);
                 
                 cascade.forEach(stage => {
                     if (stage.level > 10) {
@@ -1954,15 +2027,20 @@
                             levelInput.value = stage.count > 0 ? stage.count.toString() : '';
                             levelInput.placeholder = stage.count > 0 ? stage.count.toString() : '0';
                             recommendedValues[stage.level] = stage.count;
+                            // Mark as user-modified if cascading from user input
+                            if (isUserInitiated) {
+                                levelInput.setAttribute('data-user-modified', 'true');
+                                console.log(`[Cascade] L${stage.level} marked as user-modified (from L${fromLevel}): ${stage.count}`);
+                            }
                             updatePiecesCarousel(stage.level);
                         }
                     }
                 });
             }
         } else {
-            // For levels 15+, use normal cascade calculation
+            // For levels 15+, use normal cascade calculation with quality-based rates
             if (typeof TemplatePlanner !== 'undefined' && TemplatePlanner.calculateCascade) {
-                const cascade = TemplatePlanner.calculateCascade(fromLevel, startCount, 45);
+                const cascade = TemplatePlanner.calculateCascade(fromLevel, startCount, 45, qualitySettings);
                 
                 cascade.forEach(stage => {
                     if (stage.level > fromLevel) {
@@ -1971,6 +2049,11 @@
                             levelInput.value = stage.count > 0 ? stage.count.toString() : '';
                             levelInput.placeholder = stage.count > 0 ? stage.count.toString() : '0';
                             recommendedValues[stage.level] = stage.count;
+                            // Mark as user-modified if cascading from user input
+                            if (isUserInitiated) {
+                                levelInput.setAttribute('data-user-modified', 'true');
+                                console.log(`[Cascade] L${stage.level} marked as user-modified (from L${fromLevel}): ${stage.count}`);
+                            }
                             updatePiecesCarousel(stage.level);
                         }
                     }
@@ -1981,8 +2064,10 @@
     
     /**
      * Handle quality change
-     * When quality changes, it affects the material multiplier but cascade survival rates
-     * only apply at L15+ based on the quality at that level
+     * Quality affects:
+     * - Material cost multiplier for that level
+     * - Survival rate for cascade calculations (L15+)
+     * - Starting template estimate (since different qualities use different materials)
      */
     function onQualityChange(level, quality) {
         const card = document.querySelector(`.template-card[data-level="${level}"]`);
@@ -1990,13 +2075,23 @@
             card.setAttribute('data-quality', quality);
         }
         
-        // Recalculate cascade from this level if it's L15+
-        // Quality affects the survival rate at each level
-        if (level >= 15) {
-            const input = document.getElementById(`templateAmount${level}`);
-            const count = parseInt(input?.value) || 0;
-            if (count > 0) {
-                propagateCascadeFromLevel(level);
+        // Quality change affects material usage and cascade rates
+        // Always recalculate the full recommended plan to get accurate estimates
+        const materials = gatherMaterialsFromInputs();
+        if (materials && Object.values(materials).some(v => v > 0)) {
+            // Recalculate recommended plan with new quality settings
+            calculateRecommendedPlan(materials);
+            
+            // Update the UI with new values
+            updateTemplatePlanUI();
+        } else {
+            // No materials - just propagate cascade if L15+
+            if (level >= 15) {
+                const input = document.getElementById(`templateAmount${level}`);
+                const count = parseInt(input?.value) || 0;
+                if (count > 0) {
+                    propagateCascadeFromLevel(level);
+                }
             }
         }
         
@@ -2107,7 +2202,30 @@
      * Populate template input fields from cascade projection data
      * This bridges the cascade projection to the craftparse.js calculation
      */
+    /**
+     * Populate template inputs from cascade data
+     * RESPECTS manual inputs: only fills empty fields, preserves user changes
+     */
     function populateTemplateInputsFromCascade() {
+        const levels = [1, 5, 10, 15, 20, 25, 30, 35, 40, 45];
+        
+        // FIRST: Capture user-modified states BEFORE any cascade regeneration
+        // This must happen before renderCascadeProjection which clears the attribute
+        const userModifiedLevels = {};
+        levels.forEach(level => {
+            const input = document.getElementById(`templateAmount${level}`);
+            if (input && input.getAttribute('data-user-modified') === 'true') {
+                const rawValue = input.value.replace(/,/g, '').trim();
+                const numValue = parseInt(rawValue, 10);
+                // Include 0 as a valid user value!
+                userModifiedLevels[level] = isNaN(numValue) ? 0 : numValue;
+                console.log(`[Populate] Captured user-modified L${level}: ${userModifiedLevels[level]}`);
+            }
+        });
+        
+        const hasAnyUserModified = Object.keys(userModifiedLevels).length > 0;
+        console.log('User-modified levels (captured):', userModifiedLevels);
+        
         // If no cascade exists, generate it first
         if (!window.currentTemplatePlan?.cascade) {
             console.log('No cascade data found, generating...');
@@ -2130,25 +2248,24 @@
             return;
         }
 
-        console.log('Populating template inputs from cascade:', cascade);
-
-        // Clear all template inputs first
-        const levels = [1, 5, 10, 15, 20, 25, 30, 35, 40, 45];
-        levels.forEach(level => {
-            const input = document.getElementById(`templateAmount${level}`);
-            if (input) {
-                input.value = '';
-            }
-        });
+        console.log('Populating template inputs from cascade (respecting manual values):', cascade);
 
         // Populate from cascade data
-        // For early levels (1, 5, 10), use the crafting plan totals
-        // For cascade levels (15+), use the cascade counts
+        // RESTORE user values where they were modified, otherwise use cascade
         cascade.forEach(stage => {
             const level = stage.level;
             const input = document.getElementById(`templateAmount${level}`);
             
             if (input) {
+                // RESTORE user value if this level was modified
+                if (userModifiedLevels[level] !== undefined) {
+                    const userValue = userModifiedLevels[level];
+                    input.value = userValue > 0 ? userValue.toString() : '0';
+                    input.setAttribute('data-user-modified', 'true'); // Re-mark as modified
+                    console.log(`L${level}: RESTORED user value ${userValue}`);
+                    return;
+                }
+                
                 // For levels with crafting plan, sum up all pieces
                 const planPieces = craftingPlan?.[level];
                 let count = stage.count;
@@ -2160,24 +2277,30 @@
                 // Only set if count > 0
                 if (count > 0) {
                     input.value = count;
-                    console.log(`Template L${level}: ${count}`);
+                    console.log(`L${level}: Set from cascade ${count}`);
                 }
             }
         });
 
-        // Set quality selects based on level (matching cascade quality)
-        levels.forEach(level => {
-            const select = document.getElementById(`temp${level}`);
-            if (select) {
-                // L1-10: Poor (base), L15-25: Exquisite, L30-35: Fine, L40+: Common
-                let quality = 'poor';
-                if (level >= 15 && level <= 25) quality = 'exquisite';
-                else if (level >= 30 && level <= 35) quality = 'fine';
-                else if (level >= 40) quality = 'common';
-                
-                select.value = quality;
-            }
-        });
+        // Only set quality selects if NO user modifications exist (first time setup)
+        // If user has modified any input, respect all quality selections as-is
+        if (!hasAnyUserModified) {
+            levels.forEach(level => {
+                const select = document.getElementById(`temp${level}`);
+                if (select) {
+                    // L1-10: Legendary (typical), L15-25: Exquisite, L30-35: Fine, L40+: Common
+                    let quality = 'legendary';
+                    if (level >= 15 && level <= 25) quality = 'exquisite';
+                    else if (level >= 30 && level <= 35) quality = 'fine';
+                    else if (level >= 40) quality = 'common';
+                    
+                    select.value = quality;
+                }
+            });
+            console.log('Quality selects set to defaults (no manual values detected)');
+        } else {
+            console.log('Quality selects preserved (manual values detected)');
+        }
         
         console.log('Template inputs populated from cascade');
     }
