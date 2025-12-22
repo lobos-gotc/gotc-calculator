@@ -7586,63 +7586,6 @@ button.multiplier-btn {
     font-weight: var(--font-weight-semibold);
 }
 
-/* Cascade in Results Page */
-.results-cascade {
-    margin: 24px 0;
-    padding: 20px;
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    border-radius: 12px;
-}
-
-.results-cascade__title {
-    font-size: var(--font-size-lg);
-    font-weight: var(--font-weight-bold);
-    color: var(--text-color);
-    margin: 0 0 12px 0;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.results-cascade .cascade-quality-legend {
-    margin-bottom: 12px;
-}
-
-.results-cascade__visual {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 6px;
-    padding: 16px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 10px;
-}
-
-[data-theme="dark"] .results-cascade__visual {
-    background: rgba(0, 0, 0, 0.15);
-}
-
-/* Make cascade cards slightly smaller in results */
-.results-cascade .cascade-stage-card {
-    padding: 12px 14px;
-    min-width: 70px;
-}
-
-.results-cascade .cascade-stage-card__icon {
-    width: 40px;
-    height: 40px;
-}
-
-.results-cascade .cascade-stage-card__count {
-    font-size: var(--font-size-md);
-}
-
-.results-cascade .cascade-stage-card__label {
-    font-size: 9px;
-}
-
 /* ============================================
    Test Data Toggle (DEV)
    ============================================ */
