@@ -1899,33 +1899,57 @@
     
     /**
      * Update Template Plan summary
+     * Dynamically finds starting and ending levels based on actual values
      */
     function updateTemplatePlanSummary() {
         const summaryStart = document.getElementById('summaryStart');
         const summaryFinal = document.getElementById('summaryFinal');
         const summarySurvival = document.getElementById('summarySurvival');
+        const summaryStartLabel = document.getElementById('summaryStartLabel');
+        const summaryFinalLabel = document.getElementById('summaryFinalLabel');
         
-        // Get starting count (L1 or first non-zero)
+        // Find first non-zero level (starting point)
+        let startLevel = null;
         let startCount = 0;
         for (const level of TEMPLATE_LEVELS) {
             const input = document.getElementById(`templateAmount${level}`);
             const value = parseInt(input?.value) || 0;
             if (value > 0) {
+                startLevel = level;
                 startCount = value;
                 break;
             }
         }
         
-        // Get final L45 count
-        const finalInput = document.getElementById('templateAmount45');
-        const finalCount = parseInt(finalInput?.value) || recommendedValues[45] || 0;
+        // Find last non-zero level (ending point) - iterate in reverse
+        let endLevel = null;
+        let endCount = 0;
+        for (let i = TEMPLATE_LEVELS.length - 1; i >= 0; i--) {
+            const level = TEMPLATE_LEVELS[i];
+            const input = document.getElementById(`templateAmount${level}`);
+            const value = parseInt(input?.value) || 0;
+            if (value > 0) {
+                endLevel = level;
+                endCount = value;
+                break;
+            }
+        }
         
         // Calculate survival rate
-        const survivalRate = startCount > 0 ? ((finalCount / startCount) * 100).toFixed(1) : 0;
+        const survivalRate = startCount > 0 && endCount > 0 ? ((endCount / startCount) * 100).toFixed(1) : 0;
         
+        // Update labels to show actual levels
+        if (summaryStartLabel) {
+            summaryStartLabel.textContent = startLevel ? `L${startLevel} Start` : 'Start';
+        }
+        if (summaryFinalLabel) {
+            summaryFinalLabel.textContent = endLevel ? `L${endLevel} Final` : 'Final';
+        }
+        
+        // Update values
         if (summaryStart) summaryStart.textContent = startCount > 0 ? formatNumber(startCount) : '--';
-        if (summaryFinal) summaryFinal.textContent = finalCount > 0 ? formatNumber(finalCount) : '--';
-        if (summarySurvival) summarySurvival.textContent = startCount > 0 ? `${survivalRate}%` : '--%';
+        if (summaryFinal) summaryFinal.textContent = endCount > 0 ? formatNumber(endCount) : '--';
+        if (summarySurvival) summarySurvival.textContent = startCount > 0 && endCount > 0 ? `${survivalRate}%` : '--%';
     }
     
     /**
