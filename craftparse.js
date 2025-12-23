@@ -2539,9 +2539,10 @@ async function calculateProductionPlan(availableMaterials, templatesByLevel, pro
             if (requireCtwOnly && p.setName === 'Ceremonial Targaryen Warlord') {
                 return true;
             }
-            // Always include CTW warlord items at L20 when CTW is enabled
+            // Always include CTW warlord items when CTW is enabled (at any level)
             // This ensures CTW is available as fallback even when seasonal gear is allowed
-            if (includeWarlords && p.warlord && p.level === 20) {
+            // CTW exists at levels 1, 5, 10, 15, 20
+            if (includeWarlords && p.warlord) {
                 return true;
             }
             const applyOdds = !isLegendary && shouldApplyOddsForProduct(p);

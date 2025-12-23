@@ -1185,6 +1185,71 @@
     const recommendedValues = {};
     const TEMPLATE_LEVELS = [1, 5, 10, 15, 20, 25, 30, 35, 40, 45];
     
+    // Locked levels - values manually set by user that should not be overwritten
+    // by slider/quality changes. Key is level, value is the locked count.
+    const lockedLevels = {};
+    
+    /**
+     * Lock a level with a specific value
+     * @param {number} level - The level to lock (1, 5, 10, etc.)
+     * @param {number} value - The value to lock it to
+     */
+    function lockLevel(level, value) {
+        lockedLevels[level] = value;
+        const input = document.getElementById(`templateAmount${level}`);
+        const card = document.querySelector(`.template-card[data-level="${level}"]`);
+        if (input) {
+            input.setAttribute('data-locked', 'true');
+        }
+        if (card) {
+            card.setAttribute('data-locked', 'true');
+        }
+        console.log(`[Lock] L${level} locked to ${value}`);
+    }
+    
+    /**
+     * Unlock a level (allow auto-calculation)
+     * @param {number} level - The level to unlock
+     */
+    function unlockLevel(level) {
+        delete lockedLevels[level];
+        const input = document.getElementById(`templateAmount${level}`);
+        const card = document.querySelector(`.template-card[data-level="${level}"]`);
+        if (input) {
+            input.removeAttribute('data-locked');
+        }
+        if (card) {
+            card.removeAttribute('data-locked');
+        }
+        console.log(`[Unlock] L${level} unlocked`);
+    }
+    
+    /**
+     * Check if a level is locked
+     * @param {number} level - The level to check
+     * @returns {boolean}
+     */
+    function isLevelLocked(level) {
+        return lockedLevels.hasOwnProperty(level);
+    }
+    
+    /**
+     * Get locked value for a level (or undefined if not locked)
+     * @param {number} level - The level to check
+     * @returns {number|undefined}
+     */
+    function getLockedValue(level) {
+        return lockedLevels[level];
+    }
+    
+    /**
+     * Clear all locked levels
+     */
+    function clearAllLocks() {
+        TEMPLATE_LEVELS.forEach(level => unlockLevel(level));
+        console.log('[Lock] All levels unlocked');
+    }
+    
     /**
      * Update Template Plan based on materials and settings
      * This replaces the old renderCascadeProjection
@@ -1271,13 +1336,14 @@
 
         // ═══════════════════════════════════════════════════════════════════════
         // STEP 1: INSTANT ESTIMATE (Lighter Simulation)
-        // Uses pre-calculated costs for ALL levels (L1-L45), not just L1-L10
+        // ALWAYS calculate from materials/slider - locked values are applied later
         // ═══════════════════════════════════════════════════════════════════════
         
         let startingTemplates = 0;
         let cascade = [];
         let craftingPlan = {};
         
+        // Always calculate from materials - this ensures slider changes affect non-locked levels
         if (typeof TemplatePlanner !== 'undefined' && TemplatePlanner.estimateStartingTemplates) {
             // Use the new estimation system that accounts for L1-L45 material costs
             const estimate = TemplatePlanner.estimateStartingTemplates(
@@ -1309,22 +1375,86 @@
             const avgCostPerTemplate = 112640; // L1+L5+L10 legendary cost
             startingTemplates = Math.floor((totalBasicMats * usagePercent) / avgCostPerTemplate);
         }
+        
+        console.log('[TemplatePlan] Locked levels:', { ...lockedLevels });
 
         // ═══════════════════════════════════════════════════════════════════════
-        // STEP 2: BUILD CASCADE from the estimated starting count
+        // STEP 2: BUILD CASCADE with proper propagation from locked levels
+        // - Locked levels keep their values
+        // - Non-locked levels cascade from the nearest locked ancestor, or from calculated start
         // ═══════════════════════════════════════════════════════════════════════
         
         if (typeof TemplatePlanner !== 'undefined' && TemplatePlanner.calculateCascade) {
-            // L1, L5, L10 are all legendary - same count (no loss)
-            // Then cascade from L10 onwards with quality-based survival rates
-            const cascadeFromL10 = TemplatePlanner.calculateCascade(10, startingTemplates, 45, qualitySettings);
+            // Determine L1-L10 counts (all legendary, same count)
+            // For L1-L10, each level inherits from the HIGHEST locked level in the chain
+            // Priority: L10 lock > L5 lock > L1 lock > startingTemplates
+            let l1Count, l5Count, l10Count;
+            
+            // L10: check from highest to lowest
+            if (isLevelLocked(10)) {
+                l10Count = lockedLevels[10];
+            } else if (isLevelLocked(5)) {
+                l10Count = lockedLevels[5];
+            } else if (isLevelLocked(1)) {
+                l10Count = lockedLevels[1];
+            } else {
+                l10Count = startingTemplates;
+            }
+            
+            // L5: check from L5 down
+            if (isLevelLocked(5)) {
+                l5Count = lockedLevels[5];
+            } else if (isLevelLocked(1)) {
+                l5Count = lockedLevels[1];
+            } else {
+                l5Count = startingTemplates;
+            }
+            
+            // L1: only check L1
+            l1Count = isLevelLocked(1) ? lockedLevels[1] : startingTemplates;
+            
+            console.log('[Cascade] L1-10 counts:', { l1Count, l5Count, l10Count, startingTemplates, lockedLevels: { ...lockedLevels } });
             
             cascade = [
-                { level: 1, count: startingTemplates, successRate: 1.0 },
-                { level: 5, count: startingTemplates, successRate: 1.0 },
-                { level: 10, count: startingTemplates, successRate: 1.0 },
-                ...cascadeFromL10.filter(c => c.level > 10)
+                { level: 1, count: l1Count, successRate: 1.0 },
+                { level: 5, count: l5Count, successRate: 1.0 },
+                { level: 10, count: l10Count, successRate: 1.0 }
             ];
+            
+            // For L15+, we need to cascade from the appropriate starting point
+            // Find the effective starting count for cascade (L10's value, considering locks)
+            let cascadeStartCount = l10Count;
+            
+            // Calculate cascade from L10 using the effective start count
+            const cascadeFromL10 = TemplatePlanner.calculateCascade(10, cascadeStartCount, 45, qualitySettings);
+            
+            // Build L15+ cascade, but restart cascade from any locked level
+            let previousCount = cascadeStartCount;
+            const levelsAfter10 = [15, 20, 25, 30, 35, 40, 45];
+            
+            levelsAfter10.forEach((level, index) => {
+                if (isLevelLocked(level)) {
+                    // Use locked value and update previousCount for next iteration
+                    previousCount = lockedLevels[level];
+                    cascade.push({ level, count: previousCount, successRate: 1.0 });
+                } else {
+                    // Find this level in the calculated cascade
+                    const calcStage = cascadeFromL10.find(c => c.level === level);
+                    if (calcStage) {
+                        // If previous level was locked, recalculate cascade from that locked value
+                        const prevLevel = index === 0 ? 10 : levelsAfter10[index - 1];
+                        if (isLevelLocked(prevLevel)) {
+                            // Recalculate from the locked level
+                            const newCascade = TemplatePlanner.calculateCascade(prevLevel, lockedLevels[prevLevel], level, qualitySettings);
+                            const newStage = newCascade.find(c => c.level === level);
+                            previousCount = newStage ? newStage.count : Math.floor(previousCount * calcStage.successRate);
+                        } else {
+                            previousCount = calcStage.count;
+                        }
+                        cascade.push({ level, count: previousCount, successRate: calcStage.successRate });
+                    }
+                }
+            });
         } else {
             // Fallback cascade calculation
             const CASCADE_RATES = {
@@ -1332,15 +1462,24 @@
                 30: 0.20, 35: 0.20, 40: 0.10, 45: 0.10
             };
             
-            cascade.push({ level: 1, count: startingTemplates, successRate: 1.0 });
-            cascade.push({ level: 5, count: startingTemplates, successRate: 1.0 });
-            cascade.push({ level: 10, count: startingTemplates, successRate: 1.0 });
+            const l1Count = isLevelLocked(1) ? lockedLevels[1] : startingTemplates;
+            const l5Count = isLevelLocked(5) ? lockedLevels[5] : l1Count;
+            const l10Count = isLevelLocked(10) ? lockedLevels[10] : l5Count;
             
-            let currentCount = startingTemplates;
+            cascade.push({ level: 1, count: l1Count, successRate: 1.0 });
+            cascade.push({ level: 5, count: l5Count, successRate: 1.0 });
+            cascade.push({ level: 10, count: l10Count, successRate: 1.0 });
+            
+            let currentCount = l10Count;
             [15, 20, 25, 30, 35, 40, 45].forEach(level => {
-                const survivalRate = CASCADE_RATES[level] || 0.43;
-                currentCount = Math.floor(currentCount * survivalRate);
-                cascade.push({ level, count: currentCount, successRate: survivalRate });
+                if (isLevelLocked(level)) {
+                    currentCount = lockedLevels[level];
+                    cascade.push({ level, count: currentCount, successRate: 1.0 });
+                } else {
+                    const survivalRate = CASCADE_RATES[level] || 0.43;
+                    currentCount = Math.floor(currentCount * survivalRate);
+                    cascade.push({ level, count: currentCount, successRate: survivalRate });
+                }
             });
         }
 
@@ -1670,16 +1809,25 @@
     
     /**
      * Update the Template Plan UI with recommended values
-     * Always sets inputs to recommended values (no manual override tracking)
+     * Skips locked levels - their values are preserved
      */
     function updateTemplatePlanUI() {
         console.log('[TemplatePlan] Updating UI with recommended values:', { ...recommendedValues });
+        console.log('[TemplatePlan] Locked levels:', { ...lockedLevels });
         
-        // First pass: update all input values
+        // First pass: update all input values (skip locked levels)
         TEMPLATE_LEVELS.forEach(level => {
             const input = document.getElementById(`templateAmount${level}`);
             const card = document.querySelector(`.template-card[data-level="${level}"]`);
             const qualitySelect = document.getElementById(`temp${level}`);
+            
+            // Skip locked levels - preserve their values
+            if (isLevelLocked(level)) {
+                console.log(`[TemplatePlan] L${level} is locked (${lockedLevels[level]}), skipping`);
+                // Still update the carousel with the locked value
+                updatePiecesCarousel(level);
+                return;
+            }
             
             const value = recommendedValues[level] || 0;
             
@@ -1689,8 +1837,6 @@
                 // Only update if value actually changed to avoid unnecessary events
                 if (input.value !== newValue) {
                     input.value = newValue;
-                    // Clear user-modified flag since we're setting from cascade
-                    input.removeAttribute('data-user-modified');
                 }
                 input.placeholder = value > 0 ? value.toString() : '0';
             }
@@ -1705,7 +1851,9 @@
         // Second pass: update all carousels (after all values are set)
         // This ensures the carousel has access to the latest craftingPlan
         TEMPLATE_LEVELS.forEach(level => {
-            updatePiecesCarousel(level);
+            if (!isLevelLocked(level)) {
+                updatePiecesCarousel(level);
+            }
         });
         
         // Update summary with latest values
@@ -1957,20 +2105,28 @@
      * When user edits a level, propagate cascade to downstream levels
      */
     function onTemplateInputChange(level, value) {
-        const count = parseInt(value) || 0;
+        const rawValue = value.replace(/,/g, '').trim();
+        const numValue = parseInt(rawValue, 10);
+        const count = isNaN(numValue) ? 0 : numValue;
         
-        // Mark this input as user-modified
-        const input = document.getElementById(`templateAmount${level}`);
-        if (input) {
-            input.setAttribute('data-user-modified', 'true');
-            console.log(`[Template] L${level} marked as user-modified: ${value}`);
+        // Lock this level with the user's value (including 0)
+        // This prevents slider/quality changes from overwriting it
+        if (rawValue !== '' || value === '0') {
+            lockLevel(level, count);
         }
         
         // Update pieces carousel with new count
         updatePiecesCarousel(level);
         
-        // Cascade propagation: When a level changes, update all subsequent levels
+        // Cascade propagation: When a level changes, update all subsequent non-locked levels
         propagateCascadeFromLevel(level);
+        
+        // IMPORTANT: Also recalculate the cascade data structure to reflect locked values
+        // This ensures window.currentTemplatePlan.cascade has correct values for Calculate
+        const materials = gatherMaterialsFromInputs();
+        if (materials && Object.values(materials).some(v => v > 0)) {
+            calculateRecommendedPlan(materials);
+        }
         
         // Update summary
         updateTemplatePlanSummary();
@@ -1982,37 +2138,38 @@
      * Key rules:
      * - Levels 1, 5, 10 are ALL legendary quality - no loss between them
      * - Cascade survival rates only apply from L10 onwards (L10→L15→L20...)
+     * - Locked levels are SKIPPED - their values are preserved
      */
     function propagateCascadeFromLevel(fromLevel) {
         const input = document.getElementById(`templateAmount${fromLevel}`);
-        const startCount = parseInt(input?.value) || 0;
-        
-        if (startCount === 0) return;
+        const startCount = parseInt(input?.value?.replace(/,/g, '')) || 0;
         
         // Get current quality settings from UI for accurate cascade calculation
         const qualitySettings = getQualitySettingsFromUI();
         
-        // Check if the source level is user-modified (cascade from user input)
-        const sourceInput = document.getElementById(`templateAmount${fromLevel}`);
-        const isUserInitiated = sourceInput?.getAttribute('data-user-modified') === 'true';
+        // Helper to update a level if not locked
+        function updateLevelIfNotLocked(level, count) {
+            // Skip if this level is locked
+            if (isLevelLocked(level)) {
+                console.log(`[Cascade] L${level} is locked, skipping`);
+                return;
+            }
+            
+            const levelInput = document.getElementById(`templateAmount${level}`);
+            if (levelInput) {
+                levelInput.value = count > 0 ? count.toString() : '';
+                levelInput.placeholder = count > 0 ? count.toString() : '0';
+                recommendedValues[level] = count;
+                updatePiecesCarousel(level);
+            }
+        }
         
         // For levels 1-10: they're all legendary, so count stays the same
         if (fromLevel <= 10) {
             // Update L1, L5, L10 with the same count (no loss between them)
             [1, 5, 10].forEach(level => {
                 if (level > fromLevel) {
-                    const levelInput = document.getElementById(`templateAmount${level}`);
-                    if (levelInput) {
-                        levelInput.value = startCount > 0 ? startCount.toString() : '';
-                        levelInput.placeholder = startCount > 0 ? startCount.toString() : '0';
-                        recommendedValues[level] = startCount;
-                        // Mark as user-modified if cascading from user input
-                        if (isUserInitiated) {
-                            levelInput.setAttribute('data-user-modified', 'true');
-                            console.log(`[Cascade] L${level} marked as user-modified (from L${fromLevel}): ${startCount}`);
-                        }
-                        updatePiecesCarousel(level);
-                    }
+                    updateLevelIfNotLocked(level, startCount);
                 }
             });
             
@@ -2022,18 +2179,7 @@
                 
                 cascade.forEach(stage => {
                     if (stage.level > 10) {
-                        const levelInput = document.getElementById(`templateAmount${stage.level}`);
-                        if (levelInput) {
-                            levelInput.value = stage.count > 0 ? stage.count.toString() : '';
-                            levelInput.placeholder = stage.count > 0 ? stage.count.toString() : '0';
-                            recommendedValues[stage.level] = stage.count;
-                            // Mark as user-modified if cascading from user input
-                            if (isUserInitiated) {
-                                levelInput.setAttribute('data-user-modified', 'true');
-                                console.log(`[Cascade] L${stage.level} marked as user-modified (from L${fromLevel}): ${stage.count}`);
-                            }
-                            updatePiecesCarousel(stage.level);
-                        }
+                        updateLevelIfNotLocked(stage.level, stage.count);
                     }
                 });
             }
@@ -2044,18 +2190,7 @@
                 
                 cascade.forEach(stage => {
                     if (stage.level > fromLevel) {
-                        const levelInput = document.getElementById(`templateAmount${stage.level}`);
-                        if (levelInput) {
-                            levelInput.value = stage.count > 0 ? stage.count.toString() : '';
-                            levelInput.placeholder = stage.count > 0 ? stage.count.toString() : '0';
-                            recommendedValues[stage.level] = stage.count;
-                            // Mark as user-modified if cascading from user input
-                            if (isUserInitiated) {
-                                levelInput.setAttribute('data-user-modified', 'true');
-                                console.log(`[Cascade] L${stage.level} marked as user-modified (from L${fromLevel}): ${stage.count}`);
-                            }
-                            updatePiecesCarousel(stage.level);
-                        }
+                        updateLevelIfNotLocked(stage.level, stage.count);
                     }
                 });
             }
@@ -2107,6 +2242,9 @@
      * Triggers a full recalculation based on current materials and settings
      */
     function resetTemplatePlanToAuto() {
+        // Clear all locked levels - reset to auto mode
+        clearAllLocks();
+        
         // Reset carousel states
         Object.keys(carouselState).forEach(key => {
             carouselState[key].currentIndex = 0;
@@ -2131,6 +2269,7 @@
         TEMPLATE_LEVELS.forEach(level => {
             const input = document.getElementById(`templateAmount${level}`);
             const qualitySelect = document.getElementById(`temp${level}`);
+            const card = document.querySelector(`.template-card[data-level="${level}"]`);
             
             if (input) {
                 input.addEventListener('input', (e) => {
@@ -2138,13 +2277,47 @@
                 });
                 
                 input.addEventListener('focus', () => {
-                    const card = document.querySelector(`.template-card[data-level="${level}"]`);
                     if (card) card.classList.add('focused');
                 });
                 
                 input.addEventListener('blur', () => {
-                    const card = document.querySelector(`.template-card[data-level="${level}"]`);
                     if (card) card.classList.remove('focused');
+                });
+                
+                // Double-click on input to unlock and clear
+                input.addEventListener('dblclick', () => {
+                    if (isLevelLocked(level)) {
+                        unlockLevel(level);
+                        input.value = '';
+                        // Trigger recalculation from materials
+                        const materials = gatherMaterialsFromInputs();
+                        if (materials && Object.values(materials).some(v => v > 0)) {
+                            calculateRecommendedPlan(materials);
+                            updateTemplatePlanUI();
+                        }
+                    }
+                });
+            }
+            
+            // Double-click on card to unlock
+            if (card) {
+                card.addEventListener('dblclick', (e) => {
+                    // Don't trigger if clicking on input or quality select
+                    if (e.target.closest('.template-card__input') || 
+                        e.target.closest('.quality-select')) {
+                        return;
+                    }
+                    
+                    if (isLevelLocked(level)) {
+                        unlockLevel(level);
+                        if (input) input.value = '';
+                        // Trigger recalculation from materials
+                        const materials = gatherMaterialsFromInputs();
+                        if (materials && Object.values(materials).some(v => v > 0)) {
+                            calculateRecommendedPlan(materials);
+                            updateTemplatePlanUI();
+                        }
+                    }
                 });
             }
             
@@ -2154,7 +2327,6 @@
                 });
                 
                 // Set initial quality color
-                const card = document.querySelector(`.template-card[data-level="${level}"]`);
                 if (card) {
                     card.setAttribute('data-quality', qualitySelect.value);
                 }
@@ -2163,7 +2335,7 @@
         
         // Carousel - simple horizontal scroll, no event handlers needed
         
-        // Reset button
+        // Reset button (also clears all locks)
         const resetBtn = document.getElementById('resetToAutoBtn');
         if (resetBtn) {
             resetBtn.addEventListener('click', resetTemplatePlanToAuto);
@@ -2209,22 +2381,10 @@
     function populateTemplateInputsFromCascade() {
         const levels = [1, 5, 10, 15, 20, 25, 30, 35, 40, 45];
         
-        // FIRST: Capture user-modified states BEFORE any cascade regeneration
-        // This must happen before renderCascadeProjection which clears the attribute
-        const userModifiedLevels = {};
-        levels.forEach(level => {
-            const input = document.getElementById(`templateAmount${level}`);
-            if (input && input.getAttribute('data-user-modified') === 'true') {
-                const rawValue = input.value.replace(/,/g, '').trim();
-                const numValue = parseInt(rawValue, 10);
-                // Include 0 as a valid user value!
-                userModifiedLevels[level] = isNaN(numValue) ? 0 : numValue;
-                console.log(`[Populate] Captured user-modified L${level}: ${userModifiedLevels[level]}`);
-            }
-        });
-        
-        const hasAnyUserModified = Object.keys(userModifiedLevels).length > 0;
-        console.log('User-modified levels (captured):', userModifiedLevels);
+        // Locked levels are already tracked in the lockedLevels object
+        // No need to capture them again
+        const hasAnyLocked = Object.keys(lockedLevels).length > 0;
+        console.log('Locked levels:', { ...lockedLevels });
         
         // If no cascade exists, generate it first
         if (!window.currentTemplatePlan?.cascade) {
@@ -2248,21 +2408,20 @@
             return;
         }
 
-        console.log('Populating template inputs from cascade (respecting manual values):', cascade);
+        console.log('Populating template inputs from cascade (respecting locked values):', cascade);
 
         // Populate from cascade data
-        // RESTORE user values where they were modified, otherwise use cascade
+        // Use locked values where they exist, otherwise use cascade
         cascade.forEach(stage => {
             const level = stage.level;
             const input = document.getElementById(`templateAmount${level}`);
             
             if (input) {
-                // RESTORE user value if this level was modified
-                if (userModifiedLevels[level] !== undefined) {
-                    const userValue = userModifiedLevels[level];
-                    input.value = userValue > 0 ? userValue.toString() : '0';
-                    input.setAttribute('data-user-modified', 'true'); // Re-mark as modified
-                    console.log(`L${level}: RESTORED user value ${userValue}`);
+                // Use locked value if this level is locked
+                if (isLevelLocked(level)) {
+                    const lockedValue = lockedLevels[level];
+                    input.value = lockedValue > 0 ? lockedValue.toString() : '0';
+                    console.log(`L${level}: Using LOCKED value ${lockedValue}`);
                     return;
                 }
                 
@@ -2282,9 +2441,9 @@
             }
         });
 
-        // Only set quality selects if NO user modifications exist (first time setup)
-        // If user has modified any input, respect all quality selections as-is
-        if (!hasAnyUserModified) {
+        // Only set quality selects if NO locked levels exist (first time setup)
+        // If user has locked any input, respect all quality selections as-is
+        if (!hasAnyLocked) {
             levels.forEach(level => {
                 const select = document.getElementById(`temp${level}`);
                 if (select) {
@@ -2297,9 +2456,9 @@
                     select.value = quality;
                 }
             });
-            console.log('Quality selects set to defaults (no manual values detected)');
+            console.log('Quality selects set to defaults (no locked values detected)');
         } else {
-            console.log('Quality selects preserved (manual values detected)');
+            console.log('Quality selects preserved (locked values detected)');
         }
         
         console.log('Template inputs populated from cascade');
