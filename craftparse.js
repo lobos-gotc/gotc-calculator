@@ -2539,10 +2539,15 @@ async function calculateProductionPlan(availableMaterials, templatesByLevel, pro
             if (requireCtwOnly && p.setName === 'Ceremonial Targaryen Warlord') {
                 return true;
             }
+            // Always include CTW warlord items at L20 when CTW is enabled
+            // This ensures CTW is available as fallback even when seasonal gear is allowed
+            if (includeWarlords && p.warlord && p.level === 20) {
+                return true;
+            }
             const applyOdds = !isLegendary && shouldApplyOddsForProduct(p);
             if (!applyOdds) return true;
             if (p.odds === 'low') return includeLowOdds;
-            if (p.odds === 'medium') return includeMediumOdds || (ctwMediumNotice && p.warlord && p.level === 20);
+            if (p.odds === 'medium') return includeMediumOdds;
             return true;
         });
         filtered = filterProductsByAvailableGear(filtered, availableMaterials, multiplier);
