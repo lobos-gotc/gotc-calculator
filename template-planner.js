@@ -706,19 +706,23 @@
             if (nextLevel <= currentLevel) continue;
             if (nextLevel > targetLevel) break;
 
-            // Get quality for this level from settings, or use default
-            const quality = qualitySettings[nextLevel] || DEFAULT_QUALITIES[nextLevel] || 'exquisite';
+            // Get quality for the SOURCE level (where we're transitioning FROM)
+            // The survival rate is determined by the quality of templates we're upgrading
+            const sourceQuality = qualitySettings[currentLevel] || DEFAULT_QUALITIES[currentLevel] || 'legendary';
             
-            // Use quality-based effective survival rate (includes combining bonus)
-            const survivalRate = EFFECTIVE_SURVIVAL_RATES[quality] || 0.43;
+            // Get quality for the DESTINATION level (for display purposes)
+            const destQuality = qualitySettings[nextLevel] || DEFAULT_QUALITIES[nextLevel] || 'exquisite';
             
-            // Calculate outputs based on quality
+            // Use SOURCE level's quality to determine survival rate
+            const survivalRate = EFFECTIVE_SURVIVAL_RATES[sourceQuality] || 0.43;
+            
+            // Calculate outputs based on source quality's survival rate
             const legendary = Math.floor(currentCount * survivalRate);
             const failed = currentCount - legendary;
             
             // For legendary quality, there's no combining needed (100% success)
             // For other qualities, combining bonus is already factored into EFFECTIVE_SURVIVAL_RATES
-            const fromCombining = quality === 'legendary' ? 0 : Math.floor(failed / 16);
+            const fromCombining = sourceQuality === 'legendary' ? 0 : Math.floor(failed / 16);
             
             currentCount = legendary + fromCombining;
             currentLevel = nextLevel;
@@ -729,7 +733,8 @@
                 legendary: legendary,
                 fromCombining: fromCombining,
                 failed: failed,
-                quality: quality,
+                quality: destQuality,
+                sourceQuality: sourceQuality,
                 survivalRate: survivalRate
             });
         }
@@ -771,11 +776,12 @@
 
             const nextLevel = levels[i + 1];
             
-            // Get quality for the next level from settings, or use default
-            const quality = qualitySettings[nextLevel] || DEFAULT_QUALITIES[nextLevel] || 'exquisite';
+            // Get quality for the SOURCE level (where we're transitioning FROM)
+            // The survival rate is determined by the quality of templates we're upgrading
+            const sourceQuality = qualitySettings[level] || DEFAULT_QUALITIES[level] || 'legendary';
             
-            // Use quality-based effective survival rate
-            const effectiveRate = EFFECTIVE_SURVIVAL_RATES[quality] || 0.43;
+            // Use SOURCE level's quality to determine survival rate
+            const effectiveRate = EFFECTIVE_SURVIVAL_RATES[sourceQuality] || 0.43;
             
             neededAtLevel = Math.ceil(neededAtLevel / effectiveRate);
             
@@ -783,7 +789,7 @@
                 level: level,
                 count: neededAtLevel,
                 needed: neededAtLevel,
-                quality: quality
+                quality: sourceQuality
             });
         }
 
