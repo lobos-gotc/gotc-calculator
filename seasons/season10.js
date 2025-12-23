@@ -14,7 +14,7 @@ const season10 = {
 						"hide": 10,
 						"dragonglass": 10
 					},
-						img: "item/season10/fishmonger/head.png",
+						img: "resources/item/season10/fishmonger/head.png",
 				},
 				{
 					name: "Tassled Jerkin",
@@ -24,7 +24,7 @@ const season10 = {
 						"silk": 10,
 						"goldenheart-wood": 10
 					},
-						img: "item/season10/fishmonger/chest.png",
+						img: "resources/item/season10/fishmonger/chest.png",
 				},
 				{
 					name: "Tassled Skirt",
@@ -34,7 +34,7 @@ const season10 = {
 						"weirwood": 10,
 						"silk": 10
 					},
-						img: "item/season10/fishmonger/pants.png",
+						img: "resources/item/season10/fishmonger/pants.png",
 				},
 				{
 					name: "Dry Boots",
@@ -44,7 +44,7 @@ const season10 = {
 						"leather-straps": 10,
 						"kingswood-oak": 10
 					},
-						img: "item/season10/fishmonger/boots.png",
+						img: "resources/item/season10/fishmonger/boots.png",
 				},
 				{
 					name: "Macrame Ring",
@@ -54,7 +54,7 @@ const season10 = {
 						"copper-bar": 10,
 						"ironwood": 10
 					},
-						img: "item/season10/fishmonger/ring.png",
+						img: "resources/item/season10/fishmonger/ring.png",
 				},
 				{
 					name: "Gutting Knife",
@@ -64,7 +64,7 @@ const season10 = {
 						"milk-of-the-poppy": 10,
 						"copper-bar": 10
 					},
-						img: "item/season10/fishmonger/weapon.png",
+						img: "resources/item/season10/fishmonger/weapon.png",
 				},
 				{
 					name: "Gilded Hairpin",
@@ -74,7 +74,7 @@ const season10 = {
 						"hide": 20,
 						"dragonglass": 20
 					},
-						img: "item/season10/fishmonger/head.png",
+						img: "resources/item/season10/fishmonger/head.png",
 				},
 				{
 					name: "Tassled Jerkin",
@@ -84,7 +84,7 @@ const season10 = {
 						"silk": 20,
 						"goldenheart-wood": 20
 					},
-						img: "item/season10/fishmonger/chest.png",
+						img: "resources/item/season10/fishmonger/chest.png",
 				},
 				{
 					name: "Tassled Skirt",
@@ -94,7 +94,7 @@ const season10 = {
 						"weirwood": 20,
 						"silk": 20
 					},
-						img: "item/season10/fishmonger/pants.png",
+						img: "resources/item/season10/fishmonger/pants.png",
 				},
 				{
 					name: "Dry Boots",
@@ -104,7 +104,7 @@ const season10 = {
 						"leather-straps": 20,
 						"kingswood-oak": 20
 					},
-						img: "item/season10/fishmonger/boots.png",
+						img: "resources/item/season10/fishmonger/boots.png",
 				},
 				{
 					name: "Macrame Ring",
@@ -114,7 +114,7 @@ const season10 = {
 						"copper-bar": 20,
 						"ironwood": 20
 					},
-						img: "item/season10/fishmonger/ring.png",
+						img: "resources/item/season10/fishmonger/ring.png",
 				},
 				{
 					name: "Gutting Knife",
@@ -124,7 +124,7 @@ const season10 = {
 						"milk-of-the-poppy": 20,
 						"copper-bar": 20
 					},
-						img: "item/season10/fishmonger/weapon.png",
+						img: "resources/item/season10/fishmonger/weapon.png",
 				},
 				{
 					name: "Gilded Hairpin",
@@ -134,7 +134,7 @@ const season10 = {
 						"hide": 120,
 						"dragonglass": 120
 					},
-						img: "item/season10/fishmonger/head.png",
+						img: "resources/item/season10/fishmonger/head.png",
 				},
 				{
 					name: "Tassled Jerkin",
@@ -144,7 +144,7 @@ const season10 = {
 						"silk": 120,
 						"goldenheart-wood": 120
 					},
-						img: "item/season10/fishmonger/chest.png",
+						img: "resources/item/season10/fishmonger/chest.png",
 				},
 				{
 					name: "Tassled Skirt",
@@ -154,7 +154,7 @@ const season10 = {
 						"weirwood": 120,
 						"silk": 120
 					},
-						img: "item/season10/fishmonger/pants.png",
+						img: "resources/item/season10/fishmonger/pants.png",
 				},
 				{
 					name: "Dry Boots",
@@ -164,7 +164,7 @@ const season10 = {
 						"leather-straps": 120,
 						"kingswood-oak": 120
 					},
-						img: "item/season10/fishmonger/boots.png",
+						img: "resources/item/season10/fishmonger/boots.png",
 				},
 				{
 					name: "Macrame Ring",
@@ -174,7 +174,7 @@ const season10 = {
 						"copper-bar": 120,
 						"ironwood": 120
 					},
-						img: "item/season10/fishmonger/ring.png",
+						img: "resources/item/season10/fishmonger/ring.png",
 				},
 				{
 					name: "Gutting Knife",
@@ -184,7 +184,7 @@ const season10 = {
 						"milk-of-the-poppy": 120,
 						"copper-bar": 120
 					},
-						img: "item/season10/fishmonger/weapon.png",
+						img: "resources/item/season10/fishmonger/weapon.png",
 				},
 				{
 					name: "Gilded Hairpin",
@@ -195,7 +195,7 @@ const season10 = {
 						"dragonglass": 400,
 						"goldenheart-wood": 400
 					},
-						img: "item/season10/fishmonger/head.png",
+						img: "resources/item/season10/fishmonger/head.png",
 				},
 				{
 					name: "Tassled Jerkin",
@@ -206,7 +206,7 @@ const season10 = {
 						"goldenheart-wood": 400,
 						"black-iron": 400
 					},
-						img: "item/season10/fishmonger/chest.png",
+						img: "resources/item/season10/fishmonger/chest.png",
 				},
 				{
 					name: "Tassled Skirt",
@@ -217,7 +217,7 @@ const season10 = {
 						"silk": 400,
 						"milk-of-the-poppy": 400
 					},
-						img: "item/season10/fishmonger/pants.png",
+						img: "resources/item/season10/fishmonger/pants.png",
 				},
 				{
 					name: "Dry Boots",
@@ -228,7 +228,7 @@ const season10 = {
 						"kingswood-oak": 400,
 						"wildfire": 400
 					},
-						img: "item/season10/fishmonger/boots.png",
+						img: "resources/item/season10/fishmonger/boots.png",
 				},
 				{
 					name: "Macrame Ring",
@@ -239,7 +239,7 @@ const season10 = {
 						"ironwood": 400,
 						"kingswood-oak": 400
 					},
-						img: "item/season10/fishmonger/ring.png",
+						img: "resources/item/season10/fishmonger/ring.png",
 				},
 				{
 					name: "Gutting Knife",
@@ -250,7 +250,7 @@ const season10 = {
 						"copper-bar": 400,
 						"ironwood": 400
 					},
-						img: "item/season10/fishmonger/weapon.png",
+						img: "resources/item/season10/fishmonger/weapon.png",
 				},
 				{
 					name: "Gilded Hairpin",
@@ -261,7 +261,7 @@ const season10 = {
 						"dragonglass": 1200,
 						"goldenheart-wood": 1200
 					},
-						img: "item/season10/fishmonger/head.png",
+						img: "resources/item/season10/fishmonger/head.png",
 				},
 				{
 					name: "Tassled Jerkin",
@@ -272,7 +272,7 @@ const season10 = {
 						"goldenheart-wood": 1200,
 						"black-iron": 1200
 					},
-						img: "item/season10/fishmonger/chest.png",
+						img: "resources/item/season10/fishmonger/chest.png",
 				},
 				{
 					name: "Tassled Skirt",
@@ -283,7 +283,7 @@ const season10 = {
 						"silk": 1200,
 						"milk-of-the-poppy": 1200
 					},
-						img: "item/season10/fishmonger/pants.png",
+						img: "resources/item/season10/fishmonger/pants.png",
 				},
 				{
 					name: "Dry Boots",
@@ -294,7 +294,7 @@ const season10 = {
 						"kingswood-oak": 1200,
 						"wildfire": 1200
 					},
-						img: "item/season10/fishmonger/boots.png",
+						img: "resources/item/season10/fishmonger/boots.png",
 				},
 				{
 					name: "Macrame Ring",
@@ -305,7 +305,7 @@ const season10 = {
 						"ironwood": 1200,
 						"kingswood-oak": 1200
 					},
-						img: "item/season10/fishmonger/ring.png",
+						img: "resources/item/season10/fishmonger/ring.png",
 				},
 				{
 					name: "Gutting Knife",
@@ -316,7 +316,7 @@ const season10 = {
 						"copper-bar": 1200,
 						"ironwood": 1200
 					},
-						img: "item/season10/fishmonger/weapon.png",
+						img: "resources/item/season10/fishmonger/weapon.png",
 				}
 			]
 		},
@@ -1620,7 +1620,7 @@ const season10 = {
 					"weirwood": 10,
 					"dragonglass": 10
 				},
-					img: "item/season10/dragon_heiress/head.png",
+					img: "resources/item/season10/dragon_heiress/head.png",
 				},
 				{
 					name: "Sanguine Mantle",
@@ -1630,7 +1630,7 @@ const season10 = {
 						"leather-straps": 10,
 						"goldenheart-wood": 10
 					},
-					img: "item/season10/dragon_heiress/chest.png",
+					img: "resources/item/season10/dragon_heiress/chest.png",
 				},
 				{
 					name: "Sanguine Skirt",
@@ -1640,7 +1640,7 @@ const season10 = {
 						"copper-bar": 10,
 						"silk": 10
 					},
-					img: "item/season10/dragon_heiress/pants.png",
+					img: "resources/item/season10/dragon_heiress/pants.png",
 				},
 				{
 					name: "Gleaming Slippers",
@@ -1650,7 +1650,7 @@ const season10 = {
 						"silk": 10,
 						"kingswood-oak": 10
 					},
-					img: "item/season10/dragon_heiress/boots.png",
+					img: "resources/item/season10/dragon_heiress/boots.png",
 				},
 				{
 					name: "Trifecta Ring",
@@ -1660,7 +1660,7 @@ const season10 = {
 						"hide": 10,
 						"ironwood": 10
 					},
-					img: "item/season10/dragon_heiress/ring.png",
+					img: "resources/item/season10/dragon_heiress/ring.png",
 				},
 				{
 					name: "Wrought Iron Obelisk",
@@ -1670,7 +1670,7 @@ const season10 = {
 						"milk-of-the-poppy": 10,
 						"copper-bar": 10
 					},
-					img: "item/season10/dragon_heiress/weapon.png",
+					img: "resources/item/season10/dragon_heiress/weapon.png",
 				},
 				{
 					name: "Gilded Headdress",
@@ -1680,7 +1680,7 @@ const season10 = {
 					"weirwood": 20,
 					"dragonglass": 20
 				},
-					img: "item/season10/dragon_heiress/head.png",
+					img: "resources/item/season10/dragon_heiress/head.png",
 				},
 				{
 					name: "Sanguine Mantle",
@@ -1690,7 +1690,7 @@ const season10 = {
 						"leather-straps": 20,
 						"goldenheart-wood": 20
 					},
-					img: "item/season10/dragon_heiress/chest.png",
+					img: "resources/item/season10/dragon_heiress/chest.png",
 				},
 				{
 					name: "Sanguine Skirt",
@@ -1700,7 +1700,7 @@ const season10 = {
 						"copper-bar": 20,
 						"silk": 20
 					},
-					img: "item/season10/dragon_heiress/pants.png",
+					img: "resources/item/season10/dragon_heiress/pants.png",
 				},
 				{
 					name: "Gleaming Slippers",
@@ -1710,7 +1710,7 @@ const season10 = {
 						"silk": 20,
 						"kingswood-oak": 20
 					},
-					img: "item/season10/dragon_heiress/boots.png",
+					img: "resources/item/season10/dragon_heiress/boots.png",
 				},
 				{
 					name: "Trifecta Ring",
@@ -1720,7 +1720,7 @@ const season10 = {
 						"hide": 20,
 						"ironwood": 20
 					},
-					img: "item/season10/dragon_heiress/ring.png",
+					img: "resources/item/season10/dragon_heiress/ring.png",
 				},
 				{
 					name: "Wrought Iron Obelisk",
@@ -1730,7 +1730,7 @@ const season10 = {
 						"milk-of-the-poppy": 20,
 						"copper-bar": 20
 					},
-					img: "item/season10/dragon_heiress/weapon.png",
+					img: "resources/item/season10/dragon_heiress/weapon.png",
 				},
 				{
 					name: "Gilded Headdress",
@@ -1740,7 +1740,7 @@ const season10 = {
 						"weirwood": 120,
 						"dragonglass": 120
 					},
-					img: "item/season10/dragon_heiress/head.png",
+					img: "resources/item/season10/dragon_heiress/head.png",
 				},
 				{
 					name: "Sanguine Mantle",
@@ -1750,7 +1750,7 @@ const season10 = {
 						"leather-straps": 120,
 						"goldenheart-wood": 120
 					},
-					img: "item/season10/dragon_heiress/chest.png",
+					img: "resources/item/season10/dragon_heiress/chest.png",
 				},
 				{
 					name: "Sanguine Skirt",
@@ -1760,7 +1760,7 @@ const season10 = {
 						"copper-bar": 120,
 						"silk": 120
 					},
-					img: "item/season10/dragon_heiress/pants.png",
+					img: "resources/item/season10/dragon_heiress/pants.png",
 				},
 				{
 					name: "Gleaming Slippers",
@@ -1770,7 +1770,7 @@ const season10 = {
 						"silk": 120,
 						"kingswood-oak": 120
 					},
-					img: "item/season10/dragon_heiress/boots.png",
+					img: "resources/item/season10/dragon_heiress/boots.png",
 				},
 				{
 					name: "Trifecta Ring",
@@ -1780,7 +1780,7 @@ const season10 = {
 						"hide": 120,
 						"ironwood": 120
 					},
-					img: "item/season10/dragon_heiress/ring.png",
+					img: "resources/item/season10/dragon_heiress/ring.png",
 				},
 				{
 					name: "Wrought Iron Obelisk",
@@ -1790,7 +1790,7 @@ const season10 = {
 						"milk-of-the-poppy": 120,
 						"copper-bar": 120
 					},
-					img: "item/season10/dragon_heiress/weapon.png",
+					img: "resources/item/season10/dragon_heiress/weapon.png",
 				},
 				{
 					name: "Gilded Headdress",
@@ -1801,7 +1801,7 @@ const season10 = {
 						"dragonglass": 400,
 						"ironwood": 400
 					},
-					img: "item/season10/dragon_heiress/head.png",
+					img: "resources/item/season10/dragon_heiress/head.png",
 				},
 				{
 					name: "Sanguine Mantle",
@@ -1812,7 +1812,7 @@ const season10 = {
 						"goldenheart-wood": 400,
 						"black-iron": 400
 					},
-					img: "item/season10/dragon_heiress/chest.png",
+					img: "resources/item/season10/dragon_heiress/chest.png",
 				},
 				{
 					name: "Sanguine Skirt",
@@ -1823,7 +1823,7 @@ const season10 = {
 						"silk": 400,
 						"kingswood-oak": 400
 					},
-					img: "item/season10/dragon_heiress/pants.png",
+					img: "resources/item/season10/dragon_heiress/pants.png",
 				},
 				{
 					name: "Gleaming Slippers",
@@ -1834,7 +1834,7 @@ const season10 = {
 						"kingswood-oak": 400,
 						"weirwood": 400
 					},
-					img: "item/season10/dragon_heiress/boots.png",
+					img: "resources/item/season10/dragon_heiress/boots.png",
 				},
 				{
 					name: "Trifecta Ring",
@@ -1845,7 +1845,7 @@ const season10 = {
 						"ironwood": 400,
 						"milk-of-the-poppy": 400
 					},
-					img: "item/season10/dragon_heiress/ring.png",
+					img: "resources/item/season10/dragon_heiress/ring.png",
 				},
 				{
 					name: "Wrought Iron Obelisk",
@@ -1856,7 +1856,7 @@ const season10 = {
 						"copper-bar": 400,
 						"goldenheart-wood": 400
 					},
-					img: "item/season10/dragon_heiress/weapon.png",
+					img: "resources/item/season10/dragon_heiress/weapon.png",
 				},
 				{
 					name: "Gilded Headdress",
@@ -1867,7 +1867,7 @@ const season10 = {
 						"dragonglass": 1200,
 						"ironwood": 1200
 					},
-					img: "item/season10/dragon_heiress/head.png",
+					img: "resources/item/season10/dragon_heiress/head.png",
 				},
 				{
 					name: "Sanguine Mantle",
@@ -1878,7 +1878,7 @@ const season10 = {
 						"goldenheart-wood": 1200,
 						"black-iron": 1200
 					},
-					img: "item/season10/dragon_heiress/chest.png",
+					img: "resources/item/season10/dragon_heiress/chest.png",
 				},
 				{
 					name: "Sanguine Skirt",
@@ -1889,7 +1889,7 @@ const season10 = {
 						"silk": 1200,
 						"kingswood-oak": 1200
 					},
-					img: "item/season10/dragon_heiress/pants.png",
+					img: "resources/item/season10/dragon_heiress/pants.png",
 				},
 				{
 					name: "Gleaming Slippers",
@@ -1900,7 +1900,7 @@ const season10 = {
 						"kingswood-oak": 1200,
 						"weirwood": 1200
 					},
-					img: "item/season10/dragon_heiress/boots.png",
+					img: "resources/item/season10/dragon_heiress/boots.png",
 				},
 				{
 					name: "Trifecta Ring",
@@ -1911,7 +1911,7 @@ const season10 = {
 						"ironwood": 1200,
 						"milk-of-the-poppy": 1200
 					},
-					img: "item/season10/dragon_heiress/ring.png",
+					img: "resources/item/season10/dragon_heiress/ring.png",
 				},
 				{
 					name: "Wrought Iron Obelisk",
@@ -1922,7 +1922,7 @@ const season10 = {
 						"copper-bar": 1200,
 						"goldenheart-wood": 1200
 					},
-					img: "item/season10/dragon_heiress/weapon.png",
+					img: "resources/item/season10/dragon_heiress/weapon.png",
 				}
 			]
 		},
