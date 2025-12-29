@@ -1636,16 +1636,18 @@
             helmet: 'Helmet',
             chest: 'Chest',
             pants: 'Pants',
+            dragonTrinket: 'Dragon Trinket',
             boots: 'Boots',
             ring: 'Ring',
             weapon: 'Weapon',
             trinket: 'Trinket'
         };
-        const recommendations = [];
-        const filter = SCENARIO_TO_GEAR_FILTER[currentScenario] || 'sop';
-        const slots = ['helmet', 'chest', 'pants', 'dragonTrinket', 'boots', 'ring', 'weapon', 'trinket'];
         
-        slots.forEach(slot => {
+        const filter = SCENARIO_TO_GEAR_FILTER[currentScenario] || 'sop';
+        const leftSlots = ['helmet', 'chest', 'pants', 'dragonTrinket'];
+        const rightSlots = ['weapon', 'ring', 'boots', 'trinket'];
+        
+        function getSlotData(slot) {
             const select = document.getElementById(`msGearSelect-${slot}`);
             const qualitySelect = document.getElementById(`msGearQuality-${slot}`);
             const levelSelect = document.getElementById(`msGearLevelSelect-${slot}`);
@@ -1655,56 +1657,76 @@
                 const gearData = MARCH_SIZE_DATA.gear[slot]?.[select.value];
                 const quality = qualitySelect?.value || 'legendary';
                 const level = levelSelect?.value || '40';
+                const baseMs = parseFloat(selectedOption?.dataset?.baseMs) || 0;
+                const basePct = parseFloat(selectedOption?.dataset?.basePct) || 0;
                 
-                recommendations.push({
+                // Calculate current and max values
+                const levelMult = { 35: 0.85, 40: 1.0, 45: 1.15, 50: 1.30 }[parseInt(level)] || 1.0;
+                const qualityMult = { poor: 0.2, common: 0.4, fine: 0.6, exquisite: 0.8, epic: 0.9, legendary: 1.0 }[quality] || 1.0;
+                const currentMs = Math.floor(baseMs * levelMult * qualityMult);
+                const maxMs = Math.floor(baseMs * 1.30);
+                const currentPct = basePct * levelMult * qualityMult;
+                const maxPct = basePct * 1.30;
+                
+                return {
                     slot: slotNames[slot],
+                    slotKey: slot,
                     name: select.value,
                     img: gearData?.img || selectedOption?.dataset?.img || DEFAULT_IMAGES[slot],
                     quality: quality,
                     level: level,
-                    stats: gearData?.stats?.legendary
-                });
-            } else {
-                // Show best available gear for this slot
-                const gearOptions = getGearOptionsForSlot(slot, filter);
-                if (gearOptions.length > 0) {
-                    const best = gearOptions[0];
-                    recommendations.push({
-                        slot: slotNames[slot],
-                        name: best.name,
-                        img: best.img || DEFAULT_IMAGES[slot],
-                        quality: 'legendary',
-                        level: '40',
-                        stats: best.stats?.legendary,
-                        isRecommendation: true
-                    });
-                }
+                    currentMs, maxMs, currentPct, maxPct,
+                    stats: gearData?.stats?.legendary,
+                    isRecommendation: false
+                };
             }
-        });
-
-        elements.recommendationsGrid.innerHTML = recommendations.map(rec => {
-            const statsHtml = rec.stats ? `
-                <div class="ms-recommendation-item__stats-inline">
-                    ${rec.stats.marchSize ? `<span>+${formatNumber(rec.stats.marchSize)}</span>` : ''}
-                    ${rec.stats.marchSizePct ? `<span>+${rec.stats.marchSizePct.toFixed(2)}%</span>` : ''}
-                </div>
-            ` : '';
+            return null;
+        }
+        
+        function renderSlot(data, isRight = false) {
+            if (!data) return '';
+            
+            const imgSrc = data.img.startsWith('resources/') ? data.img : 'resources/' + data.img;
+            const qualityColor = MARCH_SIZE_DATA.qualityColors[data.quality] || '#E5CC80';
+            
+            let progressionText = '';
+            if (data.currentMs > 0) {
+                progressionText = `(+${formatNumber(data.currentMs)}/${formatNumber(data.maxMs)})`;
+            } else if (data.currentPct > 0) {
+                progressionText = `(+${data.currentPct.toFixed(2)}%/${data.maxPct.toFixed(2)}%)`;
+            }
+            
+            const isDragonTrinket = data.slotKey === 'dragonTrinket';
             
             return `
-                <div class="ms-recommendation-item ${rec.isRecommendation ? 'is-suggestion' : ''}">
-                    <div class="ms-recommendation-item__image">
-                        <img src="${rec.img.startsWith('resources/') ? rec.img : 'resources/' + rec.img}" alt="${rec.name}" onerror="this.src='${DEFAULT_IMAGES[rec.slot?.toLowerCase()] || 'resources/item/ring.png'}'">
+                <div class="ms-rec-slot ${isRight ? 'ms-rec-slot--right' : ''} ${isDragonTrinket ? 'ms-rec-slot--dragon' : ''}" data-quality="${data.quality}">
+                    <span class="ms-rec-slot__progression">${progressionText}</span>
+                    <div class="ms-rec-slot__image" style="border-color: ${qualityColor}">
+                        <img src="${imgSrc}" alt="${data.name}" onerror="this.src='${DEFAULT_IMAGES[data.slotKey] || 'resources/item/ring.png'}'">
                     </div>
-                    <div class="ms-recommendation-item__details">
-                        <div class="ms-recommendation-item__slot">${rec.slot}</div>
-                        <div class="ms-recommendation-item__name">${rec.name}</div>
-                        <div class="ms-recommendation-item__quality" style="color: ${MARCH_SIZE_DATA.qualityColors[rec.quality] || '#E5CC80'}">${capitalizeFirst(rec.quality)} Lv.${rec.level}</div>
-                        ${statsHtml}
-                        ${rec.isRecommendation ? '<div class="ms-recommendation-item__badge">Suggested</div>' : ''}
+                    <div class="ms-rec-slot__info">
+                        <span class="ms-rec-slot__label">${data.slot}</span>
+                        <span class="ms-rec-slot__name">${data.name}</span>
+                        <span class="ms-rec-slot__quality" style="color: ${qualityColor}">${capitalizeFirst(data.quality)} Lv.${data.level}</span>
                     </div>
                 </div>
             `;
-        }).join('');
+        }
+        
+        const leftHtml = leftSlots.map(slot => renderSlot(getSlotData(slot), false)).join('');
+        const rightHtml = rightSlots.map(slot => renderSlot(getSlotData(slot), true)).join('');
+        
+        elements.recommendationsGrid.innerHTML = `
+            <div class="ms-rec-column ms-rec-column--left">
+                ${leftHtml}
+            </div>
+            <div class="ms-rec-center">
+                <img src="resources/stark-logo.png" alt="Logo" class="ms-rec-logo">
+            </div>
+            <div class="ms-rec-column ms-rec-column--right">
+                ${rightHtml}
+            </div>
+        `;
     }
 
     function generateBreakdownChart(results) {
