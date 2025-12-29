@@ -3,6 +3,26 @@ let initialMaterials = {};
 const urlParams = new URLSearchParams(window.location.search);
 const isDebugMode = urlParams.has('debug') && urlParams.get('debug') === 'true';
 
+/**
+ * Format large numbers in abbreviated form (e.g., 100M, 5.2B)
+ * @param {number} n - The number to format
+ * @param {boolean} abbreviated - If true, use K/M/B suffixes for large numbers
+ * @returns {string} Formatted number string
+ */
+function formatLargeNumber(n, abbreviated = true) {
+    if (!abbreviated) {
+        return new Intl.NumberFormat('en-US').format(n);
+    }
+    if (n >= 1000000000) {
+        return (n / 1000000000).toFixed(1).replace(/\.0$/, '') + 'B';
+    } else if (n >= 1000000) {
+        return (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+    } else if (n >= 1000) {
+        return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+    }
+    return new Intl.NumberFormat('en-US').format(n);
+}
+
 const LEVELS = [1, 5, 10, 15, 20, 25, 30, 35, 40, 45];
 const normalizeKey = (str = '') =>
     (str || '')
@@ -1642,20 +1662,23 @@ function renderResults(templateCounts, materialCounts) {
             const remainingAmount = Math.max(startingAmount - usedAmount, 0);
             remainingUse[materialName] = usedAmount;
             
-            // Remaining column
+            // Remaining column (abbreviated with full number on hover)
             const remainingCol = document.createElement('div');
             remainingCol.className = 'col-remaining';
-            remainingCol.textContent = new Intl.NumberFormat('en-US').format(remainingAmount);
+            remainingCol.textContent = formatLargeNumber(remainingAmount);
+            remainingCol.title = new Intl.NumberFormat('en-US').format(remainingAmount);
             
-            // Starting column
+            // Starting column (abbreviated with full number on hover)
             const startingCol = document.createElement('div');
             startingCol.className = 'col-starting';
-            startingCol.textContent = new Intl.NumberFormat('en-US').format(startingAmount);
+            startingCol.textContent = formatLargeNumber(startingAmount);
+            startingCol.title = new Intl.NumberFormat('en-US').format(startingAmount);
             
-            // Used column
+            // Used column (abbreviated with full number on hover)
             const usedCol = document.createElement('div');
             usedCol.className = 'col-used';
-            usedCol.textContent = new Intl.NumberFormat('en-US').format(usedAmount);
+            usedCol.textContent = formatLargeNumber(usedAmount);
+            usedCol.title = new Intl.NumberFormat('en-US').format(usedAmount);
             
             row.appendChild(materialCol);
             row.appendChild(remainingCol);
@@ -1760,7 +1783,7 @@ function renderResults(templateCounts, materialCounts) {
                         materialUsage[mat] = totalAmt;
                         const pLine = document.createElement('p');
                         pLine.className = 'item-material';
-                        pLine.innerHTML = `${mat} <span>${new Intl.NumberFormat('en-US').format(totalAmt)}</span>`;
+                        pLine.innerHTML = `${mat} <span title="${new Intl.NumberFormat('en-US').format(totalAmt)}">${formatLargeNumber(totalAmt)}</span>`;
                         matsDiv.appendChild(pLine);
                     });
                     templateDiv.dataset.materials = JSON.stringify(materialUsage);
@@ -1778,7 +1801,8 @@ function renderResults(templateCounts, materialCounts) {
                             }
                             const target = materialsDiv.querySelector(`div[data-material="${mat}"] .remaining-to-use`);
                             if (target) {
-                                target.textContent = `-${new Intl.NumberFormat('en-US').format(remainingUse[mat])}`;
+                                target.textContent = `-${formatLargeNumber(remainingUse[mat])}`;
+                                target.title = `-${new Intl.NumberFormat('en-US').format(remainingUse[mat])}`;
                             }
                         });
                     });
@@ -2090,15 +2114,17 @@ function renderMaterialCombinationGuide(resultsDiv, combinationData) {
                     const tierRow = document.createElement('div');
                     tierRow.className = `combination-tier tier-${tier}`;
                     
-                    // Combined materials count
+                    // Combined materials count (abbreviated)
                     const tierCount = document.createElement('span');
                     tierCount.className = 'tier-count';
-                    tierCount.textContent = new Intl.NumberFormat('en-US').format(tierData.count);
+                    tierCount.textContent = formatLargeNumber(tierData.count);
+                    tierCount.title = new Intl.NumberFormat('en-US').format(tierData.count); // Full number on hover
                     
-                    // Poor equivalent
+                    // Poor equivalent (abbreviated)
                     const tierPoor = document.createElement('span');
                     tierPoor.className = 'tier-poor';
-                    tierPoor.textContent = new Intl.NumberFormat('en-US').format(tierData.poorEquivalent);
+                    tierPoor.textContent = formatLargeNumber(tierData.poorEquivalent);
+                    tierPoor.title = new Intl.NumberFormat('en-US').format(tierData.poorEquivalent); // Full number on hover
                     
                     tierRow.appendChild(tierCount);
                     tierRow.appendChild(tierPoor);
@@ -2108,10 +2134,10 @@ function renderMaterialCombinationGuide(resultsDiv, combinationData) {
             
             card.appendChild(tiersDiv);
             
-            // Total poor
+            // Total poor (abbreviated)
             const totalDiv = document.createElement('div');
             totalDiv.className = 'combination-card__total';
-            totalDiv.innerHTML = `<strong>Total Poor:</strong> <span>${new Intl.NumberFormat('en-US').format(data.totalPoor)}</span>`;
+            totalDiv.innerHTML = `<strong>Total Poor:</strong> <span title="${new Intl.NumberFormat('en-US').format(data.totalPoor)}">${formatLargeNumber(data.totalPoor)}</span>`;
             card.appendChild(totalDiv);
             
             cardsGrid.appendChild(card);
@@ -2136,7 +2162,7 @@ function renderMaterialCombinationGuide(resultsDiv, combinationData) {
         summaryDiv.innerHTML = `
             <div class="summary-stat">
                 <span class="summary-label">Total Poor Materials Needed</span>
-                <span class="summary-value">${new Intl.NumberFormat('en-US').format(grandTotal)}</span>
+                <span class="summary-value" title="${new Intl.NumberFormat('en-US').format(grandTotal)}">${formatLargeNumber(grandTotal)}</span>
             </div>
         `;
         guideDiv.appendChild(summaryDiv);
@@ -2319,12 +2345,14 @@ function gatherMaterialsFromInputs() {
         const id = input.getAttribute('id').replace('my-', '');
         const materialName = materialKeyMap[normalizeKey(id)];
         const raw = input.value.replace(/,/g, '');
+        // Use parseFloat to preserve decimals (e.g., "87.9" with Million scale = 87,900,000)
         const materialAmount = parseFloat(raw);
         if (!materialName) {
             return;
         }
         if (!isNaN(materialAmount)) {
-            materialsInput[materialName] = materialAmount * scale;
+            // Round to avoid floating point precision issues
+            materialsInput[materialName] = Math.round(materialAmount * scale);
         }
     });
 
