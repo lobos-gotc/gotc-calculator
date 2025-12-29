@@ -13,9 +13,16 @@
         // Basic Materials (Season 0)
         'black iron': 'my-black-iron',
         'blackiron': 'my-black-iron',
+        'black ir0n': 'my-black-iron',  // OCR o->0 confusion
+        'b1ack iron': 'my-black-iron',  // OCR l->1 confusion
+        'biack iron': 'my-black-iron',  // OCR l->i confusion
         'copper bar': 'my-copper-bar',
         'copperbar': 'my-copper-bar',
         'copper ba': 'my-copper-bar',  // OCR truncation
+        'c0pper bar': 'my-copper-bar',  // OCR O->0 confusion
+        'c0pperbar': 'my-copper-bar',
+        'copp er bar': 'my-copper-bar',  // OCR space insertion
+        'copper b ar': 'my-copper-bar',
         'dragonglass': 'my-dragonglass',
         'dragon glass': 'my-dragonglass',
         'dragongiass': 'my-dragonglass',  // OCR l/i confusion
@@ -25,11 +32,34 @@
         'goldenheart': 'my-goldenheart-wood',
         'goldenheartwood': 'my-goldenheart-wood',
         'hide': 'my-hide',
+        'h1de': 'my-hide',  // OCR i->1 confusion
+        'hid e': 'my-hide',  // OCR space insertion
         'ironwood': 'my-ironwood',
         'iron wood': 'my-ironwood',
+        'ir0nwood': 'my-ironwood',  // OCR O->0 confusion
+        '1ronwood': 'my-ironwood',  // OCR I->1 confusion
         'kingswood oak': 'my-kingswood-oak',
         'kingswoodoak': 'my-kingswood-oak',
         'kingswood': 'my-kingswood-oak',
+        'kingswood qak': 'my-kingswood-oak',  // OCR O->Q confusion
+        'kingswood 0ak': 'my-kingswood-oak',  // OCR O->0 confusion
+        'kingswoodqak': 'my-kingswood-oak',
+        'kingswood0ak': 'my-kingswood-oak',
+        'kingsw00d': 'my-kingswood-oak',  // OCR O->0 double
+        'kingswo0d oak': 'my-kingswood-oak',
+        'k1ngswood': 'my-kingswood-oak',  // OCR I->1
+        'kincswood': 'my-kingswood-oak',  // OCR G->C confusion
+        'kingswqod': 'my-kingswood-oak',  // OCR O->Q in wood
+        'kingswood oa': 'my-kingswood-oak',  // Truncated
+        'kingswood o': 'my-kingswood-oak',   // More truncated
+        'kingswoodoa': 'my-kingswood-oak',
+        'xingswood': 'my-kingswood-oak',  // OCR K->X
+        'kingswoo': 'my-kingswood-oak',   // Truncated
+        'ingswood': 'my-kingswood-oak',   // Missing K
+        'kingsw0od': 'my-kingswood-oak',
+        'kincswood oak': 'my-kingswood-oak',
+        'kingswood cak': 'my-kingswood-oak',  // OCR O->C
+        'kingswooq': 'my-kingswood-oak',  // OCR D->Q
         'leather straps': 'my-leather-straps',
         'leatherstraps': 'my-leather-straps',
         'leather strap': 'my-leather-straps',
@@ -41,11 +71,20 @@
         'milkofthepoppy': 'my-milk-of-the-poppy',
         'milk poppy': 'my-milk-of-the-poppy',
         'poppy': 'my-milk-of-the-poppy',
+        'mi1k of the poppy': 'my-milk-of-the-poppy',  // OCR l->1 confusion
+        'milk 0f the poppy': 'my-milk-of-the-poppy',  // OCR o->0 confusion
         'silk': 'my-silk',
+        's1lk': 'my-silk',  // OCR i->1 confusion
+        'si1k': 'my-silk',
+        'siik': 'my-silk',  // OCR l->i confusion
         'weirwood': 'my-weirwood',
         'weir wood': 'my-weirwood',
+        'we1rwood': 'my-weirwood',  // OCR i->1 confusion
+        'weirw0od': 'my-weirwood',  // OCR o->0 confusion
         'wildfire': 'my-wildfire',
         'wild fire': 'my-wildfire',
+        'wildf1re': 'my-wildfire',  // OCR i->1 confusion
+        'w1ldfire': 'my-wildfire',
         
         // Season 1 Materials
         'abalone': 'my-abalone',
@@ -380,6 +419,80 @@
                 detectedMaterialsEl.classList.toggle('collapsed', isExpanded);
             });
         }
+        
+        // Initialize OCR Settings UI
+        initOCRSettings();
+    }
+    
+    /**
+     * Initialize OCR Settings UI (API key management, quota display)
+     */
+    function initOCRSettings() {
+        const userApiKeyInput = document.getElementById('userApiKey');
+        const saveApiKeyBtn = document.getElementById('saveApiKey');
+        const clearApiKeyBtn = document.getElementById('clearApiKey');
+        const toggleVisibilityBtn = document.getElementById('toggleApiKeyVisibility');
+        const apiKeyStatus = document.getElementById('apiKeyStatus');
+        
+        // Load saved API key
+        if (userApiKeyInput && window.OCRKeyManager) {
+            const savedKey = window.OCRKeyManager.getUserKey();
+            if (savedKey) {
+                userApiKeyInput.value = savedKey;
+                showApiKeyStatus('API key loaded', 'success');
+            }
+        }
+        
+        // Save API key
+        if (saveApiKeyBtn && userApiKeyInput) {
+            saveApiKeyBtn.addEventListener('click', () => {
+                const key = userApiKeyInput.value.trim();
+                if (key) {
+                    if (window.OCRKeyManager) {
+                        window.OCRKeyManager.setUserKey(key);
+                        showApiKeyStatus('API key saved!', 'success');
+                        updateQuotaDisplay();
+                    }
+                } else {
+                    showApiKeyStatus('Please enter an API key', 'error');
+                }
+            });
+        }
+        
+        // Clear API key
+        if (clearApiKeyBtn && userApiKeyInput) {
+            clearApiKeyBtn.addEventListener('click', () => {
+                userApiKeyInput.value = '';
+                if (window.OCRKeyManager) {
+                    window.OCRKeyManager.clearUserKey();
+                    showApiKeyStatus('API key cleared', 'success');
+                    updateQuotaDisplay();
+                }
+            });
+        }
+        
+        // Toggle password visibility
+        if (toggleVisibilityBtn && userApiKeyInput) {
+            toggleVisibilityBtn.addEventListener('click', () => {
+                const isPassword = userApiKeyInput.type === 'password';
+                userApiKeyInput.type = isPassword ? 'text' : 'password';
+                toggleVisibilityBtn.textContent = isPassword ? '🙈' : '👁️';
+            });
+        }
+        
+        // Initialize quota display
+        updateQuotaDisplay();
+        
+        function showApiKeyStatus(message, type) {
+            if (apiKeyStatus) {
+                apiKeyStatus.textContent = message;
+                apiKeyStatus.className = 'api-key-status ' + type;
+                setTimeout(() => {
+                    apiKeyStatus.textContent = '';
+                    apiKeyStatus.className = 'api-key-status';
+                }, 3000);
+            }
+        }
     }
 
     function handleDragOver(e) {
@@ -537,6 +650,338 @@
         return ocrWorker;
     }
 
+    /**
+     * Extract just the amounts from a text string (for digit-only OCR results)
+     */
+    function extractAmountsFromText(text) {
+        const amounts = [];
+        // Pattern for numbers with M/K suffix
+        const pattern = /(\d+)(?:[.,](\d+))?\s*([MmKk])/g;
+        
+        let match;
+        while ((match = pattern.exec(text)) !== null) {
+            const intPart = match[1];
+            const decPart = match[2] || '';
+            const suffix = (match[3] || '').toLowerCase();
+            
+            let value = decPart ? parseFloat(intPart + '.' + decPart) : parseInt(intPart);
+            
+            if (suffix === 'k') {
+                value *= 1000;
+            } else if (suffix === 'm') {
+                value *= 1000000;
+            }
+            
+            if (value > 0 && value <= 500000000) { // Filter out unreasonable values
+                amounts.push(Math.round(value));
+            }
+        }
+        
+        return amounts;
+    }
+
+    /**
+     * Merge materials from OCR results, handling duplicate/conflicting values intelligently
+     */
+    function mergeMaterials(target, source) {
+        for (const [key, value] of Object.entries(source)) {
+            if (!target[key]) {
+                target[key] = value;
+            } else {
+                // Smart value selection: when values are ~10x apart, prefer smaller
+                // This handles OCR decimal drops (3.6M read as 36M)
+                const existing = target[key];
+                const ratio = Math.max(existing, value) / Math.min(existing, value);
+                
+                if (ratio >= 8 && ratio <= 12) {
+                    // Values are ~10x apart - likely a decimal drop issue
+                    // Prefer the smaller value (it's probably correct)
+                    target[key] = Math.min(existing, value);
+                    console.log(`Decimal correction: ${key} - chose ${Math.min(existing, value)} over ${Math.max(existing, value)} (ratio: ${ratio.toFixed(1)})`);
+                } else {
+                    // Values are similar or very different - take the higher one
+                    target[key] = Math.max(existing, value);
+                }
+            }
+        }
+    }
+
+    // ==================== OCR.space API Integration ====================
+    
+    const OCRSPACE_API_URL = 'https://api.ocr.space/parse/image';
+    const OCRSPACE_MONTHLY_LIMIT = 25000;
+    
+    /**
+     * Get current month's quota usage from localStorage
+     */
+    function getQuotaUsage() {
+        const now = new Date();
+        const monthKey = `ocrspace_usage_${now.getFullYear()}_${now.getMonth() + 1}`;
+        try {
+            const stored = localStorage.getItem(monthKey);
+            if (stored) {
+                return JSON.parse(stored);
+            }
+        } catch (e) {
+            console.error('Failed to read quota:', e);
+        }
+        return { used: 0, limit: OCRSPACE_MONTHLY_LIMIT };
+    }
+    
+    /**
+     * Increment quota usage
+     */
+    function incrementQuotaUsage() {
+        const now = new Date();
+        const monthKey = `ocrspace_usage_${now.getFullYear()}_${now.getMonth() + 1}`;
+        try {
+            const quota = getQuotaUsage();
+            quota.used += 1;
+            localStorage.setItem(monthKey, JSON.stringify(quota));
+            // Update UI if available
+            updateQuotaDisplay();
+        } catch (e) {
+            console.error('Failed to update quota:', e);
+        }
+    }
+    
+    /**
+     * Check if OCR.space quota is available
+     */
+    function hasOCRSpaceQuota() {
+        // If user has their own key, always allow
+        if (window.OCRKeyManager && window.OCRKeyManager.hasUserKey()) {
+            return true;
+        }
+        const quota = getQuotaUsage();
+        return quota.used < quota.limit;
+    }
+    
+    /**
+     * Get remaining quota count
+     */
+    function getRemainingQuota() {
+        const quota = getQuotaUsage();
+        return Math.max(0, quota.limit - quota.used);
+    }
+    
+    /**
+     * Update quota display in UI
+     */
+    function updateQuotaDisplay() {
+        const quotaEl = document.getElementById('ocr-quota-display');
+        if (quotaEl) {
+            const remaining = getRemainingQuota();
+            const isUserKey = window.OCRKeyManager && window.OCRKeyManager.hasUserKey();
+            if (isUserKey) {
+                quotaEl.innerHTML = '<span class="quota-unlimited">Using your API key (unlimited)</span>';
+            } else {
+                const quotaClass = remaining < 1000 ? 'quota-low' : (remaining < 5000 ? 'quota-medium' : 'quota-ok');
+                quotaEl.innerHTML = `<span class="${quotaClass}">${remaining.toLocaleString()} scans remaining this month</span>`;
+            }
+        }
+    }
+    
+    /**
+     * Compress image to fit within size limit (1MB for OCR.space free tier)
+     * @param {string} dataUrl - Original image data URL
+     * @param {number} maxSizeKB - Maximum size in KB (default 900KB to be safe)
+     * @returns {Promise<string>} Compressed image data URL
+     */
+    async function compressImageForOCR(dataUrl, maxSizeKB = 900) {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Start with original dimensions
+                let width = img.width;
+                let height = img.height;
+                
+                // If image is very large, scale it down
+                const maxDimension = 2000;
+                if (width > maxDimension || height > maxDimension) {
+                    const ratio = Math.min(maxDimension / width, maxDimension / height);
+                    width = Math.floor(width * ratio);
+                    height = Math.floor(height * ratio);
+                }
+                
+                canvas.width = width;
+                canvas.height = height;
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // Try different quality levels to get under size limit
+                let quality = 0.9;
+                let result = canvas.toDataURL('image/jpeg', quality);
+                
+                // Reduce quality until we're under the limit
+                while (getBase64SizeKB(result) > maxSizeKB && quality > 0.3) {
+                    quality -= 0.1;
+                    result = canvas.toDataURL('image/jpeg', quality);
+                }
+                
+                // If still too large, reduce dimensions
+                while (getBase64SizeKB(result) > maxSizeKB && width > 800) {
+                    width = Math.floor(width * 0.8);
+                    height = Math.floor(height * 0.8);
+                    canvas.width = width;
+                    canvas.height = height;
+                    ctx.drawImage(img, 0, 0, width, height);
+                    result = canvas.toDataURL('image/jpeg', quality);
+                }
+                
+                console.log(`[OCR] Image compressed: ${getBase64SizeKB(dataUrl).toFixed(0)}KB -> ${getBase64SizeKB(result).toFixed(0)}KB (${width}x${height}, q=${quality.toFixed(1)})`);
+                resolve(result);
+            };
+            img.src = dataUrl;
+        });
+    }
+    
+    /**
+     * Get size of base64 data URL in KB
+     */
+    function getBase64SizeKB(dataUrl) {
+        // Remove data URL prefix and calculate base64 size
+        const base64 = dataUrl.split('base64,')[1] || dataUrl;
+        // Base64 encodes 3 bytes in 4 characters, so multiply by 0.75
+        return (base64.length * 0.75) / 1024;
+    }
+    
+    /**
+     * Call OCR.space API
+     * @param {string} base64Image - Base64 encoded image (with or without data URL prefix)
+     * @returns {Promise<{success: boolean, text: string, confidence: number, error?: string}>}
+     */
+    async function callOCRSpaceAPI(base64Image) {
+        // Get API key
+        const apiKey = window.OCRKeyManager ? window.OCRKeyManager.getActiveKey() : null;
+        if (!apiKey) {
+            return { success: false, text: '', confidence: 0, error: 'No API key available' };
+        }
+        
+        // Compress image if needed (OCR.space free tier limit is 1MB)
+        let imageDataUrl = base64Image;
+        if (!base64Image.startsWith('data:')) {
+            imageDataUrl = 'data:image/png;base64,' + base64Image;
+        }
+        
+        const originalSizeKB = getBase64SizeKB(imageDataUrl);
+        if (originalSizeKB > 900) {
+            console.log(`[OCR] Image too large (${originalSizeKB.toFixed(0)}KB), compressing...`);
+            imageDataUrl = await compressImageForOCR(imageDataUrl);
+        }
+        
+        // Extract base64 data
+        const imageData = imageDataUrl.split('base64,')[1];
+        
+        try {
+            const formData = new FormData();
+            formData.append('apikey', apiKey);
+            formData.append('base64Image', 'data:image/jpeg;base64,' + imageData);
+            formData.append('language', 'eng');
+            formData.append('isOverlayRequired', 'false');
+            formData.append('detectOrientation', 'true');
+            formData.append('scale', 'true');
+            formData.append('OCREngine', '2'); // Engine 2 is better for screenshots
+            
+            const response = await fetch(OCRSPACE_API_URL, {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const result = await response.json();
+            
+            if (result.IsErroredOnProcessing) {
+                throw new Error(result.ErrorMessage || 'OCR.space processing error');
+            }
+            
+            if (!result.ParsedResults || result.ParsedResults.length === 0) {
+                throw new Error('No results from OCR.space');
+            }
+            
+            const parsedResult = result.ParsedResults[0];
+            const text = parsedResult.ParsedText || '';
+            const confidence = parsedResult.TextOverlay?.Lines?.[0]?.Words?.[0]?.WordConf || 85;
+            
+            // Only increment quota if using default key
+            if (!window.OCRKeyManager || !window.OCRKeyManager.hasUserKey()) {
+                incrementQuotaUsage();
+            }
+            
+            return {
+                success: true,
+                text: text,
+                confidence: confidence,
+                error: null
+            };
+            
+        } catch (error) {
+            console.error('OCR.space API error:', error);
+            return {
+                success: false,
+                text: '',
+                confidence: 0,
+                error: error.message
+            };
+        }
+    }
+    
+    /**
+     * Perform OCR using OCR.space API
+     * @param {object} imageData - Image data object with dataUrl
+     * @returns {Promise<{success: boolean, materials: object, rawText: string, confidence: number}>}
+     */
+    async function performOCRSpace(imageData) {
+        console.log('[OCR.space] Starting OCR for image', imageData.id);
+        
+        const result = await callOCRSpaceAPI(imageData.dataUrl);
+        
+        if (!result.success) {
+            console.warn('[OCR.space] Failed:', result.error);
+            return { success: false, materials: {}, rawText: '', confidence: 0, error: result.error };
+        }
+        
+        console.log('[OCR.space] Raw text:', result.text);
+        
+        // Parse the OCR text using existing parser
+        const materials = parseOCRText(result.text);
+        
+        console.log('[OCR.space] Parsed materials:', materials);
+        
+        return {
+            success: true,
+            materials: materials,
+            rawText: result.text,
+            confidence: result.confidence,
+            source: 'ocrspace'
+        };
+    }
+    
+    // Track which OCR engine was used for display
+    let lastOCRSource = 'tesseract';
+    
+    /**
+     * Get the last OCR source used
+     */
+    function getLastOCRSource() {
+        return lastOCRSource;
+    }
+    
+    // Expose quota functions globally
+    window.OCRQuota = {
+        getUsage: getQuotaUsage,
+        getRemaining: getRemainingQuota,
+        hasQuota: hasOCRSpaceQuota,
+        updateDisplay: updateQuotaDisplay
+    };
+    
+    // ==================== End OCR.space Integration ====================
+
     async function performOCR(imageData) {
         const statusEl = document.getElementById(`scan-status-${imageData.id}`);
         if (statusEl) {
@@ -547,6 +992,51 @@
         statusText.textContent = `Processing image ${imageData.id}...`;
 
         try {
+            // ===== TRY OCR.SPACE FIRST =====
+            if (hasOCRSpaceQuota()) {
+                statusText.textContent = `Processing image ${imageData.id} with OCR.space...`;
+                console.log('[OCR] Trying OCR.space first...');
+                
+                const ocrSpaceResult = await performOCRSpace(imageData);
+                
+                if (ocrSpaceResult.success && Object.keys(ocrSpaceResult.materials).length > 0) {
+                    console.log('[OCR] OCR.space succeeded with', Object.keys(ocrSpaceResult.materials).length, 'materials');
+                    
+                    // Store results
+                    lastOCRSource = 'ocrspace';
+                    imageData.processedImage = imageData.dataUrl;
+                    imageData.rawText = `=== OCR.space Results ===\n${ocrSpaceResult.rawText}`;
+                    imageData.materials = ocrSpaceResult.materials;
+                    imageData.confidenceScores = {};
+                    for (const matId of Object.keys(ocrSpaceResult.materials)) {
+                        imageData.confidenceScores[matId] = ocrSpaceResult.confidence;
+                    }
+                    imageData.ocrSource = 'ocrspace';
+                    imageData.status = 'complete';
+                    
+                    if (statusEl) {
+                        statusEl.className = 'scan-status complete';
+                    }
+                    
+                    updateCombinedResults();
+                    
+                    statusText.textContent = 'Processing complete!';
+                    setTimeout(() => {
+                        progressSection.style.display = 'none';
+                    }, 1000);
+                    
+                    return; // Success! No need for Tesseract fallback
+                } else {
+                    console.log('[OCR] OCR.space returned no materials, falling back to Tesseract...');
+                }
+            } else {
+                console.log('[OCR] OCR.space quota exceeded, using Tesseract...');
+            }
+            
+            // ===== TESSERACT FALLBACK =====
+            lastOCRSource = 'tesseract';
+            statusText.textContent = `Processing image ${imageData.id} with Tesseract...`;
+            
             const worker = await getOCRWorker();
             
             // Try multiple preprocessing methods and combine results
@@ -559,42 +1049,35 @@
             let allTexts = [];
             let allMaterials = {};
             let bestProcessedImage = null;
+            let confidenceScores = {}; // Track confidence per material
             
+            // Method 1-3: Traditional full-image preprocessing
             for (let i = 0; i < preprocessMethods.length; i++) {
                 const method = preprocessMethods[i];
-                statusText.textContent = `Scanning image ${imageData.id} (method ${i + 1}/${preprocessMethods.length})...`;
+                statusText.textContent = `Scanning image ${imageData.id} (Tesseract method ${i + 1}/${preprocessMethods.length})...`;
                 
                 try {
                     const processedImage = await method.fn(imageData.dataUrl);
                     if (i === 0) bestProcessedImage = processedImage;
                     
-                    const { data: { text } } = await worker.recognize(processedImage);
+                    const { data: { text, confidence } } = await worker.recognize(processedImage);
+                    
+                    // Store confidence for this method
+                    const methodConfidence = confidence || 0;
                     
                     // Parse and merge results
                     const materials = parseOCRText(text);
                     const foundMaterials = Object.keys(materials).map(k => MATERIAL_INFO[k]?.name || k).join(', ');
-                    allTexts.push(`--- ${method.name} ---\n${text}\n\n[Found: ${foundMaterials || 'none'}]`);
+                    allTexts.push(`--- ${method.name} (${methodConfidence.toFixed(0)}% conf) ---\n${text}\n\n[Found: ${foundMaterials || 'none'}]`);
                     
-                    for (const [key, value] of Object.entries(materials)) {
-                        if (!allMaterials[key]) {
-                            allMaterials[key] = value;
-                        } else {
-                            // Smart value selection: when values are ~10x apart, prefer smaller
-                            // This handles OCR decimal drops (3.6M read as 36M)
-                            const existing = allMaterials[key];
-                            const ratio = Math.max(existing, value) / Math.min(existing, value);
-                            
-                            if (ratio >= 8 && ratio <= 12) {
-                                // Values are ~10x apart - likely a decimal drop issue
-                                // Prefer the smaller value (it's probably correct)
-                                allMaterials[key] = Math.min(existing, value);
-                                console.log(`Decimal correction: ${key} - chose ${Math.min(existing, value)} over ${Math.max(existing, value)} (ratio: ${ratio.toFixed(1)})`);
-                            } else {
-                                // Values are similar or very different - take the higher one
-                                allMaterials[key] = Math.max(existing, value);
-                            }
+                    // Track confidence for each material found
+                    for (const matId of Object.keys(materials)) {
+                        if (!confidenceScores[matId] || methodConfidence > confidenceScores[matId]) {
+                            confidenceScores[matId] = methodConfidence;
                         }
                     }
+                    
+                    mergeMaterials(allMaterials, materials);
                     
                     // Merge detailed results
                     if (window._ocrDetailedResults) {
@@ -611,10 +1094,99 @@
                 }
             }
             
+            // Method 4: Row-based extraction for improved number accuracy
+            try {
+                statusText.textContent = `Scanning image ${imageData.id} (row extraction)...`;
+                const rows = await extractImageRows(imageData.dataUrl);
+                let rowTexts = [];
+                
+                for (let r = 0; r < rows.length; r++) {
+                    const row = rows[r];
+                    // Process each row with high contrast
+                    const processedRow = await preprocessHighContrast(row.dataUrl);
+                    const { data: { text } } = await worker.recognize(processedRow);
+                    
+                    if (text.trim()) {
+                        rowTexts.push(`Row ${r + 1}: ${text.trim()}`);
+                        const rowMaterials = parseOCRText(text);
+                        mergeMaterials(allMaterials, rowMaterials);
+                    }
+                }
+                
+                if (rowTexts.length > 0) {
+                    allTexts.push(`--- row-extraction ---\n${rowTexts.join('\n')}\n\n[Processed ${rows.length} rows]`);
+                }
+            } catch (e) {
+                console.error('Row extraction failed:', e);
+            }
+            
+            // Method 5: Digit-only OCR on number regions for precise value extraction
+            try {
+                statusText.textContent = `Scanning image ${imageData.id} (digit extraction)...`;
+                
+                // Configure worker for digit-only mode
+                await worker.setParameters({
+                    tessedit_char_whitelist: '0123456789.MmKk ',
+                    tessedit_pageseg_mode: '7', // Treat image as single text line
+                });
+                
+                const rows = await extractImageRows(imageData.dataUrl);
+                let digitTexts = [];
+                
+                for (let r = 0; r < rows.length; r++) {
+                    const row = rows[r];
+                    // Extract just the number region (left portion where amounts appear)
+                    const numberRegion = await extractNumberRegion(row.dataUrl);
+                    const { data: { text } } = await worker.recognize(numberRegion);
+                    
+                    const cleaned = text.trim();
+                    if (cleaned) {
+                        digitTexts.push(`Row ${r + 1} digits: ${cleaned}`);
+                        
+                        // Parse any found amounts and try to associate with materials from allMaterials
+                        const amounts = extractAmountsFromText(cleaned);
+                        if (amounts.length > 0) {
+                            console.log(`[Digit OCR] Row ${r + 1}: Found amounts:`, amounts);
+                        }
+                    }
+                }
+                
+                // Reset worker parameters back to normal
+                await worker.setParameters({
+                    tessedit_char_whitelist: '',
+                    tessedit_pageseg_mode: '6',
+                });
+                
+                if (digitTexts.length > 0) {
+                    allTexts.push(`--- digit-extraction ---\n${digitTexts.join('\n')}`);
+                }
+            } catch (e) {
+                console.error('Digit extraction failed:', e);
+                // Reset parameters on error
+                try {
+                    await worker.setParameters({
+                        tessedit_char_whitelist: '',
+                        tessedit_pageseg_mode: '6',
+                    });
+                } catch (resetError) {
+                    // Ignore reset errors
+                }
+            }
+            
             imageData.processedImage = bestProcessedImage;
             imageData.rawText = allTexts.join('\n\n');
             imageData.materials = allMaterials;
+            imageData.confidenceScores = confidenceScores;
+            imageData.ocrSource = 'tesseract';
             imageData.status = 'complete';
+            
+            // Store confidence globally for display
+            window._ocrConfidenceScores = window._ocrConfidenceScores || {};
+            for (const [matId, conf] of Object.entries(confidenceScores)) {
+                if (!window._ocrConfidenceScores[matId] || conf > window._ocrConfidenceScores[matId]) {
+                    window._ocrConfidenceScores[matId] = conf;
+                }
+            }
 
             if (statusEl) {
                 statusEl.className = 'scan-status complete';
@@ -723,13 +1295,117 @@
         });
     }
 
+    /**
+     * Row-based image extraction for better OCR accuracy
+     * Splits the image into horizontal bands based on game UI structure
+     * Each material row in the game is approximately 80-100px high
+     */
+    async function extractImageRows(dataUrl) {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => {
+                const rows = [];
+                const rowHeight = 90; // Approximate height of each material row
+                const minRowHeight = 60;
+                const totalRows = Math.floor(img.height / minRowHeight);
+                
+                console.log(`[Row Extraction] Image: ${img.width}x${img.height}, estimated ${totalRows} rows`);
+                
+                // If image is too small, return as single row
+                if (totalRows <= 1) {
+                    resolve([{ dataUrl, y: 0, height: img.height }]);
+                    return;
+                }
+                
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Extract each potential row
+                for (let y = 0; y < img.height; y += rowHeight) {
+                    const height = Math.min(rowHeight + 20, img.height - y); // Add overlap
+                    if (height < minRowHeight) break;
+                    
+                    canvas.width = img.width;
+                    canvas.height = height;
+                    ctx.drawImage(img, 0, y, img.width, height, 0, 0, img.width, height);
+                    
+                    rows.push({
+                        dataUrl: canvas.toDataURL('image/png'),
+                        y: y,
+                        height: height
+                    });
+                }
+                
+                console.log(`[Row Extraction] Extracted ${rows.length} rows`);
+                resolve(rows);
+            };
+            img.src = dataUrl;
+        });
+    }
+    
+    /**
+     * Extract just the number region from a row (right portion)
+     * Numbers typically appear in the leftmost ~150px of each material row
+     */
+    async function extractNumberRegion(rowDataUrl) {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // The number (e.g., "87.9M") is typically in the first 150-200px
+                const numberWidth = Math.min(200, img.width * 0.4);
+                
+                canvas.width = numberWidth;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0, numberWidth, img.height, 0, 0, numberWidth, img.height);
+                
+                // Apply high contrast preprocessing for digits
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const data = imageData.data;
+                
+                for (let i = 0; i < data.length; i += 4) {
+                    const r = data[i];
+                    const g = data[i + 1];
+                    const b = data[i + 2];
+                    let gray = 0.299 * r + 0.587 * g + 0.114 * b;
+                    
+                    // Increase contrast
+                    gray = ((gray - 128) * 2.5) + 128;
+                    gray = Math.max(0, Math.min(255, gray));
+                    gray = 255 - gray; // Invert for dark background
+                    
+                    data[i] = gray;
+                    data[i + 1] = gray;
+                    data[i + 2] = gray;
+                }
+                
+                ctx.putImageData(imageData, 0, 0);
+                resolve(canvas.toDataURL('image/png'));
+            };
+            img.src = rowDataUrl;
+        });
+    }
+
     function updateCombinedResults() {
         // Combine materials from all scanned images
         combinedMaterials = {};
         window._ocrDetailedResults = {};
+        window._ocrSuspiciousValues = {}; // Track values that might be OCR errors
+        window._ocrConfidenceScores = {}; // Track confidence per material
         
         for (const imageData of uploadedImages) {
             if (imageData.status === 'complete') {
+                // Merge confidence scores
+                if (imageData.confidenceScores) {
+                    for (const [matId, conf] of Object.entries(imageData.confidenceScores)) {
+                        if (!window._ocrConfidenceScores[matId] || conf > window._ocrConfidenceScores[matId]) {
+                            window._ocrConfidenceScores[matId] = conf;
+                        }
+                    }
+                }
+                
                 for (const [inputId, amount] of Object.entries(imageData.materials)) {
                     if (!combinedMaterials[inputId]) {
                         combinedMaterials[inputId] = amount;
@@ -760,7 +1436,126 @@
             }
         }
 
+        // Validate values and flag suspicious ones
+        validateAndFlagSuspiciousValues(combinedMaterials);
+        
+        // Determine which OCR source was used (prefer OCR.space indicator if any image used it)
+        let usedOCRSpace = false;
+        for (const imageData of uploadedImages) {
+            if (imageData.status === 'complete' && imageData.ocrSource === 'ocrspace') {
+                usedOCRSpace = true;
+                break;
+            }
+        }
+        lastOCRSource = usedOCRSpace ? 'ocrspace' : 'tesseract';
+        updateOCRSourceIndicator();
+        
         displayResults(combinedMaterials);
+    }
+    
+    /**
+     * Update the OCR source indicator in the UI
+     */
+    function updateOCRSourceIndicator() {
+        const indicatorEl = document.getElementById('ocrSourceIndicator');
+        if (indicatorEl) {
+            if (lastOCRSource === 'ocrspace') {
+                indicatorEl.innerHTML = '<span class="ocr-source-badge ocrspace">OCR.space</span>';
+            } else {
+                indicatorEl.innerHTML = '<span class="ocr-source-badge tesseract">Tesseract</span>';
+            }
+        }
+    }
+    
+    /**
+     * Validate and AUTO-CORRECT OCR values
+     * E.g., if most basic materials are 50-60M but one is 253M, auto-correct it
+     */
+    function validateAndFlagSuspiciousValues(materials) {
+        // Separate basic materials from seasonal materials
+        const basicMaterialIds = [
+            'my-black-iron', 'my-copper-bar', 'my-dragonglass', 'my-goldenheart-wood',
+            'my-hide', 'my-ironwood', 'my-kingswood-oak', 'my-leather-straps',
+            'my-milk-of-the-poppy', 'my-silk', 'my-weirwood', 'my-wildfire'
+        ];
+        
+        const basicValues = [];
+        
+        for (const [inputId, amount] of Object.entries(materials)) {
+            if (basicMaterialIds.includes(inputId)) {
+                basicValues.push({ id: inputId, amount });
+            }
+        }
+        
+        // Analyze basic materials for outliers
+        if (basicValues.length >= 3) {
+            // Sort by amount to find median
+            const sorted = [...basicValues].sort((a, b) => a.amount - b.amount);
+            const medianIndex = Math.floor(sorted.length / 2);
+            const median = sorted[medianIndex].amount;
+            
+            // Calculate interquartile range for better outlier detection
+            const q1Index = Math.floor(sorted.length / 4);
+            const q3Index = Math.floor(sorted.length * 3 / 4);
+            const q1 = sorted[q1Index].amount;
+            const q3 = sorted[q3Index].amount;
+            const iqr = q3 - q1;
+            const lowerBound = Math.max(q1 - 1.5 * iqr, median * 0.3);
+            const upperBound = q3 + 1.5 * iqr;
+            
+            console.log(`[OCR Validation] Median: ${median}, IQR: ${iqr}, Bounds: ${lowerBound.toFixed(0)} - ${upperBound.toFixed(0)}`);
+            
+            for (const { id, amount } of basicValues) {
+                const ratio = amount / median;
+                let correctedValue = null;
+                let reason = '';
+                
+                // Check for values with extra leading digit (e.g., 253M should be 53M)
+                if (ratio >= 3 && ratio <= 7) {
+                    // Value is 3-7x higher - likely has an extra leading digit
+                    // Try removing first digit
+                    const amountStr = Math.round(amount / 1000000).toString();
+                    if (amountStr.length >= 2) {
+                        const withoutFirst = parseInt(amountStr.substring(1)) * 1000000;
+                        const newRatio = withoutFirst / median;
+                        if (newRatio >= 0.5 && newRatio <= 2.0) {
+                            correctedValue = withoutFirst;
+                            reason = `Detected extra leading digit: ${amountStr}M → ${amountStr.substring(1)}M`;
+                        }
+                    }
+                } else if (ratio >= 0.08 && ratio <= 0.15) {
+                    // Value is ~10x smaller - likely missing a digit
+                    correctedValue = amount * 10;
+                    reason = 'Value ~10x smaller than median - likely missing a digit';
+                } else if (ratio >= 8 && ratio <= 12) {
+                    // Value is ~10x larger - likely has an extra digit
+                    correctedValue = Math.round(amount / 10);
+                    reason = 'Value ~10x larger than median - likely has an extra digit';
+                }
+                
+                if (correctedValue) {
+                    console.warn(`[OCR Auto-Correct] ${id}: ${amount} → ${correctedValue} (${reason})`);
+                    
+                    // AUTO-CORRECT the value
+                    materials[id] = correctedValue;
+                    
+                    window._ocrSuspiciousValues[id] = {
+                        detected: amount,
+                        corrected: correctedValue,
+                        median: median,
+                        ratio: ratio,
+                        reason: reason,
+                        autoCorrected: true
+                    };
+                }
+            }
+        }
+        
+        // Log summary
+        const correctedCount = Object.keys(window._ocrSuspiciousValues).length;
+        if (correctedCount > 0) {
+            console.warn(`[OCR Validation] Auto-corrected ${correctedCount} suspicious values`);
+        }
     }
 
     function parseOCRText(text) {
@@ -769,6 +1564,10 @@
         
         // Clean up OCR text - fix common OCR mistakes
         let cleanedText = text
+            // First, normalize common material name OCR errors (preserve line breaks!)
+            .replace(/KINGSWOOD\s*Q\s*A\s*K/gi, 'KINGSWOOD OAK')  // Fix QAK -> OAK
+            .replace(/KINGSWOOD\s*0\s*A\s*K/gi, 'KINGSWOOD OAK')  // Fix 0AK -> OAK
+            // Fix digit/letter confusions
             .replace(/[|l]/g, (match, offset, string) => {
                 // If surrounded by digits, likely a 1
                 const before = string[offset - 1];
@@ -882,10 +1681,54 @@
             }
         }
 
+        // Fallback: If Kingswood Oak wasn't found, search for it specifically
+        // This handles cases where OCR garbles the text with unusual characters
+        if (!results['my-kingswood-oak']) {
+            const kingswoodFallback = findKingswoodOakFallback(text);
+            if (kingswoodFallback) {
+                console.log('Fallback detection found Kingswood Oak:', kingswoodFallback);
+                results['my-kingswood-oak'] = kingswoodFallback;
+                detailedResults['my-kingswood-oak'] = {
+                    name: 'Kingswood Oak',
+                    tiers: [{ tier: 'Poor', amount: kingswoodFallback, multiplier: 1, poorEquivalent: kingswoodFallback }],
+                    total: kingswoodFallback
+                };
+            }
+        }
+        
         // Store detailed results for display
         window._ocrDetailedResults = detailedResults;
 
         return results;
+    }
+    
+    /**
+     * Fallback detection for Kingswood Oak - handles heavily garbled OCR text
+     * Only used when standard parsing doesn't find Kingswood Oak
+     */
+    function findKingswoodOakFallback(text) {
+        // Look for lines containing variations of "kingswood" 
+        const lines = text.split(/[\n\r]+/);
+        for (const line of lines) {
+            const lineLower = line.toLowerCase();
+            // Check for kingswood variations: kingswood, kingsw00d, kingswqod, kingswood qak, etc.
+            // Must have "king" followed by some characters and "w" then "d" (for wood)
+            if (/king[a-z0-9]*w[o0q][o0q]?d/i.test(lineLower) || 
+                /kingswood\s*[oq0]?[a@]?[kx]?/i.test(lineLower)) {
+                // Look for a number followed by M in this line
+                const numMatch = line.match(/(\d+(?:\.\d+)?)\s*[Mm]\b/);
+                if (numMatch) {
+                    const value = parseFloat(numMatch[1]) * 1000000;
+                    // Sanity check: basic materials should be between 50M and 200M
+                    if (value >= 50000000 && value <= 200000000) {
+                        console.log('[Kingswood Fallback] Found:', line.trim(), '-> value:', value);
+                        return Math.round(value);
+                    }
+                }
+            }
+        }
+        
+        return null;
     }
     
     // Parse OCR text line by line - more reliable for game screenshots
@@ -1156,12 +1999,24 @@
     function findAllAmountsInSegment(segment) {
         const amounts = [];
         
+        // Preprocess segment to fix common OCR digit issues:
+        // - "9 1M" -> "91M" (space between digits)
+        // - "9lM" -> "91M" (l confused with 1)
+        // - "9|M" -> "91M" (| confused with 1)
+        // - "9IM" -> "91M" (I confused with 1)
+        let cleanedSegment = segment
+            .replace(/(\d)\s+(\d)/g, '$1$2')  // Remove spaces between digits
+            .replace(/(\d)[lI|]([mMkK])/g, '$11$2')  // l/I/| before M/K -> 1
+            .replace(/(\d)[oO]([mMkK])/g, '$10$2')  // o/O before M/K -> 0
+            .replace(/[lI|](\d)/g, '1$1')  // l/I/| before digit -> 1
+            .replace(/[oO](\d)/g, '0$1');  // o/O before digit -> 0
+        
         // Pattern to match numbers with K/M suffix only
         // We IGNORE B (billion) values as they are always OCR noise
         const pattern = /(\d+)(?:[.,](\d+))?\s*([kKmM])/g;
         
         let match;
-        while ((match = pattern.exec(segment)) !== null) {
+        while ((match = pattern.exec(cleanedSegment)) !== null) {
             const intPart = match[1];
             const decPart = match[2] || '';
             const suffix = (match[3] || '').toLowerCase();
@@ -1553,6 +2408,23 @@
                     const item = document.createElement('div');
                     item.className = 'detected-material-item';
                     
+                    // Check if this value was flagged/corrected
+                    const suspicious = window._ocrSuspiciousValues && window._ocrSuspiciousValues[inputId];
+                    if (suspicious) {
+                        if (suspicious.autoCorrected) {
+                            item.classList.add('auto-corrected');
+                        } else {
+                            item.classList.add('suspicious-value');
+                        }
+                    }
+                    
+                    // Check OCR confidence level
+                    const confidence = window._ocrConfidenceScores && window._ocrConfidenceScores[inputId];
+                    const isLowConfidence = confidence !== undefined && confidence < 70;
+                    if (isLowConfidence) {
+                        item.classList.add('low-confidence');
+                    }
+                    
                     // Check if we have tier breakdown
                     const detail = detailedResults[inputId];
                     let tierInfo = '';
@@ -1575,6 +2447,33 @@
                         tierInfo = `<span class="tier-breakdown">${breakdown}</span>`;
                     }
                     
+                    // Create warning/info message for corrected values
+                    let warningHtml = '';
+                    if (suspicious) {
+                        if (suspicious.autoCorrected) {
+                            warningHtml = `
+                                <div class="ocr-corrected">
+                                    <span class="corrected-icon">✓</span>
+                                    <span class="corrected-text">Auto-fixed: was ${formatNumber(suspicious.detected)}</span>
+                                </div>
+                            `;
+                        } else {
+                            warningHtml = `
+                                <div class="ocr-warning">
+                                    <span class="warning-icon">⚠️</span>
+                                    <span class="warning-text">Possible error - expected ~${formatNumber(suspicious.suggestedCorrection)}</span>
+                                </div>
+                            `;
+                        }
+                    }
+                    
+                    // Create confidence indicator
+                    let confidenceHtml = '';
+                    if (confidence !== undefined) {
+                        const confClass = confidence >= 80 ? 'high' : (confidence >= 60 ? 'medium' : 'low');
+                        confidenceHtml = `<span class="ocr-confidence ${confClass}" title="OCR Confidence: ${confidence.toFixed(0)}%">${confidence.toFixed(0)}%</span>`;
+                    }
+                    
                     // Create unique checkbox ID
                     const checkboxId = `ocr-include-${inputId}`;
                     
@@ -1585,8 +2484,10 @@
                         </label>
                         <img src="${info.img}" alt="${info.name}">
                         <span class="material-name">${info.name}</span>
-                        <span class="material-amount">${formatNumber(amount)}</span>
+                        <span class="material-amount${suspicious ? ' suspicious' : ''}">${formatNumber(amount)}</span>
+                        ${confidenceHtml}
                         ${tierInfo}
+                        ${warningHtml}
                     `;
                     
                     // Handle checkbox changes (both direct clicks and label clicks)
