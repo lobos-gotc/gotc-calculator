@@ -10411,8 +10411,8 @@ button.multiplier-btn {
     border-radius: 14px;
     border: 1px solid var(--glass-border);
     transition: all 0.2s ease;
-    width: 360px;
-    min-height: 130px;
+    width: 400px;
+    min-height: 140px;
 }
 
 .ms-gear-slot-visual:hover {
@@ -10426,9 +10426,9 @@ button.multiplier-btn {
 
 .ms-gear-slot-visual__image {
     position: relative;
-    width: 72px;
-    height: 72px;
-    border-radius: 10px;
+    width: 90px;
+    height: 90px;
+    border-radius: 12px;
     overflow: hidden;
     background: rgba(128, 128, 128, 0.3);
     border: 3px solid var(--glass-border);
@@ -10470,7 +10470,7 @@ button.multiplier-btn {
 .ms-gear-slot-visual__image img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
     transition: transform 0.2s ease;
 }
 
@@ -12541,12 +12541,12 @@ button.multiplier-btn {
 /* Responsive for Gear Visual Layout */
 @media (max-width: 1100px) {
     .ms-gear-slot-visual {
-        width: 320px;
+        width: 360px;
     }
     
     .ms-gear-slot-visual__image {
-        width: 64px;
-        height: 64px;
+        width: 80px;
+        height: 80px;
     }
 }
 
@@ -12589,20 +12589,20 @@ button.multiplier-btn {
     }
 
     .ms-gear-slot-visual__image {
-        width: 64px;
-        height: 64px;
+        width: 80px;
+        height: 80px;
     }
 }
 
 @media (max-width: 480px) {
     .ms-gear-slot-visual {
         padding: 12px;
-        min-height: 100px;
+        min-height: 110px;
     }
     
     .ms-gear-slot-visual__image {
-        width: 56px;
-        height: 56px;
+        width: 70px;
+        height: 70px;
     }
 
     .ms-gear-slot-visual__row {

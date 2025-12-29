@@ -329,7 +329,7 @@ const MARCH_SIZE_DATA = {
             "KG White Cloak": {
                 season: 13,
                 set: "Kingsguard",
-                img: "item/ring.png",
+                img: "trinkets/kg_white_cloak.png",
                 scenarios: ["sop", "keep", "reinforce"],
                 stats: {
                     legendary: { marchSize: 4162, marchSizePct: 0 }
@@ -359,7 +359,7 @@ const MARCH_SIZE_DATA = {
             "KG White Cloak": {
                 season: 13,
                 set: "Kingsguard",
-                img: "item/ring.png",
+                img: "trinkets/kg_white_cloak.png",
                 scenarios: ["sop", "keep", "reinforce"],
                 stats: {
                     legendary: { marchSize: 4162, marchSizePct: 0 }
