@@ -1428,32 +1428,35 @@
             // Calculate cascade from L10 using the effective start count
             const cascadeFromL10 = TemplatePlanner.calculateCascade(10, cascadeStartCount, 45, qualitySettings);
             
-            // Build L15+ cascade, but restart cascade from any locked level
+            // Build L15+ cascade, always cascading from previousCount
+            // This ensures locked levels (including 0) properly propagate downstream
             let previousCount = cascadeStartCount;
+            let previousLevel = 10;
             const levelsAfter10 = [15, 20, 25, 30, 35, 40, 45];
             
-            levelsAfter10.forEach((level, index) => {
+            levelsAfter10.forEach((level) => {
                 if (isLevelLocked(level)) {
                     // Use locked value and update previousCount for next iteration
                     previousCount = lockedLevels[level];
                     cascade.push({ level, count: previousCount, successRate: 1.0 });
                 } else {
-                    // Find this level in the calculated cascade
-                    const calcStage = cascadeFromL10.find(c => c.level === level);
-                    if (calcStage) {
-                        // If previous level was locked, recalculate cascade from that locked value
-                        const prevLevel = index === 0 ? 10 : levelsAfter10[index - 1];
-                        if (isLevelLocked(prevLevel)) {
-                            // Recalculate from the locked level
-                            const newCascade = TemplatePlanner.calculateCascade(prevLevel, lockedLevels[prevLevel], level, qualitySettings);
-                            const newStage = newCascade.find(c => c.level === level);
-                            previousCount = newStage ? newStage.count : Math.floor(previousCount * calcStage.successRate);
-                        } else {
-                            previousCount = calcStage.count;
-                        }
-                        cascade.push({ level, count: previousCount, successRate: calcStage.successRate });
+                    // Always calculate from previousCount to ensure locked values propagate
+                    // This handles the case where an upstream level was locked at 0
+                    const stepCascade = TemplatePlanner.calculateCascade(previousLevel, previousCount, level, qualitySettings);
+                    const stepStage = stepCascade.find(c => c.level === level);
+                    
+                    if (stepStage) {
+                        previousCount = stepStage.count;
+                        cascade.push({ level, count: previousCount, successRate: stepStage.successRate });
+                    } else {
+                        // Fallback: use survival rate from original cascade
+                        const calcStage = cascadeFromL10.find(c => c.level === level);
+                        const survivalRate = calcStage?.successRate || 0.43;
+                        previousCount = Math.floor(previousCount * survivalRate);
+                        cascade.push({ level, count: previousCount, successRate: survivalRate });
                     }
                 }
+                previousLevel = level;
             });
         } else {
             // Fallback cascade calculation
@@ -1833,7 +1836,9 @@
             
             // Update input with recommended value
             if (input) {
-                const newValue = value > 0 ? value.toString() : '';
+                // Always set the value (including '0' for cascaded zeros)
+                const newValue = value.toString();
+                
                 // Only update if value actually changed to avoid unnecessary events
                 if (input.value !== newValue) {
                     input.value = newValue;
@@ -2147,51 +2152,72 @@
         // Get current quality settings from UI for accurate cascade calculation
         const qualitySettings = getQualitySettingsFromUI();
         
-        // Helper to update a level if not locked
-        function updateLevelIfNotLocked(level, count) {
-            // Skip if this level is locked
+        // Helper to update a level if not locked, returns the effective count for cascading
+        function updateLevelAndGetCount(level, calculatedCount) {
+            // If locked, return the locked value (for downstream cascade)
             if (isLevelLocked(level)) {
-                console.log(`[Cascade] L${level} is locked, skipping`);
-                return;
+                console.log(`[Cascade] L${level} is locked at ${lockedLevels[level]}, using locked value`);
+                return lockedLevels[level];
             }
             
+            // Update the UI with calculated value
             const levelInput = document.getElementById(`templateAmount${level}`);
             if (levelInput) {
-                levelInput.value = count > 0 ? count.toString() : '';
-                levelInput.placeholder = count > 0 ? count.toString() : '0';
-                recommendedValues[level] = count;
+                levelInput.value = calculatedCount > 0 ? calculatedCount.toString() : '';
+                levelInput.placeholder = calculatedCount > 0 ? calculatedCount.toString() : '0';
+                recommendedValues[level] = calculatedCount;
                 updatePiecesCarousel(level);
             }
+            return calculatedCount;
         }
         
         // For levels 1-10: they're all legendary, so count stays the same
         if (fromLevel <= 10) {
-            // Update L1, L5, L10 with the same count (no loss between them)
+            // Determine the effective count for L10 (considering locks in L1-L10)
+            let effectiveCount = startCount;
             [1, 5, 10].forEach(level => {
                 if (level > fromLevel) {
-                    updateLevelIfNotLocked(level, startCount);
+                    effectiveCount = updateLevelAndGetCount(level, effectiveCount);
                 }
             });
             
-            // Calculate cascade from L10 for levels 15+ with quality-based rates
+            // Cascade from L10 to L15+ step by step, respecting locked levels
             if (typeof TemplatePlanner !== 'undefined' && TemplatePlanner.calculateCascade) {
-                const cascade = TemplatePlanner.calculateCascade(10, startCount, 45, qualitySettings);
+                let previousCount = effectiveCount;
+                let previousLevel = 10;
+                const levelsAfter10 = [15, 20, 25, 30, 35, 40, 45];
                 
-                cascade.forEach(stage => {
-                    if (stage.level > 10) {
-                        updateLevelIfNotLocked(stage.level, stage.count);
+                levelsAfter10.forEach(level => {
+                    if (isLevelLocked(level)) {
+                        previousCount = lockedLevels[level];
+                        console.log(`[Cascade] L${level} locked at ${previousCount}`);
+                    } else {
+                        // Calculate one step from previous level
+                        const stepCascade = TemplatePlanner.calculateCascade(previousLevel, previousCount, level, qualitySettings);
+                        const stage = stepCascade.find(c => c.level === level);
+                        previousCount = updateLevelAndGetCount(level, stage?.count || 0);
                     }
+                    previousLevel = level;
                 });
             }
         } else {
-            // For levels 15+, use normal cascade calculation with quality-based rates
+            // For levels 15+, cascade step by step respecting locks
             if (typeof TemplatePlanner !== 'undefined' && TemplatePlanner.calculateCascade) {
-                const cascade = TemplatePlanner.calculateCascade(fromLevel, startCount, 45, qualitySettings);
+                let previousCount = startCount;
+                let previousLevel = fromLevel;
+                const allLevels = [15, 20, 25, 30, 35, 40, 45].filter(l => l > fromLevel);
                 
-                cascade.forEach(stage => {
-                    if (stage.level > fromLevel) {
-                        updateLevelIfNotLocked(stage.level, stage.count);
+                allLevels.forEach(level => {
+                    if (isLevelLocked(level)) {
+                        previousCount = lockedLevels[level];
+                        console.log(`[Cascade] L${level} locked at ${previousCount}`);
+                    } else {
+                        // Calculate one step from previous level
+                        const stepCascade = TemplatePlanner.calculateCascade(previousLevel, previousCount, level, qualitySettings);
+                        const stage = stepCascade.find(c => c.level === level);
+                        previousCount = updateLevelAndGetCount(level, stage?.count || 0);
                     }
+                    previousLevel = level;
                 });
             }
         }
@@ -2433,11 +2459,10 @@
                     count = planPieces.reduce((sum, piece) => sum + piece.count, 0);
                 }
                 
-                // Only set if count > 0
-                if (count > 0) {
-                    input.value = count;
-                    console.log(`L${level}: Set from cascade ${count}`);
-                }
+                // Always set the value from cascade (including 0)
+                // This ensures downstream levels get 0 when upstream is locked at 0
+                input.value = count > 0 ? count.toString() : '0';
+                console.log(`L${level}: Set from cascade ${count}`);
             }
         });
 
