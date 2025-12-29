@@ -1830,7 +1830,15 @@
             const input = document.getElementById(inputId);
             if (input) {
                 // Apply the value considering the scale
-                const scaledValue = scale > 1 ? Math.round(amount / scale) : amount;
+                // Preserve decimal precision for Million scale (e.g., 87.9M → 87.9)
+                let scaledValue;
+                if (scale > 1) {
+                    scaledValue = amount / scale;
+                    // Round to 1 decimal place if there's a decimal, otherwise keep as integer
+                    scaledValue = Number.isInteger(scaledValue) ? scaledValue : parseFloat(scaledValue.toFixed(1));
+                } else {
+                    scaledValue = amount;
+                }
                 input.value = scaledValue;
                 
                 // Trigger the active class for the label animation

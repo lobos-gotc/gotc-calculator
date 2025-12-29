@@ -9,6 +9,64 @@
     const WIZARD_STEPS = 3;
     let currentStep = 1;
 
+    // ═══════════════════════════════════════════════════════════════════════
+    // SCALE UTILITIES - Handle Million scale display and calculations
+    // ═══════════════════════════════════════════════════════════════════════
+    
+    /**
+     * Get current scale value from the scale selector
+     * @returns {number} Scale multiplier (1 or 1000000)
+     */
+    function getCurrentScale() {
+        const scaleSelect = document.getElementById('scaleSelect');
+        return scaleSelect ? parseFloat(scaleSelect.value) || 1 : 1;
+    }
+    
+    /**
+     * Format a number for display based on current scale
+     * When Million scale is active, shows "100" instead of "100,000,000"
+     * @param {number} value - The actual value
+     * @param {boolean} forInput - If true, returns plain number for input field
+     * @returns {string} Formatted string
+     */
+    function formatForScale(value, forInput = false) {
+        const scale = getCurrentScale();
+        const displayValue = scale > 1 ? value / scale : value;
+        
+        if (forInput) {
+            // For input fields, return plain number or with commas for readability
+            return displayValue > 0 ? Math.round(displayValue).toLocaleString('en-US') : '';
+        }
+        
+        // For display, use abbreviated format if not using Million scale
+        if (scale === 1) {
+            if (value >= 1000000000) {
+                return (value / 1000000000).toFixed(1) + 'B';
+            } else if (value >= 1000000) {
+                return (value / 1000000).toFixed(1) + 'M';
+            } else if (value >= 1000) {
+                return (value / 1000).toFixed(1) + 'K';
+            }
+        }
+        return Math.round(displayValue).toLocaleString('en-US');
+    }
+    
+    /**
+     * Parse an input value and apply the current scale
+     * @param {string} inputValue - Raw input value (may have commas)
+     * @returns {number} Actual value after applying scale
+     */
+    function parseWithScale(inputValue) {
+        const scale = getCurrentScale();
+        const rawValue = parseFloat((inputValue || '').replace(/,/g, '')) || 0;
+        return rawValue * scale;
+    }
+    
+    // Expose scale utilities globally
+    window.getCurrentScale = getCurrentScale;
+    window.formatForScale = formatForScale;
+    window.parseWithScale = parseWithScale;
+
     // DOM Elements
     const elements = {
         progressSteps: null,
@@ -240,8 +298,17 @@
             const usedBasic = Math.floor(totalBasic * usagePercent);
             const usedGear = Math.floor(totalGear * usagePercent);
             
-            // Format numbers with commas
-            const formatNum = (n) => n.toLocaleString();
+            // Format numbers - show abbreviated format for large numbers
+            const formatNum = (n) => {
+                if (n >= 1000000000) {
+                    return (n / 1000000000).toFixed(1).replace(/\.0$/, '') + 'B';
+                } else if (n >= 1000000) {
+                    return (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+                } else if (n >= 1000) {
+                    return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+                }
+                return n.toLocaleString();
+            };
             
             // Update summary UI elements
             const basicUsedEl = document.getElementById('basicMatsUsed');
@@ -1075,21 +1142,32 @@
             return;
         }
         
-        console.log(`🧪 Loading test scenario: ${scenarioName}`);
+        const scale = getCurrentScale();
+        console.log(`🧪 Loading test scenario: ${scenarioName} (scale: ${scale === 1 ? 'Normal' : 'Million'})`);
         
         // Clear all inputs first
         document.querySelectorAll('.my-material input.numeric-input').forEach(input => {
             input.value = '';
         });
         
-        // Load scenario values
+        // Load scenario values - divide by scale for display
         let loadedCount = 0;
         let hasSeasonalMaterials = false;
         
         for (const [inputId, value] of Object.entries(scenario)) {
             const input = document.getElementById(inputId);
             if (input && value > 0) {
-                input.value = value.toLocaleString('en-US');
+                // Divide by scale for display (will be multiplied back when gathering)
+                // Preserve decimal precision (e.g., 87.9M → 87.9)
+                let displayValue;
+                if (scale > 1) {
+                    displayValue = value / scale;
+                    // Round to 1 decimal place if there's a decimal, otherwise keep as integer
+                    displayValue = Number.isInteger(displayValue) ? displayValue : parseFloat(displayValue.toFixed(1));
+                } else {
+                    displayValue = value;
+                }
+                input.value = displayValue.toLocaleString('en-US');
                 input.dispatchEvent(new Event('input', { bubbles: true }));
                 loadedCount++;
                 
@@ -1175,6 +1253,58 @@
     
     // Setup listeners after a short delay to ensure DOM is ready
     setTimeout(setupMaterialInputListeners, 500);
+    
+    // ═══════════════════════════════════════════════════════════════════════
+    // SCALE CHANGE HANDLER - Convert values when scale changes
+    // ═══════════════════════════════════════════════════════════════════════
+    
+    let previousScale = 1;
+    
+    function setupScaleChangeListener() {
+        const scaleSelect = document.getElementById('scaleSelect');
+        if (!scaleSelect) return;
+        
+        previousScale = parseFloat(scaleSelect.value) || 1;
+        
+        scaleSelect.addEventListener('change', () => {
+            const newScale = parseFloat(scaleSelect.value) || 1;
+            const ratio = previousScale / newScale;
+            
+            console.log(`[Scale] Changed from ${previousScale === 1 ? 'Normal' : 'Million'} to ${newScale === 1 ? 'Normal' : 'Million'}`);
+            
+            // Convert all material input values, preserving decimal precision
+            document.querySelectorAll('.my-material input.numeric-input').forEach(input => {
+                const currentValue = parseFloat((input.value || '').replace(/,/g, '')) || 0;
+                if (currentValue > 0) {
+                    let newValue = currentValue * ratio;
+                    // For Million scale, preserve 1 decimal; for Normal, use integers
+                    if (newScale > 1) {
+                        // Million scale: 87900000 → 87.9
+                        newValue = Number.isInteger(newValue) ? newValue : parseFloat(newValue.toFixed(1));
+                    } else {
+                        // Normal scale: round to integer
+                        newValue = Math.round(newValue);
+                    }
+                    input.value = newValue.toLocaleString('en-US');
+                }
+            });
+            
+            previousScale = newScale;
+            
+            // Trigger cascade update with converted values
+            triggerCascadeUpdate();
+            
+            // Update material summary
+            const materials = gatherMaterialsFromInputs();
+            if (typeof window.updateMaterialSummary === 'function') {
+                window.updateMaterialSummary(materials);
+            }
+        });
+        
+        console.log('[Wizard] Scale change listener added');
+    }
+    
+    setTimeout(setupScaleChangeListener, 500);
 
     // ═══════════════════════════════════════════════════════════════════════
     // TEMPLATE PLAN - Recommended values based on materials and settings
@@ -2491,26 +2621,35 @@
 
     /**
      * Gather all material amounts from input fields
+     * Applies the current scale multiplier to convert display values to actual values
+     * Supports decimal values for Million scale (e.g., 87.9 × 1M = 87,900,000)
      * @returns {object} - { 'my-material-id': amount }
      */
     function gatherMaterialsFromInputs() {
         const materials = {};
+        const scale = getCurrentScale();
         
         // Read basic material inputs
         document.querySelectorAll('#yourMaterials .my-material input.numeric-input').forEach(input => {
             const rawValue = input.value;
-            const value = parseInt((rawValue || '').replace(/,/g, '')) || 0;
-            if (value > 0) {
-                materials[input.id] = value;
+            // Use parseFloat to preserve decimal precision (e.g., "87.9" → 87.9)
+            const displayValue = parseFloat((rawValue || '').replace(/,/g, '')) || 0;
+            // Apply scale multiplier to get actual value (e.g., 87.9 × 1M = 87,900,000)
+            const actualValue = Math.round(displayValue * scale);
+            if (actualValue > 0) {
+                materials[input.id] = actualValue;
             }
         });
         
         // Read gear material inputs
         document.querySelectorAll('#advMaterials .my-material input.numeric-input').forEach(input => {
             const rawValue = input.value;
-            const value = parseInt((rawValue || '').replace(/,/g, '')) || 0;
-            if (value > 0) {
-                materials[input.id] = value;
+            // Use parseFloat to preserve decimal precision
+            const displayValue = parseFloat((rawValue || '').replace(/,/g, '')) || 0;
+            // Apply scale multiplier to get actual value
+            const actualValue = Math.round(displayValue * scale);
+            if (actualValue > 0) {
+                materials[input.id] = actualValue;
             }
         });
         
