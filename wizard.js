@@ -189,6 +189,9 @@
             }, 200);
         }
         
+        // Expose triggerCascadeUpdate for external use (scale change listener)
+        window.triggerCascadeUpdate = triggerCascadeUpdate;
+        
         // Expose clearCalculatedState for external use
         window.clearCalculatedState = clearCalculatedState;
         
@@ -1292,7 +1295,9 @@
             previousScale = newScale;
             
             // Trigger cascade update with converted values
-            triggerCascadeUpdate();
+            if (typeof window.triggerCascadeUpdate === 'function') {
+                window.triggerCascadeUpdate();
+            }
             
             // Update material summary
             const materials = gatherMaterialsFromInputs();

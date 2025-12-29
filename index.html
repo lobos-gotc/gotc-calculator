@@ -50,7 +50,8 @@
     <script src="crafting-data.js?v=1"></script>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <script defer src="craftparse.js?v=2.0"></script>
-    <script defer src="ocr-scanner.js?v=1.0"></script>
+    <script defer src="ocr-key.js?v=1.0"></script>
+    <script defer src="ocr-scanner.js?v=1.1"></script>
     <script defer src="optimizer.js?v=1.0"></script>
     <script defer src="template-planner.js?v=1.0"></script>
     <script defer src="wizard.js?v=1.0"></script>
@@ -208,6 +209,16 @@
                             <p class="ocr-status" id="ocrStatus">Initializing OCR...</p>
                         </div>
                         <div class="ocr-results" id="ocrResults" style="display: none;">
+                            <!-- OCR Status Bar -->
+                            <div class="ocr-status-bar">
+                                <div class="ocr-source-indicator" id="ocrSourceIndicator">
+                                    <span class="ocr-source-badge ocrspace">OCR.space</span>
+                                </div>
+                                <div class="ocr-quota-display" id="ocr-quota-display">
+                                    <span class="quota-ok">Loading...</span>
+                                </div>
+                            </div>
+                            
                             <div class="ocr-accordion">
                                 <button type="button" class="ocr-accordion-header" id="detectedMaterialsToggle">
                                     <span class="ocr-accordion-title">Detected Materials</span>
@@ -219,6 +230,48 @@
                                 <div class="ocr-accordion-content" id="detectedMaterials"></div>
                             </div>
                             <button type="button" id="applyDetectedMaterials" class="apply-materials-btn">Apply to fields</button>
+                            
+                            <!-- OCR Settings Accordion -->
+                            <details class="ocr-settings">
+                                <summary>⚙️ OCR Settings</summary>
+                                <div class="ocr-settings-content">
+                                    <div class="ocr-api-key-section">
+                                        <label for="userApiKey">Your OCR.space API Key (optional)</label>
+                                        <div class="api-key-input-wrapper">
+                                            <input type="password" id="userApiKey" placeholder="Enter your API key" autocomplete="off">
+                                            <button type="button" id="toggleApiKeyVisibility" class="toggle-visibility-btn" title="Show/Hide">
+                                                👁️
+                                            </button>
+                                        </div>
+                                        <div class="api-key-actions">
+                                            <button type="button" id="saveApiKey" class="save-key-btn">Save Key</button>
+                                            <button type="button" id="clearApiKey" class="clear-key-btn">Clear</button>
+                                        </div>
+                                        <p class="api-key-status" id="apiKeyStatus"></p>
+                                    </div>
+                                    
+                                    <details class="api-key-help">
+                                        <summary>🔑 How to get your own free API key</summary>
+                                        <div class="api-key-help-content">
+                                            <ol>
+                                                <li>Go to <a href="https://ocr.space/ocrapi" target="_blank" rel="noopener">ocr.space/ocrapi</a></li>
+                                                <li>Click "Get Free API Key"</li>
+                                                <li>Enter your email address</li>
+                                                <li>Check your email for the API key</li>
+                                                <li>Copy and paste the key above</li>
+                                            </ol>
+                                            <p><strong>Benefits of your own key:</strong></p>
+                                            <ul>
+                                                <li>25,000 free scans per month (just for you)</li>
+                                                <li>No shared quota limits</li>
+                                                <li>Faster processing priority</li>
+                                            </ul>
+                                            <p class="privacy-note">🔒 Your key is stored locally in your browser only.</p>
+                                        </div>
+                                    </details>
+                                </div>
+                            </details>
+                            
                             <details class="ocr-debug">
                                 <summary>Show OCR debug info</summary>
                                 <pre id="ocrDebugText"></pre>
