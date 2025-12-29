@@ -611,6 +611,16 @@
         'dragon-reinforce': 'reinforce'
     };
 
+    // Map scenario IDs to display names
+    const SCENARIO_DISPLAY_NAMES = {
+        'ms-vs-sop': 'March Size vs Seat of Power',
+        'ms-vs-keep': 'March Size vs Keep',
+        'dragon-vs-sop': 'Dragon March vs Seat of Power',
+        'dragon-vs-keep': 'Dragon March vs Keep',
+        'ms-reinforce': 'March Size Reinforcement',
+        'dragon-reinforce': 'Dragon Reinforcement'
+    };
+
     // Get gear options for a specific slot filtered by current scenario
     function getGearOptionsForSlot(slot, scenarioFilter) {
         const slotData = MARCH_SIZE_DATA.gear[slot];
@@ -1619,7 +1629,7 @@
 
         // Update scenario label
         if (elements.recommendationScenario) {
-            elements.recommendationScenario.textContent = capitalizeFirst(currentScenario);
+            elements.recommendationScenario.textContent = SCENARIO_DISPLAY_NAMES[currentScenario] || capitalizeFirst(currentScenario);
         }
 
         // Generate recommendations
