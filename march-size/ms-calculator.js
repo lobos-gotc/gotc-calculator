@@ -613,14 +613,14 @@
 
     // Default placeholder images
     const DEFAULT_IMAGES = {
-        helmet: 'resources/item/helmet.png',
-        chest: 'resources/item/plate.png',
-        pants: 'resources/item/pants.png',
-        boots: 'resources/item/shoos.png',
-        ring: 'resources/item/ring.png',
-        weapon: 'resources/item/dagger.png',
-        trinket: 'resources/item/ring.png',
-        dragonTrinket: 'resources/item/ring.png'
+        helmet: 'resources/item/gear_slot_helmet.png',
+        chest: 'resources/item/gear_slot_chest.png',
+        pants: 'resources/item/gear_slot_pants.png',
+        boots: 'resources/item/gear_slot_boots.png',
+        ring: 'resources/item/gear_slot_ring.png',
+        weapon: 'resources/item/gear_slot_weapon.png',
+        trinket: 'resources/item/gear_slot_trinket.png',
+        dragonTrinket: 'resources/item/gear_slot_trinket.png'
     };
 
     // Map scenario IDs to gear scenario filters

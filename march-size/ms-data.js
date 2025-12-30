@@ -338,7 +338,7 @@ const MARCH_SIZE_DATA = {
             "Floral Brooch": {
                 season: 12,
                 set: "Floral",
-                img: "item/ring.png",
+                img: "trinkets/icon_eq_events_margaery_trinket_1.png",
                 scenarios: ["sop", "keep", "reinforce"],
                 stats: {
                     legendary: { marchSize: 3721, marchSizePct: 0 }
@@ -347,7 +347,7 @@ const MARCH_SIZE_DATA = {
             "Bronze Cutlery": {
                 season: 11,
                 set: "Bronze",
-                img: "item/ring.png",
+                img: "trinkets/icon_eq_events_vintner_goblet_trinket_1.png",
                 scenarios: ["sop", "keep", "reinforce"],
                 stats: {
                     legendary: { marchSize: 3216, marchSizePct: 0 }
@@ -368,7 +368,7 @@ const MARCH_SIZE_DATA = {
             "Floral Brooch": {
                 season: 12,
                 set: "Floral",
-                img: "item/ring.png",
+                img: "trinkets/icon_eq_events_margaery_trinket_1.png",
                 scenarios: ["sop", "keep", "reinforce"],
                 stats: {
                     legendary: { marchSize: 3721, marchSizePct: 0 }
@@ -377,7 +377,7 @@ const MARCH_SIZE_DATA = {
             "Bronze Cutlery": {
                 season: 11,
                 set: "Bronze",
-                img: "item/ring.png",
+                img: "trinkets/icon_eq_events_vintner_goblet_trinket_1.png",
                 scenarios: ["sop", "keep", "reinforce"],
                 stats: {
                     legendary: { marchSize: 3216, marchSizePct: 0 }
