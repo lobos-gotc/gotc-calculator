@@ -885,7 +885,7 @@
             return;
         }
         
-        const gearName = select.value;
+        const selectedOption = select.options[select.selectedIndex];
         const quality = qualitySelect?.value || 'legendary';
         const level = parseInt(levelSelect?.value) || 40;
         
@@ -894,27 +894,23 @@
         // Quality multipliers
         const qualityMultipliers = { poor: 0.2, common: 0.4, fine: 0.6, exquisite: 0.8, epic: 0.9, legendary: 1.0 };
         
-        const slotData = MARCH_SIZE_DATA.gear[slot];
-        const gearData = slotData && slotData[gearName];
+        // Get base stats from option dataset (already stored during populate)
+        const baseMs = parseFloat(selectedOption?.dataset?.baseMs) || 0;
+        const basePct = parseFloat(selectedOption?.dataset?.basePct) || 0;
         
-        if (gearData) {
-            const baseStats = gearData.stats?.legendary || { marchSize: 0, marchSizePct: 0 };
-            const levelMult = levelMultipliers[level] || 1.0;
-            const qualityMult = qualityMultipliers[quality] || 1.0;
-            
-            // Handle flat march size
-            const flatMS = Math.floor((baseStats.marchSize || 0) * levelMult * qualityMult);
-            
-            // Handle percentage march size
-            const pctMS = (baseStats.marchSizePct || 0) * levelMult * qualityMult;
-            
-            if (pctMS > 0) {
-                bonusEl.textContent = `+${pctMS.toFixed(2)}%`;
-            } else if (flatMS > 0) {
-                bonusEl.textContent = `+${formatNumber(flatMS)}`;
-            } else {
-                bonusEl.textContent = '+0';
-            }
+        const levelMult = levelMultipliers[level] || 1.0;
+        const qualityMult = qualityMultipliers[quality] || 1.0;
+        
+        // Handle percentage march size first (takes priority)
+        const pctMS = basePct * levelMult * qualityMult;
+        
+        // Handle flat march size
+        const flatMS = Math.floor(baseMs * levelMult * qualityMult);
+        
+        if (pctMS > 0) {
+            bonusEl.textContent = `+${pctMS.toFixed(2)}%`;
+        } else if (flatMS > 0) {
+            bonusEl.textContent = `+${formatNumber(flatMS)}`;
         } else {
             bonusEl.textContent = '+0';
         }
