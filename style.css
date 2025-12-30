@@ -10993,6 +10993,9 @@ button.multiplier-btn {
     border: 1px solid rgba(255, 255, 255, 0.05);
     transition: all 0.2s ease;
     gap: 12px;
+    overflow: hidden;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .ms-armory-item.ms-armory-item--vertical:hover {
@@ -11033,7 +11036,10 @@ button.multiplier-btn {
     background: rgba(0, 0, 0, 0.2);
     border-radius: 8px;
     width: 100%;
+    max-width: 100%;
     height: 80px;
+    overflow: hidden;
+    box-sizing: border-box;
 }
 
 .ms-armory-item.ms-armory-item--vertical > .ms-armory-icons .ms-armory-icon {
@@ -11044,6 +11050,7 @@ button.multiplier-btn {
     object-fit: contain;
     padding: 0;
     background: none;
+    flex-shrink: 1;
 }
 
 .ms-armory-slider-group {
@@ -11247,13 +11254,16 @@ button.multiplier-btn {
     
     .ms-armory-item.ms-armory-item--vertical > .ms-armory-icons {
         height: 70px;
+        overflow: hidden;
+        flex-wrap: nowrap;
     }
     
     .ms-armory-item.ms-armory-item--vertical > .ms-armory-icons .ms-armory-icon {
-        width: 45px !important;
-        height: 45px !important;
-        max-width: 45px !important;
-        max-height: 45px !important;
+        width: 40px !important;
+        height: 40px !important;
+        max-width: 40px !important;
+        max-height: 40px !important;
+        flex-shrink: 1;
     }
 }
 
