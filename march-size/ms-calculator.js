@@ -898,11 +898,23 @@
         const gearData = slotData && slotData[gearName];
         
         if (gearData) {
-            const baseStats = gearData.stats?.legendary || { marchSize: 0 };
+            const baseStats = gearData.stats?.legendary || { marchSize: 0, marchSizePct: 0 };
             const levelMult = levelMultipliers[level] || 1.0;
             const qualityMult = qualityMultipliers[quality] || 1.0;
-            const adjustedMS = Math.floor((baseStats.marchSize || 0) * levelMult * qualityMult);
-            bonusEl.textContent = `+${formatNumber(adjustedMS)}`;
+            
+            // Handle flat march size
+            const flatMS = Math.floor((baseStats.marchSize || 0) * levelMult * qualityMult);
+            
+            // Handle percentage march size
+            const pctMS = (baseStats.marchSizePct || 0) * levelMult * qualityMult;
+            
+            if (pctMS > 0) {
+                bonusEl.textContent = `+${pctMS.toFixed(2)}%`;
+            } else if (flatMS > 0) {
+                bonusEl.textContent = `+${formatNumber(flatMS)}`;
+            } else {
+                bonusEl.textContent = '+0';
+            }
         } else {
             bonusEl.textContent = '+0';
         }
