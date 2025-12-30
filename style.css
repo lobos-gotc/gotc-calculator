@@ -10846,6 +10846,7 @@ button.multiplier-btn {
     display: flex;
     flex-direction: column;
     gap: 24px;
+    overflow: hidden;
 }
 
 .ms-armory-category {
@@ -10853,6 +10854,7 @@ button.multiplier-btn {
     border-radius: 10px;
     padding: 16px;
     background: rgba(255, 255, 255, 0.02);
+    overflow: hidden;
 }
 
 .ms-armory-category__title {
@@ -11223,8 +11225,35 @@ button.multiplier-btn {
 
 /* Responsive for vertical card layout (Armories) */
 @media (max-width: 1200px) {
+    .ms-armories-content {
+        padding: 16px;
+        overflow: hidden;
+    }
+    
+    .ms-armory-category {
+        padding: 12px;
+        overflow: hidden;
+    }
+    
     .ms-armory-grid.ms-armory-grid--vertical {
         grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+    }
+    
+    .ms-armory-item.ms-armory-item--vertical {
+        padding: 12px 10px;
+        min-width: 0;
+    }
+    
+    .ms-armory-item.ms-armory-item--vertical > .ms-armory-icons {
+        height: 70px;
+    }
+    
+    .ms-armory-item.ms-armory-item--vertical > .ms-armory-icons .ms-armory-icon {
+        width: 45px !important;
+        height: 45px !important;
+        max-width: 45px !important;
+        max-height: 45px !important;
     }
 }
 
