@@ -84,8 +84,8 @@ const MARCH_SIZE_DATA = {
                 img: "item/season12/burning-usurper/chest.png",
                 scenarios: ["sop", "keep", "reinforce"],
                 stats: {
-                    // L50 = +4.873% march size (base L40 = 3.75%)
-                    legendary: { marchSize: 0, marchSizePct: 3.75 }
+                    // L40 Legendary = 4.00% march size (from game data)
+                    legendary: { marchSize: 0, marchSizePct: 4.00 }
                 }
             },
             "Frostfang Thenn": {
