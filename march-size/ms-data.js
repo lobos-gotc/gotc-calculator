@@ -366,8 +366,8 @@ const MARCH_SIZE_DATA = {
             },
             "Bronze Cutlery": {
                 season: 11,
-                set: "Bronze",
-                img: "trinkets/icon_eq_events_vintner_goblet_trinket_1.png",
+                set: "Relics of the First Man",
+                img: "trinkets/icon_eq_events_thenn_trinket_1.png",
                 scenarios: ["sop", "keep", "reinforce"],
                 stats: {
                     legendary: { marchSize: 3216, marchSizePct: 0 }
@@ -396,8 +396,8 @@ const MARCH_SIZE_DATA = {
             },
             "Bronze Cutlery": {
                 season: 11,
-                set: "Bronze",
-                img: "trinkets/icon_eq_events_vintner_goblet_trinket_1.png",
+                set: "Relics of the First Man",
+                img: "trinkets/icon_eq_events_thenn_trinket_1.png",
                 scenarios: ["sop", "keep", "reinforce"],
                 stats: {
                     legendary: { marchSize: 3216, marchSizePct: 0 }
