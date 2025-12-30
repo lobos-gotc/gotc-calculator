@@ -11253,12 +11253,14 @@ button.multiplier-btn {
     
     .ms-armory-item.ms-armory-item--vertical > .ms-armory-icons {
         height: 70px;
-        width: 100%;
+        width: auto;
         max-width: 100%;
+        align-self: center;
         justify-content: center;
         align-items: center;
         gap: 4px;
         box-sizing: border-box;
+        padding: 8px 12px;
     }
     
     .ms-armory-item.ms-armory-item--vertical > .ms-armory-icons .ms-armory-icon {
