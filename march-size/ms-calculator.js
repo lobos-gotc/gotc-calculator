@@ -898,6 +898,8 @@
         const baseMs = parseFloat(selectedOption?.dataset?.baseMs) || 0;
         const basePct = parseFloat(selectedOption?.dataset?.basePct) || 0;
         
+        console.log(`[updateGearBonusDisplay] Slot: ${slot}, Gear: ${select.value}, baseMs: ${baseMs}, basePct: ${basePct}, dataset:`, selectedOption?.dataset);
+        
         const levelMult = levelMultipliers[level] || 1.0;
         const qualityMult = qualityMultipliers[quality] || 1.0;
         
@@ -906,6 +908,8 @@
         
         // Handle flat march size
         const flatMS = Math.floor(baseMs * levelMult * qualityMult);
+        
+        console.log(`[updateGearBonusDisplay] pctMS: ${pctMS}, flatMS: ${flatMS}`);
         
         if (pctMS > 0) {
             bonusEl.textContent = `+${pctMS.toFixed(2)}%`;
