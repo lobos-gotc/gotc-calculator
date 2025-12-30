@@ -13,7 +13,7 @@
 	<link rel="icon" type="image/png" sizes="64x64" href="stark-favicon.png">
 	<link rel="icon" type="image/png" sizes="32x32" href="stark-favicon.png">
 	<link rel="apple-touch-icon" sizes="180x180" href="stark-logo.png">
-    <link rel="stylesheet" href="style.css?v=2.0">
+    <link rel="stylesheet" href="style.css?v=2.2">
         <script>
                 (function () {
                         const params = new URLSearchParams(window.location.search);
@@ -58,7 +58,7 @@
     <script defer src="history.js?v=1.0"></script>
     <script defer src="gear-database.js?v=1.0"></script>
     <script defer src="march-size/ms-data.js?v=4.2"></script>
-    <script defer src="march-size/ms-calculator.js?v=4.4"></script>
+    <script defer src="march-size/ms-calculator.js?v=4.6"></script>
 </head>
 <body>
     <div class="wrapper">
@@ -1869,6 +1869,7 @@
 
                     <!-- SoP Title Selection -->
                     <div class="glass-card ms-input-card ms-title-card">
+                        <span class="ms-title-card__bonus" id="msTitleBonus">+150,000</span>
                         <div class="ms-input-card__header">
                             <h3>Seat of Power Title</h3>
                             <span class="ms-input-card__subtitle">Your attacker title affects march size and gear recommendations</span>
@@ -1888,10 +1889,6 @@
                                     <option value="star4_5" selected>4.5-Star Attacker (+150,000)</option>
                                     <option value="kl">KL Attacker (+175,000)</option>
                                 </select>
-                                <div class="ms-title-bonus" id="msTitleBonus">
-                                    <span class="ms-title-bonus__value">+150,000</span>
-                                    <span class="ms-title-bonus__label">March Size</span>
-                                </div>
                             </div>
                         </div>
                     </div>

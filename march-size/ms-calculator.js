@@ -418,14 +418,16 @@
     
     function updateTitleDisplay() {
         const titleSelect = document.getElementById('msTitleSelect');
-        const titleBonusValue = document.getElementById('msTitleBonus')?.querySelector('.ms-title-bonus__value');
+        const titleBonusEl = document.getElementById('msTitleBonus');
         
-        if (!titleSelect || !titleBonusValue) return;
+        if (!titleSelect) return;
         
         const titleKey = titleSelect.value;
         const titleData = MARCH_SIZE_DATA.sopTitles[titleKey] || { marchSize: 0 };
         
-        titleBonusValue.textContent = `+${formatNumber(titleData.marchSize)}`;
+        if (titleBonusEl) {
+            titleBonusEl.textContent = `+${formatNumber(titleData.marchSize)}`;
+        }
     }
     
     function setupBaseMarchSizeListeners() {
@@ -878,22 +880,14 @@
 
     // Update bonus display for a single gear slot
     function updateGearBonusDisplay(slot) {
-        console.log(`[updateGearBonusDisplay] Called for slot: ${slot}`);
-        
         const select = document.getElementById(`msGearSelect-${slot}`);
         const qualitySelect = document.getElementById(`msGearQuality-${slot}`);
         const levelSelect = document.getElementById(`msGearLevelSelect-${slot}`);
         const bonusEl = document.getElementById(`msGearBonus-${slot}`);
         
-        console.log(`[updateGearBonusDisplay] select:`, select?.value, `bonusEl:`, bonusEl);
-        
-        if (!bonusEl) {
-            console.log(`[updateGearBonusDisplay] No bonus element found for ${slot}`);
-            return;
-        }
+        if (!bonusEl) return;
         
         if (!select || !select.value) {
-            console.log(`[updateGearBonusDisplay] No selection for ${slot}`);
             bonusEl.textContent = '+0';
             return;
         }
@@ -911,11 +905,6 @@
         const baseMs = parseFloat(selectedOption?.dataset?.baseMs) || 0;
         const basePct = parseFloat(selectedOption?.dataset?.basePct) || 0;
         
-        console.log(`[updateGearBonusDisplay] Slot: ${slot}, Gear: ${select.value}`);
-        console.log(`[updateGearBonusDisplay] selectedOption:`, selectedOption);
-        console.log(`[updateGearBonusDisplay] dataset:`, selectedOption?.dataset);
-        console.log(`[updateGearBonusDisplay] baseMs: ${baseMs}, basePct: ${basePct}`);
-        
         const levelMult = levelMultipliers[level] || 1.0;
         const qualityMult = qualityMultipliers[quality] || 1.0;
         
@@ -925,17 +914,13 @@
         // Handle flat march size
         const flatMS = Math.floor(baseMs * levelMult * qualityMult);
         
-        console.log(`[updateGearBonusDisplay] pctMS: ${pctMS}, flatMS: ${flatMS}`);
         
         if (pctMS > 0) {
             bonusEl.textContent = `+${pctMS.toFixed(2)}%`;
-            console.log(`[updateGearBonusDisplay] Setting percentage: +${pctMS.toFixed(2)}%`);
         } else if (flatMS > 0) {
             bonusEl.textContent = `+${formatNumber(flatMS)}`;
-            console.log(`[updateGearBonusDisplay] Setting flat: +${formatNumber(flatMS)}`);
         } else {
             bonusEl.textContent = '+0';
-            console.log(`[updateGearBonusDisplay] Setting +0`);
         }
     }
 
@@ -1694,9 +1679,13 @@
                 const adjustedMS = Math.floor((baseStats.marchSize || 0) * totalMult);
                 const adjustedPct = (baseStats.marchSizePct || 0) * totalMult;
                 
-                // Update bonus display
+                // Update bonus display - show percentage if available, otherwise flat
                 if (bonusEl) {
-                    bonusEl.textContent = `+${formatNumber(adjustedMS)}`;
+                    if (adjustedPct > 0) {
+                        bonusEl.textContent = `+${adjustedPct.toFixed(2)}%`;
+                    } else {
+                        bonusEl.textContent = `+${formatNumber(adjustedMS)}`;
+                    }
                 }
                 
                 result.flat += adjustedMS;

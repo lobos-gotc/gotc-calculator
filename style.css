@@ -3717,8 +3717,9 @@ button.multiplier-btn {
     margin-right: 12px;
     font-size: var(--font-size-sm);
     font-weight: var(--font-weight-medium);
-    color: var(--accent-green);
-    background: rgba(74, 222, 128, 0.15);
+    color: var(--success-color);
+    background: linear-gradient(135deg, rgba(76, 175, 80, 0.15), rgba(56, 142, 60, 0.2));
+    border: 1px solid rgba(76, 175, 80, 0.3);
     padding: 4px 10px;
     border-radius: 6px;
     font-family: 'JetBrains Mono', monospace;
@@ -3728,8 +3729,9 @@ button.multiplier-btn {
 .ms-category-total {
     font-size: var(--font-size-xs);
     font-weight: var(--font-weight-medium);
-    color: var(--text-secondary);
-    background: rgba(255, 255, 255, 0.1);
+    color: var(--success-color);
+    background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(56, 142, 60, 0.15));
+    border: 1px solid rgba(76, 175, 80, 0.2);
     padding: 2px 8px;
     border-radius: 4px;
     margin-left: 8px;
@@ -10344,7 +10346,22 @@ button.multiplier-btn {
    SOP TITLE CARD
    ============================================ */
 .ms-title-card {
+    position: relative;
     margin-bottom: 24px;
+}
+
+.ms-title-card__bonus {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: linear-gradient(135deg, rgba(76, 175, 80, 0.2), rgba(56, 142, 60, 0.3));
+    border: 1px solid var(--success-color);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--success-color);
+    z-index: 1;
 }
 
 .ms-title-card .ms-input-card__header {
@@ -10428,6 +10445,13 @@ button.multiplier-btn {
 
 /* Mobile responsive */
 @media (max-width: 600px) {
+    .ms-title-card__bonus {
+        font-size: 0.75rem;
+        padding: 4px 8px;
+        top: 8px;
+        right: 8px;
+    }
+    
     .ms-title-selection {
         flex-direction: column;
         text-align: center;
@@ -10436,10 +10460,6 @@ button.multiplier-btn {
     .ms-title-selection__icon {
         width: 60px;
         height: 60px;
-    }
-    
-    .ms-title-bonus {
-        justify-content: center;
     }
 }
 
@@ -10532,13 +10552,13 @@ button.multiplier-btn {
     position: absolute;
     top: 8px;
     right: 8px;
-    background: linear-gradient(135deg, rgba(0, 191, 255, 0.2), rgba(0, 150, 200, 0.3));
-    border: 1px solid var(--primary-color);
+    background: linear-gradient(135deg, rgba(76, 175, 80, 0.2), rgba(56, 142, 60, 0.3));
+    border: 1px solid var(--success-color);
     border-radius: 6px;
     padding: 4px 10px;
     font-size: 0.85rem;
     font-weight: 600;
-    color: var(--primary-color);
+    color: var(--success-color);
     z-index: 1;
 }
 
@@ -12117,7 +12137,7 @@ button.multiplier-btn {
 
 .ms-hero-slot__bonus {
     font-size: var(--font-size-xs);
-    color: var(--primary-color);
+    color: var(--success-color);
     font-weight: var(--font-weight-medium);
     text-align: center;
     min-height: 18px;
