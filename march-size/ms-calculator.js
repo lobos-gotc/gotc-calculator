@@ -242,6 +242,9 @@
                 
                 // Update dropdown stats display
                 updateGearDropdownStats(slot);
+                
+                // Update gear bonus display
+                updateGearBonusDisplay(slot);
             });
             
             // Recalculate march size after gear is set
@@ -405,6 +408,24 @@
         
         // Add listeners for inputs that affect base march size (for hero bonus calculations)
         setupBaseMarchSizeListeners();
+        
+        // Title selection listener
+        const titleSelect = document.getElementById('msTitleSelect');
+        if (titleSelect) {
+            titleSelect.addEventListener('change', updateTitleDisplay);
+        }
+    }
+    
+    function updateTitleDisplay() {
+        const titleSelect = document.getElementById('msTitleSelect');
+        const titleBonusValue = document.getElementById('msTitleBonus')?.querySelector('.ms-title-bonus__value');
+        
+        if (!titleSelect || !titleBonusValue) return;
+        
+        const titleKey = titleSelect.value;
+        const titleData = MARCH_SIZE_DATA.sopTitles[titleKey] || { marchSize: 0 };
+        
+        titleBonusValue.textContent = `+${formatNumber(titleData.marchSize)}`;
     }
     
     function setupBaseMarchSizeListeners() {
@@ -512,6 +533,9 @@
             elements.templateSection.classList.remove('active');
             elements.marchSizeSection.style.display = 'block';
             elements.marchSizeSection.classList.add('active');
+            
+            // Ensure we start at step 1 when switching to march size mode
+            goToStep(1);
         }
     }
 
@@ -537,10 +561,8 @@
     function goToStep(step) {
         if (step < 1 || step > totalSteps) return;
         
-        // If going to results, calculate first
-        if (step === 3 && currentStep === 2) {
-            calculateMarchSize();
-        }
+        // Note: If going to results via Calculate button, calculateMarchSize() handles it
+        // Don't call calculateMarchSize here to avoid infinite loop
 
         currentStep = step;
         
@@ -800,6 +822,9 @@
                     updateGearSlotQuality(slot, '');
                 }
                 
+                // Update gear bonus display
+                updateGearBonusDisplay(slot);
+                
                 // Update hero bonus display
                 updateHeroBonusDisplay();
             });
@@ -811,6 +836,8 @@
                     if (select.value) {
                         updateGearSlotQuality(slot, qualitySelect.value);
                     }
+                    // Update gear bonus display
+                    updateGearBonusDisplay(slot);
                     // Update hero bonus display
                     updateHeroBonusDisplay();
                 });
@@ -821,6 +848,8 @@
             if (levelSelect && !levelSelect._listenersAdded) {
                 levelSelect.addEventListener('change', () => {
                     updateGearDropdownStats(slot);
+                    // Update gear bonus display
+                    updateGearBonusDisplay(slot);
                     // Update hero bonus display
                     updateHeroBonusDisplay();
                 });
@@ -839,6 +868,43 @@
             } else {
                 delete slotElement.dataset.quality;
             }
+        }
+    }
+
+    // Update bonus display for a single gear slot
+    function updateGearBonusDisplay(slot) {
+        const select = document.getElementById(`msGearSelect-${slot}`);
+        const qualitySelect = document.getElementById(`msGearQuality-${slot}`);
+        const levelSelect = document.getElementById(`msGearLevelSelect-${slot}`);
+        const bonusEl = document.getElementById(`msGearBonus-${slot}`);
+        
+        if (!bonusEl) return;
+        
+        if (!select || !select.value) {
+            bonusEl.textContent = '+0';
+            return;
+        }
+        
+        const gearName = select.value;
+        const quality = qualitySelect?.value || 'legendary';
+        const level = parseInt(levelSelect?.value) || 40;
+        
+        // Level multipliers
+        const levelMultipliers = { 35: 0.85, 40: 1.0, 45: 1.15, 50: 1.30 };
+        // Quality multipliers
+        const qualityMultipliers = { poor: 0.2, common: 0.4, fine: 0.6, exquisite: 0.8, epic: 0.9, legendary: 1.0 };
+        
+        const slotData = MARCH_SIZE_DATA.gear[slot];
+        const gearData = slotData && slotData[gearName];
+        
+        if (gearData) {
+            const baseStats = gearData.stats?.legendary || { marchSize: 0 };
+            const levelMult = levelMultipliers[level] || 1.0;
+            const qualityMult = qualityMultipliers[quality] || 1.0;
+            const adjustedMS = Math.floor((baseStats.marchSize || 0) * levelMult * qualityMult);
+            bonusEl.textContent = `+${formatNumber(adjustedMS)}`;
+        } else {
+            bonusEl.textContent = '+0';
         }
     }
 
@@ -1152,6 +1218,10 @@
         results.breakdown.gear = calculateGearMS();
         results.gear = results.breakdown.gear.flat;
         results.bonusPct += results.breakdown.gear.pct;
+
+        // Calculate from SoP Title
+        results.breakdown.title = calculateTitleMS();
+        results.gear += results.breakdown.title.flat;
 
         // Quick modifiers (Keep Enhancement)
         const keepEnhLevel = parseInt(elements.keepEnhancementLevel?.value) || 0;
@@ -1559,8 +1629,13 @@
             const select = document.getElementById(`msGearSelect-${slot}`);
             const qualitySelect = document.getElementById(`msGearQuality-${slot}`);
             const levelSelect = document.getElementById(`msGearLevelSelect-${slot}`);
+            const bonusEl = document.getElementById(`msGearBonus-${slot}`);
             
-            if (!select || !select.value) return;
+            if (!select || !select.value) {
+                // Update bonus display to show +0 when no gear selected
+                if (bonusEl) bonusEl.textContent = '+0';
+                return;
+            }
             
             const gearName = select.value;
             const quality = qualitySelect?.value || 'legendary';
@@ -1588,6 +1663,11 @@
                 const adjustedMS = Math.floor((baseStats.marchSize || 0) * totalMult);
                 const adjustedPct = (baseStats.marchSizePct || 0) * totalMult;
                 
+                // Update bonus display
+                if (bonusEl) {
+                    bonusEl.textContent = `+${formatNumber(adjustedMS)}`;
+                }
+                
                 result.flat += adjustedMS;
                 result.pct += adjustedPct;
                 result.items.push({
@@ -1600,9 +1680,29 @@
                     marchSize: adjustedMS,
                     marchSizePct: adjustedPct
                 });
+            } else {
+                // Gear not found in data, show +0
+                if (bonusEl) bonusEl.textContent = '+0';
             }
         });
 
+        return result;
+    }
+
+    function calculateTitleMS() {
+        const result = { flat: 0, name: 'No Title' };
+        
+        const titleSelect = document.getElementById('msTitleSelect');
+        if (!titleSelect || !titleSelect.value || titleSelect.value === 'none') {
+            return result;
+        }
+        
+        const titleData = MARCH_SIZE_DATA.sopTitles[titleSelect.value];
+        if (titleData) {
+            result.flat = titleData.marchSize;
+            result.name = titleData.name;
+        }
+        
         return result;
     }
 

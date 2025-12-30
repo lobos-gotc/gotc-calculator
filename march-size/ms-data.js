@@ -888,6 +888,22 @@ const MARCH_SIZE_DATA = {
     // QUALITY TIERS
     // ============================================
     qualities: ["poor", "common", "fine", "exquisite", "epic", "legendary"],
+    // ============================================
+    // SOP ATTACKER TITLES
+    // Title bonuses based on the Seat of Power you hold
+    // Community naming: X-Star Attacker vs Seat of Power
+    // ============================================
+    sopTitles: {
+        none: { name: "No Title", stars: 0, marchSize: 0 },
+        star2: { name: "2-Star Attacker", stars: 2, marchSize: 108234 },
+        star2_5: { name: "2.5-Star Attacker", stars: 2.5, marchSize: 113009 },
+        star3: { name: "3-Star Attacker", stars: 3, marchSize: 117147 },
+        star3_5: { name: "3.5-Star Attacker", stars: 3.5, marchSize: 120967 },
+        star4: { name: "4-Star Attacker", stars: 4, marchSize: 135000 },
+        star4_5: { name: "4.5-Star Attacker", stars: 4.5, marchSize: 150000 },
+        kl: { name: "KL Attacker", stars: 5, marchSize: 175000 }
+    },
+
     qualityColors: {
         poor: "#9d9d9d",
         common: "#32CD32",

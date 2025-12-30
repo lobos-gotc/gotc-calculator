@@ -1854,20 +1854,6 @@
                                 </div>
                             </div>
 
-                            <!-- Heroes Aggregate Total -->
-                            <div class="ms-heroes-aggregate">
-                                <span>Total Hero Bonuses:</span>
-                                <strong id="msHeroesTotal">+0 troops</strong>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Manual Total Override -->
-                    <div class="glass-card ms-input-card">
-                        <div class="ms-manual-total">
-                            <label for="msManualTotal">Or Enter Base March Size Directly</label>
-                            <p class="ms-manual-total__hint">Check your march size in-game with gear unequipped</p>
-                            <input type="number" id="msManualTotal" class="ms-input ms-input--large" min="0" placeholder="e.g. 500000">
                         </div>
                     </div>
 
@@ -1876,8 +1862,37 @@
                 <!-- MS Step 2: Gear Selection -->
                 <div class="wizard-step" id="ms-step-input" data-step="2">
                     <div class="wizard-step__header">
-                        <h2>Select Your Gear</h2>
-                        <p>Choose the gear you want to calculate march size for</p>
+                        <h2>Select Your Gear & Title</h2>
+                        <p>Choose your SoP attacker title and gear to calculate march size</p>
+                    </div>
+
+                    <!-- SoP Title Selection -->
+                    <div class="glass-card ms-input-card ms-title-card">
+                        <div class="ms-input-card__header">
+                            <h3>Seat of Power Title</h3>
+                            <span class="ms-input-card__subtitle">Your attacker title affects march size and gear recommendations</span>
+                        </div>
+                        <div class="ms-title-selection">
+                            <div class="ms-title-selection__icon">
+                                <img src="resources/research/icon_research_march_size_vs_sop.png" alt="Title" id="msTitleIcon">
+                            </div>
+                            <div class="ms-title-selection__controls">
+                                <select class="ms-title-select" id="msTitleSelect">
+                                    <option value="none">No Title (+0)</option>
+                                    <option value="star2">2-Star Attacker (+108,234)</option>
+                                    <option value="star2_5">2.5-Star Attacker (+113,009)</option>
+                                    <option value="star3">3-Star Attacker (+117,147)</option>
+                                    <option value="star3_5">3.5-Star Attacker (+120,967)</option>
+                                    <option value="star4">4-Star Attacker (+135,000)</option>
+                                    <option value="star4_5" selected>4.5-Star Attacker (+150,000)</option>
+                                    <option value="kl">KL Attacker (+175,000)</option>
+                                </select>
+                                <div class="ms-title-bonus" id="msTitleBonus">
+                                    <span class="ms-title-bonus__value">+150,000</span>
+                                    <span class="ms-title-bonus__label">March Size</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Gear Selection -->
@@ -1890,6 +1905,7 @@
                             <!-- Left Column: Helmet, Chest, Pants -->
                             <div class="ms-gear-column ms-gear-column--left">
                                 <div class="ms-gear-slot-visual" data-slot="helmet">
+                                    <span class="ms-gear-slot-visual__bonus" id="msGearBonus-helmet">+0</span>
                                     <div class="ms-gear-slot-visual__image">
                                         <img src="resources/item/helmet.png" alt="Helmet" id="msGearImg-helmet">
                                     </div>
@@ -1917,6 +1933,7 @@
                                     </div>
                                 </div>
                                 <div class="ms-gear-slot-visual" data-slot="chest">
+                                    <span class="ms-gear-slot-visual__bonus" id="msGearBonus-chest">+0</span>
                                     <div class="ms-gear-slot-visual__image">
                                         <img src="resources/item/plate.png" alt="Chest" id="msGearImg-chest">
                                     </div>
@@ -1944,6 +1961,7 @@
                                     </div>
                                 </div>
                                 <div class="ms-gear-slot-visual" data-slot="pants">
+                                    <span class="ms-gear-slot-visual__bonus" id="msGearBonus-pants">+0</span>
                                     <div class="ms-gear-slot-visual__image">
                                         <img src="resources/item/pants.png" alt="Pants" id="msGearImg-pants">
                                     </div>
@@ -1971,6 +1989,7 @@
                                     </div>
                                 </div>
                                 <div class="ms-gear-slot-visual ms-gear-slot-visual--dragon-trinket" data-slot="dragonTrinket">
+                                    <span class="ms-gear-slot-visual__bonus" id="msGearBonus-dragonTrinket">+0</span>
                                     <div class="ms-gear-slot-visual__image">
                                         <img src="resources/item/ring.png" alt="Dragon Trinket" id="msGearImg-dragonTrinket">
                                     </div>
@@ -2009,6 +2028,10 @@
                             <!-- Right Column: Weapon, Ring, Boots, Trinket -->
                             <div class="ms-gear-column ms-gear-column--right">
                                 <div class="ms-gear-slot-visual" data-slot="weapon">
+                                    <span class="ms-gear-slot-visual__bonus" id="msGearBonus-weapon">+0</span>
+                                    <div class="ms-gear-slot-visual__image">
+                                        <img src="resources/item/weapon.png" alt="Weapon" id="msGearImg-weapon">
+                                    </div>
                                     <div class="ms-gear-slot-visual__info">
                                         <span class="ms-gear-slot-visual__label">Weapon</span>
                                         <select class="ms-gear-slot-visual__select" id="msGearSelect-weapon" data-slot="weapon">
@@ -2031,11 +2054,12 @@
                                             </select>
                                         </div>
                                     </div>
-                                    <div class="ms-gear-slot-visual__image">
-                                        <img src="resources/item/dagger.png" alt="Weapon" id="msGearImg-weapon">
-                                    </div>
                                 </div>
                                 <div class="ms-gear-slot-visual" data-slot="ring">
+                                    <span class="ms-gear-slot-visual__bonus" id="msGearBonus-ring">+0</span>
+                                    <div class="ms-gear-slot-visual__image">
+                                        <img src="resources/item/ring.png" alt="Ring" id="msGearImg-ring">
+                                    </div>
                                     <div class="ms-gear-slot-visual__info">
                                         <span class="ms-gear-slot-visual__label">Ring</span>
                                         <select class="ms-gear-slot-visual__select" id="msGearSelect-ring" data-slot="ring">
@@ -2058,11 +2082,12 @@
                                             </select>
                                         </div>
                                     </div>
-                                    <div class="ms-gear-slot-visual__image">
-                                        <img src="resources/item/ring.png" alt="Ring" id="msGearImg-ring">
-                                    </div>
                                 </div>
                                 <div class="ms-gear-slot-visual" data-slot="boots">
+                                    <span class="ms-gear-slot-visual__bonus" id="msGearBonus-boots">+0</span>
+                                    <div class="ms-gear-slot-visual__image">
+                                        <img src="resources/item/boots.png" alt="Boots" id="msGearImg-boots">
+                                    </div>
                                     <div class="ms-gear-slot-visual__info">
                                         <span class="ms-gear-slot-visual__label">Boots</span>
                                         <select class="ms-gear-slot-visual__select" id="msGearSelect-boots" data-slot="boots">
@@ -2085,11 +2110,12 @@
                                             </select>
                                         </div>
                                     </div>
-                                    <div class="ms-gear-slot-visual__image">
-                                        <img src="resources/item/shoos.png" alt="Boots" id="msGearImg-boots">
-                                    </div>
                                 </div>
                                 <div class="ms-gear-slot-visual" data-slot="trinket">
+                                    <span class="ms-gear-slot-visual__bonus" id="msGearBonus-trinket">+0</span>
+                                    <div class="ms-gear-slot-visual__image">
+                                        <img src="resources/trinkets/kg_white_cloak.png" alt="Trinket" id="msGearImg-trinket">
+                                    </div>
                                     <div class="ms-gear-slot-visual__info">
                                         <span class="ms-gear-slot-visual__label">Trinket</span>
                                         <select class="ms-gear-slot-visual__select" id="msGearSelect-trinket" data-slot="trinket">
@@ -2111,9 +2137,6 @@
                                                 <option value="legendary" selected>Legendary</option>
                                             </select>
                                         </div>
-                                    </div>
-                                    <div class="ms-gear-slot-visual__image">
-                                        <img src="resources/item/ring.png" alt="Trinket" id="msGearImg-trinket">
                                     </div>
                                 </div>
                             </div>
