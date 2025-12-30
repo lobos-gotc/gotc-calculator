@@ -358,7 +358,7 @@ const MARCH_SIZE_DATA = {
             "Floral Brooch": {
                 season: 12,
                 set: "Floral",
-                img: "trinkets/icon_eq_events_margaery_trinket_1.png",
+                img: "trinkets/icon_eq_events_harvest_trinket_1.png",
                 scenarios: ["sop", "keep", "reinforce"],
                 stats: {
                     legendary: { marchSize: 3721, marchSizePct: 0 }
@@ -388,7 +388,7 @@ const MARCH_SIZE_DATA = {
             "Floral Brooch": {
                 season: 12,
                 set: "Floral",
-                img: "trinkets/icon_eq_events_margaery_trinket_1.png",
+                img: "trinkets/icon_eq_events_harvest_trinket_1.png",
                 scenarios: ["sop", "keep", "reinforce"],
                 stats: {
                     legendary: { marchSize: 3721, marchSizePct: 0 }
