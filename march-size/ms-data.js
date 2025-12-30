@@ -62,10 +62,30 @@ const MARCH_SIZE_DATA = {
             "Val. Kingsguard": {
                 season: 13,
                 set: "Valyrian Kingsguard",
-                img: "item/season9/targaryen-kingsguard/chest.png",
+                img: "item/season13/valyrian-kingsguard/chest.png",
                 scenarios: ["sop", "keep", "reinforce"],
                 stats: {
                     legendary: { marchSize: 0, marchSizePct: 4.80 }
+                }
+            },
+            "Targ. Kingsguard": {
+                season: 9,
+                set: "Targaryen Kingsguard",
+                img: "item/season9/targaryen-kingsguard/chest.png",
+                scenarios: ["sop", "keep", "reinforce"],
+                stats: {
+                    // L50 = +4,230 flat march size (base L40 = 3254)
+                    legendary: { marchSize: 3254, marchSizePct: 0 }
+                }
+            },
+            "Burning Usurper": {
+                season: 12,
+                set: "Burning Usurper",
+                img: "item/season12/burning-usurper/chest.png",
+                scenarios: ["sop", "keep", "reinforce"],
+                stats: {
+                    // L50 = +4.873% march size (base L40 = 3.75%)
+                    legendary: { marchSize: 0, marchSizePct: 3.75 }
                 }
             },
             "Frostfang Thenn": {
@@ -119,7 +139,7 @@ const MARCH_SIZE_DATA = {
             "Val. Kingsguard": {
                 season: 13,
                 set: "Valyrian Kingsguard",
-                img: "item/season9/targaryen-kingsguard/pants.png",
+                img: "item/season13/valyrian-kingsguard/pants.png",
                 scenarios: ["sop", "keep", "reinforce"],
                 stats: {
                     legendary: { marchSize: 0, marchSizePct: 4.80 }
@@ -224,7 +244,7 @@ const MARCH_SIZE_DATA = {
             "Val. Kingsguard": {
                 season: 13,
                 set: "Valyrian Kingsguard",
-                img: "item/season9/targaryen-kingsguard/ring.png",
+                img: "item/season13/valyrian-kingsguard/ring.png",
                 scenarios: ["sop", "keep", "reinforce"],
                 stats: {
                     legendary: { marchSize: 0, marchSizePct: 4.80 }
