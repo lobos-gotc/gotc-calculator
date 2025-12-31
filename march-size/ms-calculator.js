@@ -759,9 +759,8 @@
                     console.log(`[populateGearSlots] ${slot}/${gear.name}: Setting basePct=${option.dataset.basePct} from stats.legendary.marchSizePct=${gear.stats?.legendary?.marchSizePct}`);
                 }
                 
-                // Calculate adjusted stats based on level and quality
-                const statText = getGearStatText(gear.stats?.legendary, level, quality);
-                option.textContent = `${gear.name}${statText}`;
+                // Just show gear name - stats shown in badge
+                option.textContent = gear.name;
                 select.appendChild(option);
             });
 
@@ -803,28 +802,10 @@
         return '';
     }
 
-    // Update dropdown text when level or quality changes
+    // Update dropdown text when level or quality changes (stats now shown in badge only)
     function updateGearDropdownStats(slot) {
-        const select = document.getElementById(`msGearSelect-${slot}`);
-        const levelSelect = document.getElementById(`msGearLevelSelect-${slot}`);
-        const qualitySelect = document.getElementById(`msGearQuality-${slot}`);
-        
-        if (!select) return;
-        
-        const level = parseInt(levelSelect?.value) || 40;
-        const quality = qualitySelect?.value || 'legendary';
-        
-        // Update each option's display text
-        Array.from(select.options).forEach(option => {
-            if (!option.value) return; // Skip "-- None --"
-            
-            const baseMs = parseFloat(option.dataset.baseMs) || 0;
-            const basePct = parseFloat(option.dataset.basePct) || 0;
-            const gearName = option.value;
-            
-            const statText = getGearStatText({ marchSize: baseMs, marchSizePct: basePct }, level, quality);
-            option.textContent = `${gearName}${statText}`;
-        });
+        // No longer needed - stats displayed in badge, not dropdown
+        // Function kept for backward compatibility with event listeners
     }
 
     function setupGearEventListeners() {
@@ -1981,7 +1962,8 @@
             trinket: 'Trinket'
         };
         
-        const slots = ['helmet', 'chest', 'pants', 'weapon', 'ring', 'boots', 'dragonTrinket', 'trinket'];
+        // Interleaved for 2-column grid: left column (helmet,chest,pants,dragonTrinket), right column (weapon,ring,boots,trinket)
+        const slots = ['helmet', 'weapon', 'chest', 'ring', 'pants', 'boots', 'dragonTrinket', 'trinket'];
         
         // Initialize recommendation state
         recommendationState.baseMarchSize = baseMarchSize;
@@ -2338,7 +2320,7 @@
     
     // Setup event listeners for optimization guide interactivity
     function setupOptimizationEventListeners() {
-        const slots = ['helmet', 'chest', 'pants', 'weapon', 'ring', 'boots', 'dragonTrinket', 'trinket'];
+        const slots = ['helmet', 'weapon', 'chest', 'ring', 'pants', 'boots', 'dragonTrinket', 'trinket'];
         
         // Title change listener
         const titleSelect = document.getElementById('msOptTitleSelect');
@@ -2539,7 +2521,7 @@
     
     // Update summary totals after slot changes
     function updateSummaryTotals() {
-        const slots = ['helmet', 'chest', 'pants', 'weapon', 'ring', 'boots', 'dragonTrinket', 'trinket'];
+        const slots = ['helmet', 'weapon', 'chest', 'ring', 'pants', 'boots', 'dragonTrinket', 'trinket'];
         const baseMarchSize = recommendationState.baseMarchSize;
         
         let totalCurrent = 0;
@@ -2615,7 +2597,7 @@
         }
         
         // Update all slots
-        const slots = ['helmet', 'chest', 'pants', 'weapon', 'ring', 'boots', 'dragonTrinket', 'trinket'];
+        const slots = ['helmet', 'weapon', 'chest', 'ring', 'pants', 'boots', 'dragonTrinket', 'trinket'];
         for (const slot of slots) {
             updateSlotDisplay(slot);
         }
