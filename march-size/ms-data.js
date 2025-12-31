@@ -1112,15 +1112,18 @@ function getBuildingMarchSize(buildingId, level) {
 
 // Helper function to get armory march size at level
 // Uses the exact progression values from the game data
+// Note: Game displays level N but uses array[N-1] for actual bonus (off-by-one)
 function getArmoryMarchSize(armoryType, armoryId, level) {
     const progressions = MARCH_SIZE_DATA.armoryProgressions;
     if (!progressions || !progressions[armoryType]) return { marchSize: 0 };
     
     const values = progressions[armoryType];
-    if (level < 0) return { marchSize: 0 };
-    if (level >= values.length) return { marchSize: values[values.length - 1] };
+    // Game uses level-1 for lookup (level 211 uses index 210)
+    const index = Math.max(0, level - 1);
+    if (index < 0) return { marchSize: 0 };
+    if (index >= values.length) return { marchSize: values[values.length - 1] };
     
-    return { marchSize: values[level] || 0 };
+    return { marchSize: values[index] || 0 };
 }
 
 // Helper function to get enhancement march size at level
@@ -1174,16 +1177,18 @@ function getGearMarchSizeByLevelQuality(gearLevel, quality) {
 
 // Helper function to get armory march size by type and level
 // Uses extracted game progression data
+// Note: Game uses level-1 for lookup (off-by-one adjustment)
 function getArmoryMarchSizeByLevel(armoryType, level) {
     const progressions = MARCH_SIZE_DATA.armoryProgressions;
     if (!progressions || !progressions[armoryType]) return 0;
     
     const values = progressions[armoryType];
-    if (level < 0 || level >= values.length) {
-        return level >= values.length ? values[values.length - 1] : 0;
-    }
+    // Game uses level-1 for lookup
+    const index = Math.max(0, level - 1);
+    if (index < 0) return 0;
+    if (index >= values.length) return values[values.length - 1];
     
-    return values[level] || 0;
+    return values[index] || 0;
 }
 
 // Export for use in other modules
