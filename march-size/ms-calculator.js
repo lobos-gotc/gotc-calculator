@@ -789,7 +789,8 @@
         if (!baseStats) return '';
         
         const levelMult = { 35: 0.85, 40: 1.0, 45: 1.15, 50: 1.30 }[level] || 1.0;
-        const qualityMult = { poor: 0.2, common: 0.4, fine: 0.6, exquisite: 0.8, epic: 0.9, legendary: 1.0 }[quality] || 1.0;
+        // Actual game quality multipliers (from extracted database)
+        const qualityMult = { poor: 0.70, common: 0.75, fine: 0.80, exquisite: 0.85, epic: 0.90, legendary: 1.0 }[quality] || 1.0;
         const totalMult = levelMult * qualityMult;
         
         if (baseStats.marchSize) {
@@ -943,7 +944,8 @@
         } else {
             // Fall back to multiplier calculation (for trinkets or unmapped gear)
             const levelMultipliers = { 35: 0.8902, 40: 1.0, 45: 1.1098, 50: 1.2196 };
-            const qualityMultipliers = { poor: 0.2, common: 0.4, fine: 0.6, exquisite: 0.8, epic: 0.9, legendary: 1.0 };
+            // Actual game quality multipliers (from extracted database)
+            const qualityMultipliers = { poor: 0.70, common: 0.75, fine: 0.80, exquisite: 0.85, epic: 0.90, legendary: 1.0 };
             
             const baseMs = parseFloat(selectedOption?.dataset?.baseMs) || 0;
             const basePct = parseFloat(selectedOption?.dataset?.basePct) || 0;
@@ -1692,13 +1694,13 @@
             50: 1.2196
         };
 
-        // Quality multipliers (fallback for trinkets without exact DB values)
+        // Actual game quality multipliers (from extracted database)
         const qualityMultipliers = {
-            poor: 0.2,
-            common: 0.4,
-            fine: 0.6,
-            exquisite: 0.8,
-            epic: 0.9,
+            poor: 0.70,
+            common: 0.75,
+            fine: 0.80,
+            exquisite: 0.85,
+            epic: 0.90,
             legendary: 1.0
         };
 
@@ -1840,10 +1842,11 @@
     // GEAR OPTIMIZATION CALCULATIONS
     // ============================================
 
-    const LEVEL_MULTIPLIERS = { 35: 0.85, 40: 1.0, 45: 1.15, 50: 1.30 };
+    const LEVEL_MULTIPLIERS = { 35: 0.8902, 40: 1.0, 45: 1.1098, 50: 1.2196 };
+    // Actual game quality multipliers (from extracted database)
     const QUALITY_MULTIPLIERS = { 
-        poor: 0.2, common: 0.4, fine: 0.6, 
-        exquisite: 0.8, epic: 0.9, legendary: 1.0 
+        poor: 0.70, common: 0.75, fine: 0.80, 
+        exquisite: 0.85, epic: 0.90, legendary: 1.0 
     };
 
     // Calculate effective march size contribution from a gear piece
