@@ -788,9 +788,9 @@ const MARCH_SIZE_DATA = {
         // Advanced Military
         troopSurge1: {
             name: "Troop Surge I",
-            maxLevel: 5,
-            maxMarchSize: 2500,
-            perLevel: 500  // 500 per level: 500, 1000, 1500, 2000, 2500
+            maxLevel: 3,
+            maxMarchSize: 750,
+            perLevel: 250  // 250 per level: 250, 500, 750
         },
         troopSurge2: {
             name: "Troop Surge II",
