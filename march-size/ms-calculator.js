@@ -1271,7 +1271,7 @@
             
             // Add Marching Hero bonus (1st signature skill)
             if (elements.marchingHeroLevel) {
-                const marchingLevel = parseInt(elements.marchingHeroLevel.value) || 1;
+                const marchingLevel = parseInt(elements.marchingHeroLevel.value) || 0;
                 const marchingBonus = getMarchingHeroMS(marchingLevel);
                 results.base += marchingBonus;
                 results.breakdown.marchingHero = { flat: marchingBonus };
@@ -1455,10 +1455,14 @@
         const display = document.getElementById('msMarchingHeroLevelDisplay');
         
         if (slider && display) {
-            const level = parseInt(slider.value) || 1;
+            const level = parseInt(slider.value) || 0;
             const currentMS = getMarchingHeroMS(level);
             const maxMS = 8813; // Max at level 60
-            display.textContent = `Lv ${level} | (${currentMS.toLocaleString()} / ${maxMS.toLocaleString()})`;
+            if (level === 0) {
+                display.textContent = `None | (0 / ${maxMS.toLocaleString()})`;
+            } else {
+                display.textContent = `Lv ${level} | (${currentMS.toLocaleString()} / ${maxMS.toLocaleString()})`;
+            }
         }
     }
     
@@ -3053,7 +3057,7 @@
         let marchingMaxPct = 0; // No percentage for marching hero
         
         if (elements.marchingHeroLevel) {
-            const level = parseInt(elements.marchingHeroLevel.value) || 1;
+            const level = parseInt(elements.marchingHeroLevel.value) || 0;
             marchingFlat = getMarchingHeroMS(level);
         }
         
