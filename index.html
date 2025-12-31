@@ -13,7 +13,7 @@
 	<link rel="icon" type="image/png" sizes="64x64" href="stark-favicon.png">
 	<link rel="icon" type="image/png" sizes="32x32" href="stark-favicon.png">
 	<link rel="apple-touch-icon" sizes="180x180" href="stark-logo.png">
-    <link rel="stylesheet" href="style.css?v=3.6">
+    <link rel="stylesheet" href="style.css?v=3.7">
         <script>
                 (function () {
                         const params = new URLSearchParams(window.location.search);
@@ -57,8 +57,8 @@
     <script defer src="wizard.js?v=1.0"></script>
     <script defer src="history.js?v=1.0"></script>
     <script defer src="gear-database.js?v=1.0"></script>
-    <script defer src="march-size/ms-data.js?v=4.4"></script>
-    <script defer src="march-size/ms-calculator.js?v=6.3"></script>
+    <script defer src="march-size/ms-data.js?v=4.7"></script>
+    <script defer src="march-size/ms-calculator.js?v=7.0"></script>
 </head>
 <body>
     <div class="wrapper">
@@ -1588,7 +1588,7 @@
                                     </div>
                                 </span>
                             </span>
-                            <span class="ms-section-total" id="msResearchTotal">(+0 / 60,000)</span>
+                            <span class="ms-section-total" id="msResearchTotal">(+0 / 58,250)</span>
                             <svg class="accordion-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"/></svg>
                         </div>
                         <div id="ms-research" class="accordion-content ms-research-grid" style="display:none;">
@@ -1684,7 +1684,7 @@
                             <div class="ms-research-category" data-category="advancedMilitary">
                                 <div class="ms-research-category__header">
                                     <img src="resources/research/eliteMarchSize.png" alt="Advanced Military" class="ms-research-icon">
-                                    <h4>Advanced Military <span class="ms-category-total" id="msAdvancedMilitaryTotal">(+0 / 7,500)</span></h4>
+                                    <h4>Advanced Military <span class="ms-category-total" id="msAdvancedMilitaryTotal">(+0 / 5,750)</span></h4>
                                 </div>
                                 <div class="ms-research-sliders">
                                     <div class="ms-research-slider-item">
@@ -1692,9 +1692,9 @@
                                         <div class="ms-research-slider-content">
                                             <div class="ms-research-slider-header">
                                                 <span class="ms-research-slider-name">Troop Surge I</span>
-                                                <span class="ms-research-slider-value" id="msTroopSurge1Value">0 / 2,500</span>
+                                                <span class="ms-research-slider-value" id="msTroopSurge1Value">0 / 750</span>
                                             </div>
-                                            <input type="range" id="msTroopSurge1" class="ms-research-range" min="0" max="5" value="0">
+                                            <input type="range" id="msTroopSurge1" class="ms-research-range" min="0" max="3" value="0">
                                         </div>
                                     </div>
                                     <div class="ms-research-slider-item">
@@ -1907,7 +1907,7 @@
                                     <div class="ms-marching-hero__controls">
                                         <label for="msMarchingHeroLevel">Hero Level</label>
                                         <div class="ms-marching-slider-group">
-                                            <input type="range" id="msMarchingHeroLevel" class="ms-marching-slider" min="1" max="60" value="60" data-marching="level">
+                                            <input type="range" id="msMarchingHeroLevel" class="ms-marching-slider" min="0" max="60" value="60" data-marching="level">
                                             <span class="ms-marching-value" id="msMarchingHeroLevelDisplay">Lv 60 | (8,813 / 8,813)</span>
                                         </div>
                                     </div>

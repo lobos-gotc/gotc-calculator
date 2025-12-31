@@ -759,9 +759,8 @@
                     console.log(`[populateGearSlots] ${slot}/${gear.name}: Setting basePct=${option.dataset.basePct} from stats.legendary.marchSizePct=${gear.stats?.legendary?.marchSizePct}`);
                 }
                 
-                // Calculate adjusted stats based on level and quality
-                const statText = getGearStatText(gear.stats?.legendary, level, quality);
-                option.textContent = `${gear.name}${statText}`;
+                // Just show gear name - stats shown in badge
+                option.textContent = gear.name;
                 select.appendChild(option);
             });
 
@@ -789,7 +788,8 @@
         if (!baseStats) return '';
         
         const levelMult = { 35: 0.85, 40: 1.0, 45: 1.15, 50: 1.30 }[level] || 1.0;
-        const qualityMult = { poor: 0.2, common: 0.4, fine: 0.6, exquisite: 0.8, epic: 0.9, legendary: 1.0 }[quality] || 1.0;
+        // Actual game quality multipliers (from extracted database)
+        const qualityMult = { poor: 0.70, common: 0.75, fine: 0.80, exquisite: 0.85, epic: 0.90, legendary: 1.0 }[quality] || 1.0;
         const totalMult = levelMult * qualityMult;
         
         if (baseStats.marchSize) {
@@ -802,28 +802,10 @@
         return '';
     }
 
-    // Update dropdown text when level or quality changes
+    // Update dropdown text when level or quality changes (stats now shown in badge only)
     function updateGearDropdownStats(slot) {
-        const select = document.getElementById(`msGearSelect-${slot}`);
-        const levelSelect = document.getElementById(`msGearLevelSelect-${slot}`);
-        const qualitySelect = document.getElementById(`msGearQuality-${slot}`);
-        
-        if (!select) return;
-        
-        const level = parseInt(levelSelect?.value) || 40;
-        const quality = qualitySelect?.value || 'legendary';
-        
-        // Update each option's display text
-        Array.from(select.options).forEach(option => {
-            if (!option.value) return; // Skip "-- None --"
-            
-            const baseMs = parseFloat(option.dataset.baseMs) || 0;
-            const basePct = parseFloat(option.dataset.basePct) || 0;
-            const gearName = option.value;
-            
-            const statText = getGearStatText({ marchSize: baseMs, marchSizePct: basePct }, level, quality);
-            option.textContent = `${gearName}${statText}`;
-        });
+        // No longer needed - stats displayed in badge, not dropdown
+        // Function kept for backward compatibility with event listeners
     }
 
     function setupGearEventListeners() {
@@ -922,28 +904,39 @@
             return;
         }
         
+        const gearName = select.value;
         const selectedOption = select.options[select.selectedIndex];
         const quality = qualitySelect?.value || 'legendary';
         const level = parseInt(levelSelect?.value) || 40;
+        const levelKey = `L${level}`;
         
-        // Level multipliers (verified from game data - precise values)
-        const levelMultipliers = { 35: 0.8902, 40: 1.0, 45: 1.1098, 50: 1.2196 };
-        // Quality multipliers
-        const qualityMultipliers = { poor: 0.2, common: 0.4, fine: 0.6, exquisite: 0.8, epic: 0.9, legendary: 1.0 };
+        // Try to get EXACT values from GEAR_DATABASE first (for lord gear)
+        const exactStats = typeof getExactGearMarchSize === 'function' 
+            ? getExactGearMarchSize(gearName, slot, levelKey, quality) 
+            : null;
         
-        // Get base stats from option dataset (already stored during populate)
-        const baseMs = parseFloat(selectedOption?.dataset?.baseMs) || 0;
-        const basePct = parseFloat(selectedOption?.dataset?.basePct) || 0;
+        let flatMS = 0;
+        let pctMS = 0;
         
-        const levelMult = levelMultipliers[level] || 1.0;
-        const qualityMult = qualityMultipliers[quality] || 1.0;
-        
-        // Handle percentage march size first (takes priority)
-        const pctMS = basePct * levelMult * qualityMult;
-        
-        // Handle flat march size
-        const flatMS = Math.floor(baseMs * levelMult * qualityMult);
-        
+        if (exactStats) {
+            // Use exact database values - no rounding errors!
+            flatMS = Math.round(exactStats.flat);
+            pctMS = exactStats.pct;
+        } else {
+            // Fall back to multiplier calculation (for trinkets or unmapped gear)
+            const levelMultipliers = { 35: 0.8902, 40: 1.0, 45: 1.1098, 50: 1.2196 };
+            // Actual game quality multipliers (from extracted database)
+            const qualityMultipliers = { poor: 0.70, common: 0.75, fine: 0.80, exquisite: 0.85, epic: 0.90, legendary: 1.0 };
+            
+            const baseMs = parseFloat(selectedOption?.dataset?.baseMs) || 0;
+            const basePct = parseFloat(selectedOption?.dataset?.basePct) || 0;
+            
+            const levelMult = levelMultipliers[level] || 1.0;
+            const qualityMult = qualityMultipliers[quality] || 1.0;
+            
+            pctMS = basePct * levelMult * qualityMult;
+            flatMS = Math.floor(baseMs * levelMult * qualityMult);
+        }
         
         if (pctMS > 0) {
             bonusEl.textContent = `+${pctMS.toFixed(2)}%`;
@@ -1261,7 +1254,7 @@
             
             // Add Marching Hero bonus (1st signature skill)
             if (elements.marchingHeroLevel) {
-                const marchingLevel = parseInt(elements.marchingHeroLevel.value) || 1;
+                const marchingLevel = parseInt(elements.marchingHeroLevel.value) || 0;
                 const marchingBonus = getMarchingHeroMS(marchingLevel);
                 results.base += marchingBonus;
                 results.breakdown.marchingHero = { flat: marchingBonus };
@@ -1445,10 +1438,14 @@
         const display = document.getElementById('msMarchingHeroLevelDisplay');
         
         if (slider && display) {
-            const level = parseInt(slider.value) || 1;
+            const level = parseInt(slider.value) || 0;
             const currentMS = getMarchingHeroMS(level);
             const maxMS = 8813; // Max at level 60
-            display.textContent = `Lv ${level} | (${currentMS.toLocaleString()} / ${maxMS.toLocaleString()})`;
+            if (level === 0) {
+                display.textContent = `None | (0 / ${maxMS.toLocaleString()})`;
+            } else {
+                display.textContent = `Lv ${level} | (${currentMS.toLocaleString()} / ${maxMS.toLocaleString()})`;
+            }
         }
     }
     
@@ -1670,7 +1667,7 @@
         const result = { flat: 0, pct: 0, items: [] };
         const slots = ['helmet', 'chest', 'pants', 'dragonTrinket', 'boots', 'ring', 'weapon', 'trinket'];
 
-        // Level multipliers (verified from game data - precise values)
+        // Level multipliers (fallback for trinkets without exact DB values)
         const levelMultipliers = {
             35: 0.8902,
             40: 1.0,
@@ -1678,13 +1675,13 @@
             50: 1.2196
         };
 
-        // Quality multipliers (relative to legendary)
+        // Actual game quality multipliers (from extracted database)
         const qualityMultipliers = {
-            poor: 0.2,
-            common: 0.4,
-            fine: 0.6,
-            exquisite: 0.8,
-            epic: 0.9,
+            poor: 0.70,
+            common: 0.75,
+            fine: 0.80,
+            exquisite: 0.85,
+            epic: 0.90,
             legendary: 1.0
         };
 
@@ -1705,8 +1702,11 @@
             const level = parseInt(levelSelect?.value) || 40;
             const selectedOption = select.options[select.selectedIndex];
             const imgPath = selectedOption?.dataset?.img || '';
+            
+            // Convert level to key format for database lookup (e.g., 40 -> "L40")
+            const levelKey = `L${level}`;
 
-            // Look up in MARCH_SIZE_DATA
+            // Look up in MARCH_SIZE_DATA for gear metadata
             const slotData = MARCH_SIZE_DATA.gear[slot];
             let gearData = null;
             
@@ -1714,17 +1714,30 @@
                 gearData = slotData[gearName];
             }
             
+            let adjustedMS = 0;
+            let adjustedPct = 0;
+            
             if (gearData) {
-                // Get base stats (legendary at level 40)
-                const baseStats = gearData.stats?.legendary || { marchSize: 0, marchSizePct: 0 };
+                // Try to get EXACT values from GEAR_DATABASE first (for lord gear)
+                const exactStats = typeof getExactGearMarchSize === 'function' 
+                    ? getExactGearMarchSize(gearName, slot, levelKey, quality) 
+                    : null;
                 
-                // Apply multipliers
-                const levelMult = levelMultipliers[level] || 1.0;
-                const qualityMult = qualityMultipliers[quality] || 1.0;
-                const totalMult = levelMult * qualityMult;
-                
-                const adjustedMS = Math.floor((baseStats.marchSize || 0) * totalMult);
-                const adjustedPct = (baseStats.marchSizePct || 0) * totalMult;
+                if (exactStats) {
+                    // Use exact database values - no rounding errors!
+                    adjustedMS = Math.round(exactStats.flat);
+                    adjustedPct = exactStats.pct;
+                } else {
+                    // Fall back to multiplier calculation (for trinkets or unmapped gear)
+                    const baseStats = gearData.stats?.legendary || { marchSize: 0, marchSizePct: 0 };
+                    
+                    const levelMult = levelMultipliers[level] || 1.0;
+                    const qualityMult = qualityMultipliers[quality] || 1.0;
+                    const totalMult = levelMult * qualityMult;
+                    
+                    adjustedMS = Math.floor((baseStats.marchSize || 0) * totalMult);
+                    adjustedPct = (baseStats.marchSizePct || 0) * totalMult;
+                }
                 
                 // Update bonus display - show percentage if available, otherwise flat
                 if (bonusEl) {
@@ -1810,10 +1823,11 @@
     // GEAR OPTIMIZATION CALCULATIONS
     // ============================================
 
-    const LEVEL_MULTIPLIERS = { 35: 0.85, 40: 1.0, 45: 1.15, 50: 1.30 };
+    const LEVEL_MULTIPLIERS = { 35: 0.8902, 40: 1.0, 45: 1.1098, 50: 1.2196 };
+    // Actual game quality multipliers (from extracted database)
     const QUALITY_MULTIPLIERS = { 
-        poor: 0.2, common: 0.4, fine: 0.6, 
-        exquisite: 0.8, epic: 0.9, legendary: 1.0 
+        poor: 0.70, common: 0.75, fine: 0.80, 
+        exquisite: 0.85, epic: 0.90, legendary: 1.0 
     };
 
     // Calculate effective march size contribution from a gear piece
@@ -1948,7 +1962,8 @@
             trinket: 'Trinket'
         };
         
-        const slots = ['helmet', 'chest', 'pants', 'weapon', 'ring', 'boots', 'dragonTrinket', 'trinket'];
+        // Interleaved for 2-column grid: left column (helmet,chest,pants,dragonTrinket), right column (weapon,ring,boots,trinket)
+        const slots = ['helmet', 'weapon', 'chest', 'ring', 'pants', 'boots', 'dragonTrinket', 'trinket'];
         
         // Initialize recommendation state
         recommendationState.baseMarchSize = baseMarchSize;
@@ -2305,7 +2320,7 @@
     
     // Setup event listeners for optimization guide interactivity
     function setupOptimizationEventListeners() {
-        const slots = ['helmet', 'chest', 'pants', 'weapon', 'ring', 'boots', 'dragonTrinket', 'trinket'];
+        const slots = ['helmet', 'weapon', 'chest', 'ring', 'pants', 'boots', 'dragonTrinket', 'trinket'];
         
         // Title change listener
         const titleSelect = document.getElementById('msOptTitleSelect');
@@ -2506,7 +2521,7 @@
     
     // Update summary totals after slot changes
     function updateSummaryTotals() {
-        const slots = ['helmet', 'chest', 'pants', 'weapon', 'ring', 'boots', 'dragonTrinket', 'trinket'];
+        const slots = ['helmet', 'weapon', 'chest', 'ring', 'pants', 'boots', 'dragonTrinket', 'trinket'];
         const baseMarchSize = recommendationState.baseMarchSize;
         
         let totalCurrent = 0;
@@ -2582,7 +2597,7 @@
         }
         
         // Update all slots
-        const slots = ['helmet', 'chest', 'pants', 'weapon', 'ring', 'boots', 'dragonTrinket', 'trinket'];
+        const slots = ['helmet', 'weapon', 'chest', 'ring', 'pants', 'boots', 'dragonTrinket', 'trinket'];
         for (const slot of slots) {
             updateSlotDisplay(slot);
         }
@@ -2952,7 +2967,7 @@
         const categoryTotals = {
             military1: { current: 0, max: 30000 },      // 6000 + 10000 + 14000
             military2: { current: 0, max: 22500 },     // 10000 + 10000 + 1250 + 1250
-            advancedMilitary: { current: 0, max: 7500 } // 2500 + 2500 + 2500
+            advancedMilitary: { current: 0, max: 5750 } // 750 + 2500 + 2500
         };
         
         let totalCurrent = 0;
@@ -3027,7 +3042,7 @@
         let marchingMaxPct = 0; // No percentage for marching hero
         
         if (elements.marchingHeroLevel) {
-            const level = parseInt(elements.marchingHeroLevel.value) || 1;
+            const level = parseInt(elements.marchingHeroLevel.value) || 0;
             marchingFlat = getMarchingHeroMS(level);
         }
         

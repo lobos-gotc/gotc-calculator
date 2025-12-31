@@ -361,7 +361,8 @@ const MARCH_SIZE_DATA = {
                 img: "trinkets/icon_eq_events_harvest_trinket_1.png",
                 scenarios: ["sop", "keep", "reinforce"],
                 stats: {
-                    legendary: { marchSize: 3721, marchSizePct: 0 }
+                    // L40 Legendary: marchSize 1672 + PvP 1254 + SoP 1254 = 4180
+                    legendary: { marchSize: 4180, marchSizePct: 0 }
                 }
             },
             "Bronze Cutlery": {
@@ -391,7 +392,8 @@ const MARCH_SIZE_DATA = {
                 img: "trinkets/icon_eq_events_harvest_trinket_1.png",
                 scenarios: ["sop", "keep", "reinforce"],
                 stats: {
-                    legendary: { marchSize: 3721, marchSizePct: 0 }
+                    // L40 Legendary: marchSize 1672 + PvP 1254 + SoP 1254 = 4180
+                    legendary: { marchSize: 4180, marchSizePct: 0 }
                 }
             },
             "Bronze Cutlery": {
@@ -788,9 +790,9 @@ const MARCH_SIZE_DATA = {
         // Advanced Military
         troopSurge1: {
             name: "Troop Surge I",
-            maxLevel: 5,
-            maxMarchSize: 2500,
-            perLevel: 500  // 500 per level: 500, 1000, 1500, 2000, 2500
+            maxLevel: 3,
+            maxMarchSize: 750,
+            perLevel: 250  // 250 per level: 250, 500, 750
         },
         troopSurge2: {
             name: "Troop Surge II",
@@ -1191,6 +1193,109 @@ function getArmoryMarchSizeByLevel(armoryType, level) {
     return values[index] || 0;
 }
 
+// ============================================
+// EXACT GEAR LOOKUP FROM GEAR_DATABASE
+// Maps ms-data.js gear names to gear-database.js internal IDs
+// for 100% accurate march size calculations
+// ============================================
+
+const GEAR_NAME_TO_DB_ID = {
+    // Queen Mother (Season 10)
+    "Queen Mother Vestments": "alicent",
+    
+    // Golden Rose (Season 12)
+    "Golden Rose": "margaery",
+    
+    // Frostfang Thenn (Season 12) 
+    "Frostfang Thenn": "oldnan5",
+    
+    // Valyrian Kingsguard (Season 13)
+    "Val. Kingsguard": "kingsguard3",
+    
+    // Targaryen Kingsguard (Season 9)
+    "Targ. Kingsguard": "kingsguard2",
+    
+    // Burning Usurper (Season 12)
+    "Burning Usurper": "baratheon4",
+    
+    // Flame Reaver / Flame Wreathed Reaver (Season 11)
+    "Flame Reaver": "yara2",
+    
+    // Frost Ranger / Frostbitten Ranger (Season 11)
+    "Frost Ranger": "oldnan4",
+    
+    // GreenFyre / Greenfyre Captain (Season 11)
+    "GreenFyre": "conquest6",
+    
+    // Chilled Corsair (Season 12)
+    "Chilled Corsair": "velaryon2",
+    
+    // Dragonflame Warrior (Season 12)
+    "Dragonflame Warrior": "freedom3",
+    
+    // Northern Noble / Northern Guardian (Early season)
+    "Northern Noble": "stark"
+};
+
+/**
+ * Get exact march size stats from GEAR_DATABASE for a specific gear piece
+ * @param {string} gearName - The display name from ms-data.js
+ * @param {string} slot - The gear slot (helmet, chest, pants, weapon, ring, boots)
+ * @param {string} levelKey - Level key like "L40", "L45", "L50"
+ * @param {string} quality - Quality like "legendary", "epic", "exquisite", etc.
+ * @returns {object} { flat: number, pct: number } - Exact march size values
+ */
+function getExactGearMarchSize(gearName, slot, levelKey, quality) {
+    // Check if GEAR_DATABASE is available
+    if (typeof GEAR_DATABASE === 'undefined') {
+        console.warn('GEAR_DATABASE not loaded, using multiplier fallback');
+        return null;
+    }
+    
+    // Get database ID for this gear
+    const dbId = GEAR_NAME_TO_DB_ID[gearName];
+    if (!dbId) {
+        // console.log('No DB mapping for:', gearName);
+        return null;
+    }
+    
+    // Get gear from database
+    const gearSet = GEAR_DATABASE.lord_gear[dbId];
+    if (!gearSet || !gearSet.slots || !gearSet.slots[slot]) {
+        // console.log('Gear not found in DB:', dbId, slot);
+        return null;
+    }
+    
+    const slotData = gearSet.slots[slot];
+    const stats = slotData.stats || {};
+    
+    // Calculate total flat march size (maxmarchsize + marchsizevsplayer + maxmarchsizevssop for SoP)
+    let flat = 0;
+    let pct = 0;
+    
+    // Get maxmarchsize (universal flat bonus)
+    if (stats.maxmarchsize && stats.maxmarchsize[levelKey] && stats.maxmarchsize[levelKey][quality] !== undefined) {
+        flat += stats.maxmarchsize[levelKey][quality];
+    }
+    
+    // Get marchsizevsplayer (PvP flat bonus - also applies to SoP)
+    if (stats.marchsizevsplayer && stats.marchsizevsplayer[levelKey] && stats.marchsizevsplayer[levelKey][quality] !== undefined) {
+        flat += stats.marchsizevsplayer[levelKey][quality];
+    }
+    
+    // Get maxmarchsizevssop (SoP-specific flat bonus)
+    if (stats.maxmarchsizevssop && stats.maxmarchsizevssop[levelKey] && stats.maxmarchsizevssop[levelKey][quality] !== undefined) {
+        flat += stats.maxmarchsizevssop[levelKey][quality];
+    }
+    
+    // Get maxmarchsizepercent (percentage bonus) - stored as decimal (0.04 = 4%)
+    if (stats.maxmarchsizepercent && stats.maxmarchsizepercent[levelKey] && stats.maxmarchsizepercent[levelKey][quality] !== undefined) {
+        pct = stats.maxmarchsizepercent[levelKey][quality] * 100; // Convert to percentage
+    }
+    
+    return { flat, pct };
+}
+
 // Export for use in other modules
 if (typeof window !== 'undefined') {
     window.MARCH_SIZE_DATA = MARCH_SIZE_DATA;
@@ -1205,5 +1310,7 @@ if (typeof window !== 'undefined') {
     window.getEnhancementMarchSize = getEnhancementMarchSize;
     window.getGearMarchSizeByLevelQuality = getGearMarchSizeByLevelQuality;
     window.getArmoryMarchSizeByLevel = getArmoryMarchSizeByLevel;
+    window.GEAR_NAME_TO_DB_ID = GEAR_NAME_TO_DB_ID;
+    window.getExactGearMarchSize = getExactGearMarchSize;
 }
 

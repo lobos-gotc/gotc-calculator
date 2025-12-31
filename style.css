@@ -13447,7 +13447,7 @@ button.multiplier-btn {
 }
 
 /* Responsive Optimization Guide */
-@media (max-width: 1100px) {
+@media (max-width: 1000px) {
     .ms-opt-slots {
         grid-template-columns: 1fr;
     }
