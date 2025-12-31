@@ -2982,7 +2982,7 @@
         const categoryTotals = {
             military1: { current: 0, max: 30000 },      // 6000 + 10000 + 14000
             military2: { current: 0, max: 22500 },     // 10000 + 10000 + 1250 + 1250
-            advancedMilitary: { current: 0, max: 7500 } // 2500 + 2500 + 2500
+            advancedMilitary: { current: 0, max: 5750 } // 750 + 2500 + 2500
         };
         
         let totalCurrent = 0;
