@@ -1546,7 +1546,7 @@
             if (progressions && progressions[armoryType]) {
                 const values = progressions[armoryType];
                 const currentMS = getArmoryMarchSize(armoryType, armoryId, level);
-                const maxMS = values[values.length - 1]; // Last value in array is max
+                const maxMS = values[values.length - 1]; // Keep max display consistent with game overview
                 
                 // Display as "Lv X | (currentMS / maxMS)"
                 display.textContent = `Lv ${level} | (${currentMS.marchSize.toLocaleString()} / ${maxMS.toLocaleString()})`;
