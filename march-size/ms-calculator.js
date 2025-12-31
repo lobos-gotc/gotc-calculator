@@ -926,8 +926,8 @@
         const quality = qualitySelect?.value || 'legendary';
         const level = parseInt(levelSelect?.value) || 40;
         
-        // Level multipliers
-        const levelMultipliers = { 35: 0.85, 40: 1.0, 45: 1.15, 50: 1.30 };
+        // Level multipliers (verified from game data - precise values)
+        const levelMultipliers = { 35: 0.8902, 40: 1.0, 45: 1.1098, 50: 1.2196 };
         // Quality multipliers
         const qualityMultipliers = { poor: 0.2, common: 0.4, fine: 0.6, exquisite: 0.8, epic: 0.9, legendary: 1.0 };
         
@@ -1258,6 +1258,22 @@
             results.breakdown.heroes = calculateHeroMS();
             results.base += results.breakdown.heroes.flat;
             results.bonusPct += results.breakdown.heroes.pct;
+            
+            // Add Marching Hero bonus (1st signature skill)
+            if (elements.marchingHeroLevel) {
+                const marchingLevel = parseInt(elements.marchingHeroLevel.value) || 1;
+                const marchingBonus = getMarchingHeroMS(marchingLevel);
+                results.base += marchingBonus;
+                results.breakdown.marchingHero = { flat: marchingBonus };
+            }
+            
+            // Add Hall of Heroes bonus
+            if (elements.hallLevel) {
+                const hallLevel = parseInt(elements.hallLevel.value) || 0;
+                const hallBonus = getHallMS(hallLevel);
+                results.base += hallBonus;
+                results.breakdown.hallOfHeroes = { flat: hallBonus };
+            }
         }
 
         // Calculate from gear
@@ -1573,9 +1589,10 @@
             if (heroId && heroList[heroId] && level > 0) {
                 const heroData = heroList[heroId];
                 
-                // Get flat march capacity based on quality
+                // Get flat march capacity based on quality (for display only, NOT added to march size)
+                // Hero capacity = troops that hero can lead, NOT a march size bonus!
                 const capacity = getHeroMarchCapacity(heroData.quality, level);
-                result.flat += capacity;
+                // NOTE: capacity is NOT added to result.flat - it's just for reference
                 
                 // Get council march size bonus (new structure: { type, unlockLevel, value })
                 let pct = 0;
@@ -1653,12 +1670,12 @@
         const result = { flat: 0, pct: 0, items: [] };
         const slots = ['helmet', 'chest', 'pants', 'dragonTrinket', 'boots', 'ring', 'weapon', 'trinket'];
 
-        // Level multipliers (relative to level 40 Gold as base from the reference)
+        // Level multipliers (verified from game data - precise values)
         const levelMultipliers = {
-            35: 0.85,
+            35: 0.8902,
             40: 1.0,
-            45: 1.15,
-            50: 1.30
+            45: 1.1098,
+            50: 1.2196
         };
 
         // Quality multipliers (relative to legendary)
@@ -3380,6 +3397,7 @@
                     const armoryId = input.dataset.armory;
                     if (armoryId && state.armories[armoryId] !== undefined) {
                         input.value = state.armories[armoryId];
+                        updateArmorySliderDisplay(input);
                     }
                 });
             }
@@ -3439,11 +3457,17 @@
                     
                     if (select && gearData.name) {
                         select.value = gearData.name;
-                        // Trigger change to update image
-                        updateGearImage(slot);
+                        
+                        // Get gear data from MARCH_SIZE_DATA to update image
+                        const gearInfo = MARCH_SIZE_DATA.gear[slot] && MARCH_SIZE_DATA.gear[slot][gearData.name];
+                        if (gearInfo && gearInfo.img) {
+                            updateGearImage(slot, gearInfo.img);
+                        }
                     }
                     if (qualitySelect && gearData.quality) {
                         qualitySelect.value = gearData.quality;
+                        // Update quality styling/color
+                        updateGearSlotQuality(slot, gearData.quality);
                     }
                     if (levelSelect && gearData.level) {
                         levelSelect.value = gearData.level;
