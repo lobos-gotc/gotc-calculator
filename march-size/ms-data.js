@@ -361,7 +361,8 @@ const MARCH_SIZE_DATA = {
                 img: "trinkets/icon_eq_events_harvest_trinket_1.png",
                 scenarios: ["sop", "keep", "reinforce"],
                 stats: {
-                    legendary: { marchSize: 3721, marchSizePct: 0 }
+                    // L40 Legendary: marchSize 1672 + PvP 1254 + SoP 1254 = 4180
+                    legendary: { marchSize: 4180, marchSizePct: 0 }
                 }
             },
             "Bronze Cutlery": {
@@ -391,7 +392,8 @@ const MARCH_SIZE_DATA = {
                 img: "trinkets/icon_eq_events_harvest_trinket_1.png",
                 scenarios: ["sop", "keep", "reinforce"],
                 stats: {
-                    legendary: { marchSize: 3721, marchSizePct: 0 }
+                    // L40 Legendary: marchSize 1672 + PvP 1254 + SoP 1254 = 4180
+                    legendary: { marchSize: 4180, marchSizePct: 0 }
                 }
             },
             "Bronze Cutlery": {
