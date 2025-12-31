@@ -922,28 +922,38 @@
             return;
         }
         
+        const gearName = select.value;
         const selectedOption = select.options[select.selectedIndex];
         const quality = qualitySelect?.value || 'legendary';
         const level = parseInt(levelSelect?.value) || 40;
+        const levelKey = `L${level}`;
         
-        // Level multipliers (verified from game data - precise values)
-        const levelMultipliers = { 35: 0.8902, 40: 1.0, 45: 1.1098, 50: 1.2196 };
-        // Quality multipliers
-        const qualityMultipliers = { poor: 0.2, common: 0.4, fine: 0.6, exquisite: 0.8, epic: 0.9, legendary: 1.0 };
+        // Try to get EXACT values from GEAR_DATABASE first (for lord gear)
+        const exactStats = typeof getExactGearMarchSize === 'function' 
+            ? getExactGearMarchSize(gearName, slot, levelKey, quality) 
+            : null;
         
-        // Get base stats from option dataset (already stored during populate)
-        const baseMs = parseFloat(selectedOption?.dataset?.baseMs) || 0;
-        const basePct = parseFloat(selectedOption?.dataset?.basePct) || 0;
+        let flatMS = 0;
+        let pctMS = 0;
         
-        const levelMult = levelMultipliers[level] || 1.0;
-        const qualityMult = qualityMultipliers[quality] || 1.0;
-        
-        // Handle percentage march size first (takes priority)
-        const pctMS = basePct * levelMult * qualityMult;
-        
-        // Handle flat march size
-        const flatMS = Math.floor(baseMs * levelMult * qualityMult);
-        
+        if (exactStats) {
+            // Use exact database values - no rounding errors!
+            flatMS = Math.round(exactStats.flat);
+            pctMS = exactStats.pct;
+        } else {
+            // Fall back to multiplier calculation (for trinkets or unmapped gear)
+            const levelMultipliers = { 35: 0.8902, 40: 1.0, 45: 1.1098, 50: 1.2196 };
+            const qualityMultipliers = { poor: 0.2, common: 0.4, fine: 0.6, exquisite: 0.8, epic: 0.9, legendary: 1.0 };
+            
+            const baseMs = parseFloat(selectedOption?.dataset?.baseMs) || 0;
+            const basePct = parseFloat(selectedOption?.dataset?.basePct) || 0;
+            
+            const levelMult = levelMultipliers[level] || 1.0;
+            const qualityMult = qualityMultipliers[quality] || 1.0;
+            
+            pctMS = basePct * levelMult * qualityMult;
+            flatMS = Math.floor(baseMs * levelMult * qualityMult);
+        }
         
         if (pctMS > 0) {
             bonusEl.textContent = `+${pctMS.toFixed(2)}%`;
@@ -1670,7 +1680,7 @@
         const result = { flat: 0, pct: 0, items: [] };
         const slots = ['helmet', 'chest', 'pants', 'dragonTrinket', 'boots', 'ring', 'weapon', 'trinket'];
 
-        // Level multipliers (verified from game data - precise values)
+        // Level multipliers (fallback for trinkets without exact DB values)
         const levelMultipliers = {
             35: 0.8902,
             40: 1.0,
@@ -1678,7 +1688,7 @@
             50: 1.2196
         };
 
-        // Quality multipliers (relative to legendary)
+        // Quality multipliers (fallback for trinkets without exact DB values)
         const qualityMultipliers = {
             poor: 0.2,
             common: 0.4,
@@ -1705,8 +1715,11 @@
             const level = parseInt(levelSelect?.value) || 40;
             const selectedOption = select.options[select.selectedIndex];
             const imgPath = selectedOption?.dataset?.img || '';
+            
+            // Convert level to key format for database lookup (e.g., 40 -> "L40")
+            const levelKey = `L${level}`;
 
-            // Look up in MARCH_SIZE_DATA
+            // Look up in MARCH_SIZE_DATA for gear metadata
             const slotData = MARCH_SIZE_DATA.gear[slot];
             let gearData = null;
             
@@ -1714,17 +1727,30 @@
                 gearData = slotData[gearName];
             }
             
+            let adjustedMS = 0;
+            let adjustedPct = 0;
+            
             if (gearData) {
-                // Get base stats (legendary at level 40)
-                const baseStats = gearData.stats?.legendary || { marchSize: 0, marchSizePct: 0 };
+                // Try to get EXACT values from GEAR_DATABASE first (for lord gear)
+                const exactStats = typeof getExactGearMarchSize === 'function' 
+                    ? getExactGearMarchSize(gearName, slot, levelKey, quality) 
+                    : null;
                 
-                // Apply multipliers
-                const levelMult = levelMultipliers[level] || 1.0;
-                const qualityMult = qualityMultipliers[quality] || 1.0;
-                const totalMult = levelMult * qualityMult;
-                
-                const adjustedMS = Math.floor((baseStats.marchSize || 0) * totalMult);
-                const adjustedPct = (baseStats.marchSizePct || 0) * totalMult;
+                if (exactStats) {
+                    // Use exact database values - no rounding errors!
+                    adjustedMS = Math.round(exactStats.flat);
+                    adjustedPct = exactStats.pct;
+                } else {
+                    // Fall back to multiplier calculation (for trinkets or unmapped gear)
+                    const baseStats = gearData.stats?.legendary || { marchSize: 0, marchSizePct: 0 };
+                    
+                    const levelMult = levelMultipliers[level] || 1.0;
+                    const qualityMult = qualityMultipliers[quality] || 1.0;
+                    const totalMult = levelMult * qualityMult;
+                    
+                    adjustedMS = Math.floor((baseStats.marchSize || 0) * totalMult);
+                    adjustedPct = (baseStats.marchSizePct || 0) * totalMult;
+                }
                 
                 // Update bonus display - show percentage if available, otherwise flat
                 if (bonusEl) {
