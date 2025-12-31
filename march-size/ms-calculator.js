@@ -33,11 +33,20 @@
         populateHeroes();
         updateNavigationState();
         
-        // Set recommended defaults
+        // Set recommended defaults first
         setRecommendedDefaults();
         
         // Initialize armory display values
         initializeArmoryDisplays();
+        
+        // Setup storage UI (save/load buttons)
+        setupStorageUI();
+        
+        // Try to load saved data from localStorage
+        const loaded = loadFromLocalStorage();
+        if (loaded) {
+            console.log('Loaded saved configuration from localStorage');
+        }
         
         // Initialize all section totals
         updateAllSectionTotals();
@@ -231,13 +240,13 @@
                     }
                 }
                 
-                // Set to legendary quality and level 45
+                // Set to legendary quality and level 40
                 if (qualitySelect) {
                     qualitySelect.value = 'legendary';
                     updateGearSlotQuality(slot, 'legendary');
                 }
                 if (levelSelect) {
-                    levelSelect.value = '45';
+                    levelSelect.value = '40';
                 }
                 
                 // Update dropdown stats display
@@ -370,7 +379,13 @@
         // Accordion toggles for MS sections
         const msAccordions = document.querySelectorAll('#marchSizeCalculator .accordion-toggle');
         msAccordions.forEach(toggle => {
-            toggle.addEventListener('click', () => {
+            // Handle click events
+            toggle.addEventListener('click', (e) => {
+                // Don't toggle if clicking on info button or its children
+                if (e.target.closest('.info-btn') || e.target.closest('.info-popover')) {
+                    return;
+                }
+                
                 const targetId = toggle.getAttribute('data-target');
                 const content = document.getElementById(targetId);
                 const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
@@ -379,6 +394,18 @@
                 // Use flex for armories content, grid for others
                 const displayType = content.classList.contains('ms-armories-content') ? 'flex' : 'grid';
                 content.style.display = isExpanded ? 'none' : displayType;
+            });
+            
+            // Handle keyboard events for accessibility (Enter/Space)
+            toggle.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    // Don't toggle if focus is on info button
+                    if (e.target.closest('.info-btn')) {
+                        return;
+                    }
+                    e.preventDefault();
+                    toggle.click();
+                }
             });
         });
 
@@ -524,6 +551,9 @@
         if (historyTrigger) {
             historyTrigger.style.display = mode === 'template' ? 'block' : 'none';
         }
+        
+        // Toggle storage buttons visibility (only for march size calculator)
+        updateStorageVisibility(mode === 'march-size');
 
         if (mode === 'template') {
             elements.templateSection.style.display = 'block';
@@ -1722,7 +1752,7 @@
             result.flat = titleData.marchSize;
             result.name = titleData.name;
         }
-        
+
         return result;
     }
 
@@ -1752,14 +1782,142 @@
             elements.recommendationScenario.textContent = SCENARIO_DISPLAY_NAMES[currentScenario] || capitalizeFirst(currentScenario);
         }
 
-        // Generate recommendations
-        generateRecommendations();
+        // Generate recommendations with base march size for optimization analysis
+        generateRecommendations(results.total);
 
         // Generate breakdown chart
         generateBreakdownChart(results);
     }
 
-    function generateRecommendations() {
+    // ============================================
+    // GEAR OPTIMIZATION CALCULATIONS
+    // ============================================
+
+    const LEVEL_MULTIPLIERS = { 35: 0.85, 40: 1.0, 45: 1.15, 50: 1.30 };
+    const QUALITY_MULTIPLIERS = { 
+        poor: 0.2, common: 0.4, fine: 0.6, 
+        exquisite: 0.8, epic: 0.9, legendary: 1.0 
+    };
+
+    // Calculate effective march size contribution from a gear piece
+    function calculateEffectiveMS(baseMarchSize, gearStats, level, quality) {
+        const levelMult = LEVEL_MULTIPLIERS[level] || 1.0;
+        const qualityMult = QUALITY_MULTIPLIERS[quality] || 1.0;
+        
+        const marchSize = gearStats?.marchSize || 0;
+        const marchSizePct = gearStats?.marchSizePct || 0;
+        
+        if (marchSizePct > 0) {
+            return Math.floor(baseMarchSize * (marchSizePct / 100) * levelMult * qualityMult);
+        }
+        return Math.floor(marchSize * levelMult * qualityMult);
+    }
+
+    // Calculate breakeven point where % gear becomes better than flat gear
+    function calculateBreakeven(flatGearStats, pctGearStats, flatLevel, flatQuality) {
+        const flatLevelMult = LEVEL_MULTIPLIERS[flatLevel] || 1.0;
+        const flatQualityMult = QUALITY_MULTIPLIERS[flatQuality] || 1.0;
+        
+        const flatValue = (flatGearStats?.marchSize || 0) * flatLevelMult * flatQualityMult;
+        const pctRate = (pctGearStats?.marchSizePct || 0) / 100;
+        
+        if (pctRate <= 0) return Infinity;
+        
+        // At L45 Legendary, % gear gives baseMarchSize * pctRate * 1.15 * 1.0
+        // So breakeven is: flatValue / (pctRate * 1.15 * 1.0)
+        return Math.ceil(flatValue / (pctRate * 1.15 * 1.0));
+    }
+
+    // Find minimum level/quality combinations that beat the current gear value
+    function findMinimumRequirements(baseMarchSize, currentValue, pctGearStats) {
+        const levels = [35, 40, 45, 50];
+        const qualities = ['exquisite', 'epic', 'legendary'];
+        const results = [];
+        
+        for (const level of levels) {
+            for (const quality of qualities) {
+                const effective = calculateEffectiveMS(baseMarchSize, pctGearStats, level, quality);
+                const diff = effective - currentValue;
+                results.push({ 
+                    level, 
+                    quality, 
+                    effective: Math.floor(effective), 
+                    diff: Math.floor(diff), 
+                    beats: diff > 0 
+                });
+            }
+        }
+        // Sort by effective value ascending so user sees progression
+        return results.sort((a, b) => a.effective - b.effective);
+    }
+
+    // Find the best percentage gear for a slot
+    function findBestPctGearForSlot(slot) {
+        const slotData = MARCH_SIZE_DATA.gear[slot];
+        if (!slotData) return null;
+        
+        let bestPctGear = null;
+        let bestPct = 0;
+        
+        for (const [name, data] of Object.entries(slotData)) {
+            const pct = data.stats?.legendary?.marchSizePct || 0;
+            if (pct > bestPct) {
+                bestPct = pct;
+                bestPctGear = { name, ...data };
+            }
+        }
+        
+        return bestPctGear;
+    }
+
+    // Find the best flat march size gear for a slot
+    function findBestFlatGearForSlot(slot) {
+        const slotData = MARCH_SIZE_DATA.gear[slot];
+        if (!slotData) return null;
+        
+        let bestFlatGear = null;
+        let bestFlat = 0;
+        
+        for (const [name, data] of Object.entries(slotData)) {
+            const flat = data.stats?.legendary?.marchSize || 0;
+            const pct = data.stats?.legendary?.marchSizePct || 0;
+            // Only consider purely flat gear (no % component)
+            if (flat > bestFlat && pct === 0) {
+                bestFlat = flat;
+                bestFlatGear = { name, ...data };
+            }
+        }
+        
+        return bestFlatGear;
+    }
+
+    // Calculate breakeven point where flat gear becomes better than % gear
+    function calculateBreakevenForFlat(pctGearStats, flatGearStats) {
+        const pctRate = (pctGearStats?.marchSizePct || 0) / 100;
+        const flatValue = (flatGearStats?.marchSize || 0) * 1.15 * 1.0; // At L45 Legendary
+        
+        if (pctRate <= 0) return 0;
+        
+        // At L45 Legendary for %, effective = baseMarchSize * pctRate * 1.15
+        // flatValue > baseMarchSize * pctRate * 1.15
+        // baseMarchSize < flatValue / (pctRate * 1.15)
+        return Math.ceil(flatValue / (pctRate * 1.15));
+    }
+
+    // Check if current gear is percentage-based
+    function isPercentageGear(gearStats) {
+        return (gearStats?.marchSizePct || 0) > 0;
+    }
+
+    // State for interactive recommendations
+    let recommendationState = {
+        baseMarchSize: 0,
+        titleBonus: 0,
+        selectedTitle: 'none',
+        slots: {}
+    };
+
+    function generateRecommendations(baseMarchSize) {
         if (!elements.recommendationsGrid) return;
 
         const slotNames = {
@@ -1773,11 +1931,15 @@
             trinket: 'Trinket'
         };
         
-        const filter = SCENARIO_TO_GEAR_FILTER[currentScenario] || 'sop';
-        const leftSlots = ['helmet', 'chest', 'pants', 'dragonTrinket'];
-        const rightSlots = ['weapon', 'ring', 'boots', 'trinket'];
+        const slots = ['helmet', 'chest', 'pants', 'weapon', 'ring', 'boots', 'dragonTrinket', 'trinket'];
         
-        function getSlotData(slot) {
+        // Initialize recommendation state
+        recommendationState.baseMarchSize = baseMarchSize;
+        recommendationState.selectedTitle = document.getElementById('msTitleSelect')?.value || 'none';
+        recommendationState.titleBonus = MARCH_SIZE_DATA.sopTitles[recommendationState.selectedTitle]?.marchSize || 0;
+        
+        // Get current equipped gear data for a slot
+        function getCurrentGearData(slot) {
             const select = document.getElementById(`msGearSelect-${slot}`);
             const qualitySelect = document.getElementById(`msGearQuality-${slot}`);
             const levelSelect = document.getElementById(`msGearLevelSelect-${slot}`);
@@ -1786,17 +1948,12 @@
                 const selectedOption = select.options[select.selectedIndex];
                 const gearData = MARCH_SIZE_DATA.gear[slot]?.[select.value];
                 const quality = qualitySelect?.value || 'legendary';
-                const level = levelSelect?.value || '40';
+                const level = parseInt(levelSelect?.value) || 40;
                 const baseMs = parseFloat(selectedOption?.dataset?.baseMs) || 0;
                 const basePct = parseFloat(selectedOption?.dataset?.basePct) || 0;
                 
-                // Calculate current and max values
-                const levelMult = { 35: 0.85, 40: 1.0, 45: 1.15, 50: 1.30 }[parseInt(level)] || 1.0;
-                const qualityMult = { poor: 0.2, common: 0.4, fine: 0.6, exquisite: 0.8, epic: 0.9, legendary: 1.0 }[quality] || 1.0;
-                const currentMs = Math.floor(baseMs * levelMult * qualityMult);
-                const maxMs = Math.floor(baseMs * 1.30);
-                const currentPct = basePct * levelMult * qualityMult;
-                const maxPct = basePct * 1.30;
+                const stats = { marchSize: baseMs, marchSizePct: basePct };
+                const effectiveValue = calculateEffectiveMS(baseMarchSize, stats, level, quality);
                 
                 return {
                     slot: slotNames[slot],
@@ -1805,58 +1962,669 @@
                     img: gearData?.img || selectedOption?.dataset?.img || DEFAULT_IMAGES[slot],
                     quality: quality,
                     level: level,
-                    currentMs, maxMs, currentPct, maxPct,
-                    stats: gearData?.stats?.legendary,
-                    isRecommendation: false
+                    stats: stats,
+                    effectiveValue: effectiveValue,
+                    isPct: basePct > 0
                 };
             }
             return null;
         }
         
-        function renderSlot(data, isRight = false) {
-            if (!data) return '';
+        // Get all available gear for a slot (for dropdown)
+        function getAllGearForSlot(slot) {
+            const slotData = MARCH_SIZE_DATA.gear[slot];
+            if (!slotData) return [];
             
-            const imgSrc = data.img.startsWith('resources/') ? data.img : 'resources/' + data.img;
-            const qualityColor = MARCH_SIZE_DATA.qualityColors[data.quality] || '#E5CC80';
+            return Object.entries(slotData).map(([name, data]) => ({
+                name,
+                img: data.img,
+                stats: data.stats?.legendary || { marchSize: 0, marchSizePct: 0 },
+                isPct: (data.stats?.legendary?.marchSizePct || 0) > 0,
+                season: data.season,
+                set: data.set
+            })).sort((a, b) => {
+                // Sort by effectiveness at current base march size
+                const aEff = calculateEffectiveMS(baseMarchSize, a.stats, 45, 'legendary');
+                const bEff = calculateEffectiveMS(baseMarchSize, b.stats, 45, 'legendary');
+                return bEff - aEff;
+            });
+        }
+        
+        // Calculate minimum quality needed per level to beat a target value
+        function calculateMinQualityPerLevel(targetValue, gearStats) {
+            const levels = [35, 40, 45, 50];
+            const qualities = ['poor', 'common', 'fine', 'exquisite', 'epic', 'legendary'];
+            const results = {};
             
-            let progressionText = '';
-            if (data.currentMs > 0) {
-                progressionText = `(+${formatNumber(data.currentMs)}/${formatNumber(data.maxMs)})`;
-            } else if (data.currentPct > 0) {
-                progressionText = `(+${data.currentPct.toFixed(2)}%/${data.maxPct.toFixed(2)}%)`;
+            for (const level of levels) {
+                results[level] = null;
+                for (const quality of qualities) {
+                    const effective = calculateEffectiveMS(baseMarchSize, gearStats, level, quality);
+                    if (effective > targetValue) {
+                        results[level] = { quality, effective };
+                        break;
+                    }
+                }
+            }
+            return results;
+        }
+        
+        // Find the best gear for this slot based on current base march size
+        function findBestGearForSlot(slotKey) {
+            const allGear = getAllGearForSlot(slotKey);
+            if (allGear.length === 0) return null;
+            
+            // Sort by effectiveness at current base march size (L45 Legendary)
+            return allGear[0]; // Already sorted by effectiveness
+        }
+        
+        // Render a single slot optimization card with interactive elements
+        function renderOptimizationSlot(slotKey, slotState) {
+            const current = getCurrentGearData(slotKey);
+            const allGear = getAllGearForSlot(slotKey);
+            const bestGear = findBestGearForSlot(slotKey);
+            
+            // Initialize slot state if not exists
+            if (!recommendationState.slots[slotKey]) {
+                recommendationState.slots[slotKey] = {
+                    selectedGear: bestGear?.name || '',
+                    selectedLevel: 45,
+                    selectedQuality: 'legendary'
+                };
+            }
+            const state = recommendationState.slots[slotKey];
+            
+            if (!current) {
+                return `
+                    <div class="ms-opt-slot" data-slot="${slotKey}">
+                        <div class="ms-opt-header">${slotNames[slotKey]}</div>
+                        <div class="ms-opt-empty">No gear equipped</div>
+                </div>
+                `;
             }
             
-            const isDragonTrinket = data.slotKey === 'dragonTrinket';
+            const currentImgSrc = current.img?.startsWith('resources/') ? current.img : 'resources/' + current.img;
+            const currentQualityColor = MARCH_SIZE_DATA.qualityColors[current.quality] || '#E5CC80';
+            
+            // Get selected recommendation data
+            const selectedGearData = allGear.find(g => g.name === state.selectedGear) || bestGear;
+            const recImgSrc = selectedGearData?.img?.startsWith('resources/') 
+                ? selectedGearData.img 
+                : 'resources/' + (selectedGearData?.img || '');
+            const recQualityColor = MARCH_SIZE_DATA.qualityColors[state.selectedQuality] || '#E5CC80';
+            
+            // Calculate values
+            const recStats = selectedGearData?.stats || { marchSize: 0, marchSizePct: 0 };
+            const recEffective = calculateEffectiveMS(baseMarchSize, recStats, state.selectedLevel, state.selectedQuality);
+            
+            // Check if same as current
+            const isSameAsCurrent = selectedGearData?.name === current.name 
+                && state.selectedLevel === current.level 
+                && state.selectedQuality === current.quality;
+            
+            // Determine badge status - shortened text for mobile
+            let badgeHtml = '';
+            let slotClass = '';
+            if (isSameAsCurrent) {
+                badgeHtml = '<span class="ms-opt-badge ms-opt-badge--same">= Same</span>';
+                slotClass = 'ms-opt-slot--same';
+            } else if (recEffective > current.effectiveValue) {
+                badgeHtml = '<span class="ms-opt-badge ms-opt-badge--upgrade">⬆ Upgrade</span>';
+                slotClass = 'ms-opt-slot--upgrade';
+            } else if (recEffective < current.effectiveValue) {
+                badgeHtml = '<span class="ms-opt-badge ms-opt-badge--downgrade">⬇ Downgrade</span>';
+                slotClass = 'ms-opt-slot--downgrade';
+            } else {
+                badgeHtml = '<span class="ms-opt-badge ms-opt-badge--current">No Change</span>';
+            }
+            
+            // Calculate min requirements for the recommended gear to beat current
+            const minReqs = calculateMinQualityPerLevel(current.effectiveValue, recStats);
+            
+            // Build gear dropdown options - shorter format without parentheses
+            const gearOptionsHtml = allGear.map(g => {
+                const statDisplay = g.isPct ? `${g.stats.marchSizePct.toFixed(1)}%` : `+${formatNumber(g.stats.marchSize)}`;
+                return `<option value="${g.name}" ${g.name === state.selectedGear ? 'selected' : ''} title="${g.name} - ${statDisplay}">
+                    ${g.name}
+                </option>`;
+            }).join('');
+            
+            // Build level options
+            const levelOptionsHtml = [35, 40, 45, 50].map(lvl => 
+                `<option value="${lvl}" ${lvl === state.selectedLevel ? 'selected' : ''}>Lv.${lvl}</option>`
+            ).join('');
+            
+            // Build quality options - shorter names for mobile
+            const qualities = ['poor', 'common', 'fine', 'exquisite', 'epic', 'legendary'];
+            const qualityShortNames = { poor: 'Poor', common: 'Com', fine: 'Fine', exquisite: 'Exq', epic: 'Epic', legendary: 'Leg' };
+            const qualityOptionsHtml = qualities.map(q => 
+                `<option value="${q}" ${q === state.selectedQuality ? 'selected' : ''}>${qualityShortNames[q]}</option>`
+            ).join('');
+            
+            // Build min requirements display - only show levels that can beat, with quality colors
+            const qualityColors = MARCH_SIZE_DATA.qualityColors;
+            const minReqsHtml = [35, 40, 45, 50].map(lvl => {
+                const req = minReqs[lvl];
+                if (req) {
+                    const qColor = qualityColors[req.quality] || '#E5CC80';
+                    const gain = req.effective - current.effectiveValue;
+                    return `<span class="ms-opt-minreq" style="border-color: ${qColor}; background: ${qColor}15;" 
+                        title="Lv.${lvl} ${capitalizeFirst(req.quality)}: +${formatNumber(req.effective)} (+${formatNumber(gain)} gain)">
+                        <span class="ms-opt-minreq__level">Lv.${lvl}</span>
+                        <span class="ms-opt-minreq__quality" style="color: ${qColor}">${capitalizeFirst(req.quality)}</span>
+                        <span class="ms-opt-minreq__check">✓</span>
+                    </span>`;
+                }
+                return ''; // Don't show levels that can't beat current
+            }).filter(html => html).join('');
+            
+            // Calculate gain/loss for this slot
+            const slotGain = recEffective - current.effectiveValue;
+            const gainDisplay = slotGain >= 0 ? `+${formatNumber(slotGain)}` : formatNumber(slotGain);
+            const gainClass = slotGain > 0 ? 'ms-opt-gain--positive' : (slotGain < 0 ? 'ms-opt-gain--negative' : 'ms-opt-gain--neutral');
+            
+            // Format current value display
+            const currentValueDisplay = current.isPct 
+                ? `+${(current.stats.marchSizePct * LEVEL_MULTIPLIERS[current.level] * QUALITY_MULTIPLIERS[current.quality]).toFixed(2)}%`
+                : `+${formatNumber(current.stats.marchSize)} flat`;
+                
+            // Format recommended value display
+            const recIsPct = (recStats.marchSizePct || 0) > 0;
+            const recValueDisplay = recIsPct
+                ? `+${(recStats.marchSizePct * LEVEL_MULTIPLIERS[state.selectedLevel] * QUALITY_MULTIPLIERS[state.selectedQuality]).toFixed(2)}%`
+                : `+${formatNumber(recStats.marchSize)} flat`;
             
             return `
-                <div class="ms-rec-slot ${isRight ? 'ms-rec-slot--right' : ''} ${isDragonTrinket ? 'ms-rec-slot--dragon' : ''}" data-quality="${data.quality}">
-                    <span class="ms-rec-slot__progression">${progressionText}</span>
-                    <div class="ms-rec-slot__image" style="border-color: ${qualityColor}">
-                        <img src="${imgSrc}" alt="${data.name}" onerror="this.src='${DEFAULT_IMAGES[data.slotKey] || 'resources/item/ring.png'}'">
+                <div class="ms-opt-slot ${slotClass}" data-slot="${slotKey}">
+                    <div class="ms-opt-header">
+                        <span class="ms-opt-header__title">${slotNames[slotKey]}</span>
+                        ${badgeHtml}
+                        <span class="ms-opt-header__gain ${gainClass}" id="msOptGain-${slotKey}">${gainDisplay}</span>
                     </div>
-                    <div class="ms-rec-slot__info">
-                        <span class="ms-rec-slot__label">${data.slot}</span>
-                        <span class="ms-rec-slot__name">${data.name}</span>
-                        <span class="ms-rec-slot__quality" style="color: ${qualityColor}">${capitalizeFirst(data.quality)} Lv.${data.level}</span>
+                    <div class="ms-opt-comparison">
+                        <div class="ms-opt-gear ms-opt-gear--current">
+                            <div class="ms-opt-gear__label">Current</div>
+                            <div class="ms-opt-gear__image" style="border-color: ${currentQualityColor}">
+                                <img src="${currentImgSrc}" alt="${current.name}" onerror="this.style.display='none'">
                     </div>
+                            <div class="ms-opt-gear__info">
+                                <span class="ms-opt-gear__name">${current.name}</span>
+                                <span class="ms-opt-gear__quality" style="color: ${currentQualityColor}">${capitalizeFirst(current.quality)} Lv.${current.level}</span>
+                                <span class="ms-opt-gear__effective">+${formatNumber(current.effectiveValue)}</span>
+                            </div>
+                        </div>
+                        <div class="ms-opt-vs">→</div>
+                        <div class="ms-opt-gear ms-opt-gear--recommended">
+                            <div class="ms-opt-gear__label">Recommended</div>
+                            <div class="ms-opt-gear__image" style="border-color: ${recQualityColor}" id="msOptImg-${slotKey}">
+                                <img src="${recImgSrc}" alt="${selectedGearData?.name || ''}" onerror="this.style.display='none'">
+                            </div>
+                            <div class="ms-opt-gear__info">
+                                <select class="ms-opt-gear-select" id="msOptGear-${slotKey}" data-slot="${slotKey}" title="${selectedGearData?.name || ''}">
+                                    ${gearOptionsHtml}
+                                </select>
+                                <div class="ms-opt-gear__selectors">
+                                    <select class="ms-opt-level-select" id="msOptLevel-${slotKey}" data-slot="${slotKey}">
+                                        ${levelOptionsHtml}
+                                    </select>
+                                    <select class="ms-opt-quality-select" id="msOptQuality-${slotKey}" data-slot="${slotKey}">
+                                        ${qualityOptionsHtml}
+                                    </select>
+                                </div>
+                                <span class="ms-opt-gear__effective" id="msOptEffective-${slotKey}">+${formatNumber(recEffective)}</span>
+                            </div>
+                        </div>
+                    </div>
+                    ${minReqsHtml ? `
+                    <div class="ms-opt-minreqs" id="msOptMinReqs-${slotKey}">
+                        <span class="ms-opt-minreqs__label">Min. levels to beat current:</span>
+                        <div class="ms-opt-minreqs__list">${minReqsHtml}</div>
+                    </div>
+                    ` : ''}
                 </div>
             `;
         }
         
-        const leftHtml = leftSlots.map(slot => renderSlot(getSlotData(slot), false)).join('');
-        const rightHtml = rightSlots.map(slot => renderSlot(getSlotData(slot), true)).join('');
+        // Calculate totals
+        function calculateTotals() {
+            let totalCurrent = 0;
+            let totalRecommended = 0;
+            
+            for (const slotKey of slots) {
+                const current = getCurrentGearData(slotKey);
+                if (current) {
+                    totalCurrent += current.effectiveValue;
+                    
+                    const state = recommendationState.slots[slotKey];
+                    if (state && state.selectedGear) {
+                        const allGear = getAllGearForSlot(slotKey);
+                        const selectedGear = allGear.find(g => g.name === state.selectedGear);
+                        if (selectedGear) {
+                            const recEffective = calculateEffectiveMS(baseMarchSize, selectedGear.stats, state.selectedLevel, state.selectedQuality);
+                            totalRecommended += recEffective;
+                        } else {
+                            totalRecommended += current.effectiveValue;
+                        }
+                    } else {
+                        totalRecommended += current.effectiveValue;
+                    }
+                }
+            }
+            
+            return { totalCurrent, totalRecommended };
+        }
+        
+        // Generate SoP title selector HTML
+        const titleOptionsHtml = Object.entries(MARCH_SIZE_DATA.sopTitles).map(([key, data]) => 
+            `<option value="${key}" ${key === recommendationState.selectedTitle ? 'selected' : ''}>
+                ${data.name} (+${formatNumber(data.marchSize)})
+            </option>`
+        ).join('');
+        
+        // Generate HTML for all slots
+        const slotsHtml = slots.map(slot => renderOptimizationSlot(slot)).join('');
+        
+        // Calculate initial totals
+        const { totalCurrent, totalRecommended } = calculateTotals();
+        const potentialGain = totalRecommended - totalCurrent;
         
         elements.recommendationsGrid.innerHTML = `
-            <div class="ms-rec-column ms-rec-column--left">
-                ${leftHtml}
-            </div>
-            <div class="ms-rec-center">
-                <img src="resources/stark-logo.png" alt="Logo" class="ms-rec-logo">
-            </div>
-            <div class="ms-rec-column ms-rec-column--right">
-                ${rightHtml}
+            <div class="ms-optimization-guide">
+                <div class="ms-opt-intro">
+                    <h3>Gear Optimization Guide</h3>
+                    <p>Compare your equipped gear with recommended alternatives. Adjust selections to see real-time impact.</p>
+                </div>
+                
+                <div class="ms-opt-title-section">
+                    <div class="ms-opt-title-card">
+                        <div class="ms-opt-title-icon">
+                            <img src="resources/research/icon_research_march_size_vs_sop.png" alt="Title">
+                        </div>
+                        <div class="ms-opt-title-controls">
+                            <label>SoP Attacker Title</label>
+                            <select id="msOptTitleSelect" class="ms-opt-title-select">
+                                ${titleOptionsHtml}
+                            </select>
+                        </div>
+                        <div class="ms-opt-title-bonus">
+                            <span class="ms-opt-title-bonus__label">Title Bonus</span>
+                            <span class="ms-opt-title-bonus__value" id="msOptTitleBonus">+${formatNumber(recommendationState.titleBonus)}</span>
+                        </div>
+                    </div>
+                    <div class="ms-opt-base-info">
+                        <span>Base March Size: <strong id="msOptBaseMarch">${formatNumber(baseMarchSize)}</strong></span>
+                    </div>
+                </div>
+                
+                <div class="ms-opt-slots">
+                    ${slotsHtml}
+                </div>
+                
+                <div class="ms-opt-summary" id="msOptSummary">
+                    <div class="ms-opt-summary__row">
+                        <span>Current Gear Contribution:</span>
+                        <span class="ms-opt-summary__value" id="msOptCurrentTotal">+${formatNumber(totalCurrent)}</span>
+                    </div>
+                    <div class="ms-opt-summary__row">
+                        <span>Recommended Contribution:</span>
+                        <span class="ms-opt-summary__value ms-opt-summary__value--optimized" id="msOptRecTotal">+${formatNumber(totalRecommended)}</span>
+                    </div>
+                    ${potentialGain > 0 ? `
+                        <div class="ms-opt-summary__row ms-opt-summary__row--gain" id="msOptGainRow">
+                            <span>Potential Gain:</span>
+                            <span class="ms-opt-summary__value ms-opt-summary__value--gain" id="msOptGainValue">+${formatNumber(potentialGain)}</span>
+                        </div>
+                    ` : `<div class="ms-opt-summary__row" id="msOptGainRow" style="display:none;">
+                            <span>Potential Gain:</span>
+                            <span class="ms-opt-summary__value ms-opt-summary__value--gain" id="msOptGainValue">+0</span>
+                        </div>`}
+                </div>
             </div>
         `;
+        
+        // Attach event listeners for interactivity
+        setupOptimizationEventListeners();
+    }
+    
+    // Setup event listeners for optimization guide interactivity
+    function setupOptimizationEventListeners() {
+        const slots = ['helmet', 'chest', 'pants', 'weapon', 'ring', 'boots', 'dragonTrinket', 'trinket'];
+        
+        // Title change listener
+        const titleSelect = document.getElementById('msOptTitleSelect');
+        if (titleSelect) {
+            titleSelect.addEventListener('change', function() {
+                recommendationState.selectedTitle = this.value;
+                recommendationState.titleBonus = MARCH_SIZE_DATA.sopTitles[this.value]?.marchSize || 0;
+                
+                // Update title bonus display
+                const bonusEl = document.getElementById('msOptTitleBonus');
+                if (bonusEl) {
+                    bonusEl.textContent = '+' + formatNumber(recommendationState.titleBonus);
+                }
+                
+                // Full recalculation needed as base march size changes
+                recalculateAndUpdateOptimization();
+            });
+        }
+        
+        // Slot gear/level/quality change listeners
+        for (const slot of slots) {
+            const gearSelect = document.getElementById(`msOptGear-${slot}`);
+            const levelSelect = document.getElementById(`msOptLevel-${slot}`);
+            const qualitySelect = document.getElementById(`msOptQuality-${slot}`);
+            
+            if (gearSelect) {
+                gearSelect.addEventListener('change', function() {
+                    recommendationState.slots[slot].selectedGear = this.value;
+                    updateSlotDisplay(slot);
+                    updateSummaryTotals();
+                });
+            }
+            
+            if (levelSelect) {
+                levelSelect.addEventListener('change', function() {
+                    recommendationState.slots[slot].selectedLevel = parseInt(this.value);
+                    updateSlotDisplay(slot);
+                    updateSummaryTotals();
+                });
+            }
+            
+            if (qualitySelect) {
+                qualitySelect.addEventListener('change', function() {
+                    recommendationState.slots[slot].selectedQuality = this.value;
+                    updateSlotDisplay(slot);
+                    updateSummaryTotals();
+                });
+            }
+        }
+    }
+    
+    // Update a single slot's display after change
+    function updateSlotDisplay(slotKey) {
+        const baseMarchSize = recommendationState.baseMarchSize;
+        const state = recommendationState.slots[slotKey];
+        const slotData = MARCH_SIZE_DATA.gear[slotKey];
+        
+        // Get current equipped gear
+        const select = document.getElementById(`msGearSelect-${slotKey}`);
+        const qualitySelect = document.getElementById(`msGearQuality-${slotKey}`);
+        const levelSelect = document.getElementById(`msGearLevelSelect-${slotKey}`);
+        
+        if (!select || !select.value) return;
+        
+        const currentName = select.value;
+        const currentQuality = qualitySelect?.value || 'legendary';
+        const currentLevel = parseInt(levelSelect?.value) || 40;
+        
+        const selectedOption = select.options[select.selectedIndex];
+        const currentBaseMs = parseFloat(selectedOption?.dataset?.baseMs) || 0;
+        const currentBasePct = parseFloat(selectedOption?.dataset?.basePct) || 0;
+        const currentStats = { marchSize: currentBaseMs, marchSizePct: currentBasePct };
+        const currentEffective = calculateEffectiveMS(baseMarchSize, currentStats, currentLevel, currentQuality);
+        
+        // Get recommended gear data
+        const recGearData = slotData?.[state.selectedGear];
+        const recStats = recGearData?.stats?.legendary || { marchSize: 0, marchSizePct: 0 };
+        const recEffective = calculateEffectiveMS(baseMarchSize, recStats, state.selectedLevel, state.selectedQuality);
+        
+        // Check if same as current
+        const isSameAsCurrent = state.selectedGear === currentName 
+            && state.selectedLevel === currentLevel 
+            && state.selectedQuality === currentQuality;
+        
+        // Calculate gain
+        const slotGain = recEffective - currentEffective;
+        const gainDisplay = slotGain >= 0 ? `+${formatNumber(slotGain)}` : formatNumber(slotGain);
+        const gainClass = slotGain > 0 ? 'ms-opt-gain--positive' : (slotGain < 0 ? 'ms-opt-gain--negative' : 'ms-opt-gain--neutral');
+        
+        // Update badge and gain
+        const slotEl = document.querySelector(`.ms-opt-slot[data-slot="${slotKey}"]`);
+        if (slotEl) {
+            // Remove old classes
+            slotEl.classList.remove('ms-opt-slot--upgrade', 'ms-opt-slot--downgrade', 'ms-opt-slot--same');
+            
+            // Find and update badge
+            const header = slotEl.querySelector('.ms-opt-header');
+            if (header) {
+                const existingBadge = header.querySelector('.ms-opt-badge');
+                if (existingBadge) existingBadge.remove();
+                
+                let badgeHtml = '';
+                if (isSameAsCurrent) {
+                    badgeHtml = '<span class="ms-opt-badge ms-opt-badge--same">= Same</span>';
+                    slotEl.classList.add('ms-opt-slot--same');
+                } else if (recEffective > currentEffective) {
+                    badgeHtml = '<span class="ms-opt-badge ms-opt-badge--upgrade">⬆ Upgrade</span>';
+                    slotEl.classList.add('ms-opt-slot--upgrade');
+                } else if (recEffective < currentEffective) {
+                    badgeHtml = '<span class="ms-opt-badge ms-opt-badge--downgrade">⬇ Downgrade</span>';
+                    slotEl.classList.add('ms-opt-slot--downgrade');
+                } else {
+                    badgeHtml = '<span class="ms-opt-badge ms-opt-badge--current">No Change</span>';
+                }
+                header.insertAdjacentHTML('beforeend', badgeHtml);
+                
+                // Update gain display
+                const gainEl = document.getElementById(`msOptGain-${slotKey}`);
+                if (gainEl) {
+                    gainEl.textContent = gainDisplay;
+                    gainEl.className = `ms-opt-header__gain ${gainClass}`;
+                }
+            }
+        }
+        
+        // Update image
+        const imgContainer = document.getElementById(`msOptImg-${slotKey}`);
+        if (imgContainer && recGearData) {
+            const recImgSrc = recGearData.img?.startsWith('resources/') 
+                ? recGearData.img 
+                : 'resources/' + recGearData.img;
+            const recQualityColor = MARCH_SIZE_DATA.qualityColors[state.selectedQuality] || '#E5CC80';
+            imgContainer.style.borderColor = recQualityColor;
+            const img = imgContainer.querySelector('img');
+            if (img) {
+                img.src = recImgSrc;
+                img.alt = state.selectedGear;
+            }
+        }
+        
+        // Update effective value
+        const effectiveEl = document.getElementById(`msOptEffective-${slotKey}`);
+        if (effectiveEl) {
+            effectiveEl.textContent = '+' + formatNumber(recEffective);
+        }
+        
+        // Update min requirements - only show levels that can beat
+        const minReqsContainer = document.getElementById(`msOptMinReqs-${slotKey}`);
+        const qualityColors = MARCH_SIZE_DATA.qualityColors;
+        const minReqs = calculateMinQualityPerLevelLocal(currentEffective, recStats, baseMarchSize);
+        
+        const minReqsItems = [35, 40, 45, 50].map(lvl => {
+            const req = minReqs[lvl];
+            if (req) {
+                const qColor = qualityColors[req.quality] || '#E5CC80';
+                const gain = req.effective - currentEffective;
+                return `<span class="ms-opt-minreq" style="border-color: ${qColor}; background: ${qColor}15;" 
+                    title="Lv.${lvl} ${capitalizeFirst(req.quality)}: +${formatNumber(req.effective)} (+${formatNumber(gain)} gain)">
+                    <span class="ms-opt-minreq__level">Lv.${lvl}</span>
+                    <span class="ms-opt-minreq__quality" style="color: ${qColor}">${capitalizeFirst(req.quality)}</span>
+                    <span class="ms-opt-minreq__check">✓</span>
+                </span>`;
+            }
+            return '';
+        }).filter(html => html).join('');
+        
+        if (minReqsContainer) {
+            if (minReqsItems) {
+                minReqsContainer.style.display = '';
+                minReqsContainer.innerHTML = `
+                    <span class="ms-opt-minreqs__label">Min. levels to beat current:</span>
+                    <div class="ms-opt-minreqs__list">${minReqsItems}</div>
+                `;
+            } else {
+                minReqsContainer.style.display = 'none';
+            }
+        }
+    }
+    
+    // Helper to calculate min quality per level (outside of generateRecommendations scope)
+    function calculateMinQualityPerLevelLocal(targetValue, gearStats, baseMarchSize) {
+        const levels = [35, 40, 45, 50];
+        const qualities = ['poor', 'common', 'fine', 'exquisite', 'epic', 'legendary'];
+        const results = {};
+        
+        for (const level of levels) {
+            results[level] = null;
+            for (const quality of qualities) {
+                const effective = calculateEffectiveMS(baseMarchSize, gearStats, level, quality);
+                if (effective > targetValue) {
+                    results[level] = { quality, effective };
+                    break;
+                }
+            }
+        }
+        return results;
+    }
+    
+    // Update summary totals after slot changes
+    function updateSummaryTotals() {
+        const slots = ['helmet', 'chest', 'pants', 'weapon', 'ring', 'boots', 'dragonTrinket', 'trinket'];
+        const baseMarchSize = recommendationState.baseMarchSize;
+        
+        let totalCurrent = 0;
+        let totalRecommended = 0;
+        
+        for (const slotKey of slots) {
+            // Get current equipped
+            const select = document.getElementById(`msGearSelect-${slotKey}`);
+            const qualitySelect = document.getElementById(`msGearQuality-${slotKey}`);
+            const levelSelect = document.getElementById(`msGearLevelSelect-${slotKey}`);
+            
+            if (select && select.value) {
+                const selectedOption = select.options[select.selectedIndex];
+                const quality = qualitySelect?.value || 'legendary';
+                const level = parseInt(levelSelect?.value) || 40;
+                const baseMs = parseFloat(selectedOption?.dataset?.baseMs) || 0;
+                const basePct = parseFloat(selectedOption?.dataset?.basePct) || 0;
+                const stats = { marchSize: baseMs, marchSizePct: basePct };
+                totalCurrent += calculateEffectiveMS(baseMarchSize, stats, level, quality);
+            }
+            
+            // Get recommended
+            const state = recommendationState.slots[slotKey];
+            if (state && state.selectedGear) {
+                const slotData = MARCH_SIZE_DATA.gear[slotKey];
+                const recGearData = slotData?.[state.selectedGear];
+                const recStats = recGearData?.stats?.legendary || { marchSize: 0, marchSizePct: 0 };
+                totalRecommended += calculateEffectiveMS(baseMarchSize, recStats, state.selectedLevel, state.selectedQuality);
+            }
+        }
+        
+        // Update display
+        const currentTotalEl = document.getElementById('msOptCurrentTotal');
+        const recTotalEl = document.getElementById('msOptRecTotal');
+        const gainRowEl = document.getElementById('msOptGainRow');
+        const gainValueEl = document.getElementById('msOptGainValue');
+        
+        if (currentTotalEl) currentTotalEl.textContent = '+' + formatNumber(totalCurrent);
+        if (recTotalEl) recTotalEl.textContent = '+' + formatNumber(totalRecommended);
+        
+        const potentialGain = totalRecommended - totalCurrent;
+        if (gainRowEl && gainValueEl) {
+            if (potentialGain > 0) {
+                gainRowEl.style.display = '';
+                gainRowEl.classList.remove('ms-opt-summary__row--loss');
+                gainRowEl.classList.add('ms-opt-summary__row--gain');
+                gainValueEl.textContent = '+' + formatNumber(potentialGain);
+                gainValueEl.classList.remove('ms-opt-summary__value--loss');
+                gainValueEl.classList.add('ms-opt-summary__value--gain');
+            } else if (potentialGain < 0) {
+                gainRowEl.style.display = '';
+                gainRowEl.classList.remove('ms-opt-summary__row--gain');
+                gainRowEl.classList.add('ms-opt-summary__row--loss');
+                gainValueEl.textContent = formatNumber(potentialGain);
+                gainValueEl.classList.remove('ms-opt-summary__value--gain');
+                gainValueEl.classList.add('ms-opt-summary__value--loss');
+            } else {
+                gainRowEl.style.display = 'none';
+            }
+        }
+    }
+    
+    // Full recalculation when title changes
+    function recalculateAndUpdateOptimization() {
+        // Recalculate base march size with new title
+        const results = calculateMarchSizeResults();
+        recommendationState.baseMarchSize = results.baseMarchSize || recommendationState.baseMarchSize;
+        
+        // Update base march size display
+        const baseMarchEl = document.getElementById('msOptBaseMarch');
+        if (baseMarchEl) {
+            baseMarchEl.textContent = formatNumber(recommendationState.baseMarchSize);
+        }
+        
+        // Update all slots
+        const slots = ['helmet', 'chest', 'pants', 'weapon', 'ring', 'boots', 'dragonTrinket', 'trinket'];
+        for (const slot of slots) {
+            updateSlotDisplay(slot);
+        }
+        
+        // Update totals
+        updateSummaryTotals();
+    }
+    
+    // Helper to calculate march size results (for title changes)
+    function calculateMarchSizeResults() {
+        // Get title bonus from optimization state
+        const titleBonus = recommendationState.titleBonus;
+        
+        // Calculate other components using existing logic
+        const buildingMS = calculateBuildingMS();
+        const armoryMS = calculateArmoryMS();
+        const researchMS = calculateResearchMS();
+        const heroMS = calculateHeroMS();
+        const gearMS = calculateGearMS();
+        
+        // These functions return objects, extract the appropriate values
+        let base = 0;
+        let bonusPct = 0;
+        
+        base += buildingMS.total || 0;
+        base += armoryMS.total || 0;
+        base += researchMS.flat || 0;
+        bonusPct += researchMS.pct || 0;
+        base += heroMS.flat || 0;
+        bonusPct += heroMS.pct || 0;
+        
+        const gearFlat = gearMS.flat || 0;
+        bonusPct += gearMS.pct || 0;
+        
+        // Keep Enhancement percentage
+        const keepEnhLevel = parseInt(elements.keepEnhancementLevel?.value) || 0;
+        if (keepEnhLevel >= 40) {
+            bonusPct += 8.0;
+        }
+        
+        const baseForBonus = base + gearFlat + titleBonus;
+        const bonus = Math.floor(baseForBonus * (bonusPct / 100));
+        const total = baseForBonus + bonus;
+        
+        // Base march size is everything except gear contribution
+        const baseMarchSize = total - gearFlat;
+        
+        return {
+            total: total,
+            baseMarchSize: baseMarchSize,
+            breakdown: {
+                buildings: buildingMS,
+                armories: armoryMS,
+                research: researchMS,
+                heroes: heroMS,
+                gear: gearMS,
+                title: { flat: titleBonus }
+            }
+        };
     }
 
     function generateBreakdownChart(results) {
@@ -2399,6 +3167,9 @@
         
         // Update base march size total
         updateBaseMarchSizeTotal();
+        
+        // Trigger auto-save (debounced)
+        triggerAutoSave();
     }
 
     // Calculate and update the base march size total
@@ -2462,6 +3233,400 @@
     }
 
     // ============================================
+    // DATA STORAGE & PERSISTENCE
+    // ============================================
+    
+    const STORAGE_KEY = 'gotc_march_size_data';
+    const STORAGE_VERSION = '1.1'; // Bumped to reset defaults (title=none, level=40)
+    
+    // Gather all current state into a saveable object
+    function gatherCurrentState() {
+        const state = {
+            version: STORAGE_VERSION,
+            timestamp: new Date().toISOString(),
+            scenario: currentScenario,
+            
+            // Buildings
+            buildings: {
+                keep: parseInt(elements.keepLevel?.value) || 0,
+                trainingYard: parseInt(elements.trainingYardLevel?.value) || 0,
+                greatHall: parseInt(elements.greatHallLevel?.value) || 0,
+                watchtower: parseInt(elements.watchtowerLevel?.value) || 0,
+                keepEnhancement: parseInt(elements.keepEnhancementLevel?.value) || 0
+            },
+            
+            // Research
+            research: {},
+            
+            // Armories
+            armories: {},
+            
+            // Heroes
+            heroes: {},
+            
+            // Gear
+            gear: {},
+            
+            // SoP Title
+            title: document.getElementById('msTitleSelect')?.value || 'none'
+        };
+        
+        // Gather research values
+        if (elements.researchSliders) {
+            Object.entries(elements.researchSliders).forEach(([key, slider]) => {
+                if (slider) {
+                    state.research[key] = parseInt(slider.value) || 0;
+                }
+            });
+        }
+        
+        // Gather armory values
+        if (elements.armoryInputs) {
+            elements.armoryInputs.forEach(input => {
+                const armoryId = input.dataset.armory;
+                if (armoryId) {
+                    state.armories[armoryId] = parseInt(input.value) || 0;
+                }
+            });
+        }
+        
+        // Gather hero selections
+        const heroPositions = ['hand', 'war', 'coin', 'whispers', 'law', 'ships', 'commander', 'maester'];
+        heroPositions.forEach(position => {
+            const select = document.getElementById(`msHeroSelect-${position}`);
+            const slider = document.getElementById(`msHeroLevel-${position}`);
+            if (select) {
+                state.heroes[position] = {
+                    id: select.value || '',
+                    level: parseInt(slider?.value) || 1
+                };
+            }
+        });
+        
+        // Gather gear selections
+        const gearSlots = ['helmet', 'chest', 'pants', 'weapon', 'ring', 'boots', 'dragonTrinket', 'trinket'];
+        gearSlots.forEach(slot => {
+            const select = document.getElementById(`msGearSelect-${slot}`);
+            const qualitySelect = document.getElementById(`msGearQuality-${slot}`);
+            const levelSelect = document.getElementById(`msGearLevelSelect-${slot}`);
+            if (select) {
+                state.gear[slot] = {
+                    name: select.value || '',
+                    quality: qualitySelect?.value || 'legendary',
+                    level: parseInt(levelSelect?.value) || 40
+                };
+            }
+        });
+        
+        return state;
+    }
+    
+    // Apply saved state to UI
+    function applyState(state) {
+        if (!state || state.version !== STORAGE_VERSION) {
+            console.log('No valid saved state found or version mismatch');
+            return false;
+        }
+        
+        try {
+            // Apply scenario
+            if (state.scenario) {
+                currentScenario = state.scenario;
+                const scenarioCard = document.querySelector(`.ms-scenario-card[data-scenario="${state.scenario}"]`);
+                if (scenarioCard) {
+                    document.querySelectorAll('.ms-scenario-card').forEach(c => c.classList.remove('active'));
+                    scenarioCard.classList.add('active');
+                }
+            }
+            
+            // Apply buildings
+            if (state.buildings) {
+                if (elements.keepLevel && state.buildings.keep !== undefined) {
+                    elements.keepLevel.value = state.buildings.keep;
+                    updateBuildingSliderDisplay('msKeepLevel', 'msKeepLevelDisplay', 'keep');
+                }
+                if (elements.trainingYardLevel && state.buildings.trainingYard !== undefined) {
+                    elements.trainingYardLevel.value = state.buildings.trainingYard;
+                    updateBuildingSliderDisplay('msTrainingYardLevel', 'msTrainingYardLevelDisplay', 'trainingYard');
+                }
+                if (elements.greatHallLevel && state.buildings.greatHall !== undefined) {
+                    elements.greatHallLevel.value = state.buildings.greatHall;
+                    updateBuildingSliderDisplay('msGreatHallLevel', 'msGreatHallLevelDisplay', 'greatHall');
+                }
+                if (elements.watchtowerLevel && state.buildings.watchtower !== undefined) {
+                    elements.watchtowerLevel.value = state.buildings.watchtower;
+                    updateBuildingSliderDisplay('msWatchtowerLevel', 'msWatchtowerLevelDisplay', 'watchtower');
+                }
+                if (elements.keepEnhancementLevel && state.buildings.keepEnhancement !== undefined) {
+                    elements.keepEnhancementLevel.value = state.buildings.keepEnhancement;
+                    updateBuildingSliderDisplay('msKeepEnhancementLevel', 'msKeepEnhancementLevelDisplay', 'keepEnhancement');
+                }
+            }
+            
+            // Apply research
+            if (state.research && elements.researchSliders) {
+                Object.entries(state.research).forEach(([key, value]) => {
+                    const slider = elements.researchSliders[key];
+                    if (slider) {
+                        slider.value = value;
+                        updateResearchSliderDisplay(key);
+                    }
+                });
+            }
+            
+            // Apply armories
+            if (state.armories && elements.armoryInputs) {
+                elements.armoryInputs.forEach(input => {
+                    const armoryId = input.dataset.armory;
+                    if (armoryId && state.armories[armoryId] !== undefined) {
+                        input.value = state.armories[armoryId];
+                    }
+                });
+            }
+            
+            // Apply heroes
+            if (state.heroes) {
+                Object.entries(state.heroes).forEach(([position, heroData]) => {
+                    const select = document.getElementById(`msHeroSelect-${position}`);
+                    const slider = document.getElementById(`msHeroLevel-${position}`);
+                    const imgElement = document.getElementById(`msHeroImg-${position}`);
+                    const slotElement = document.querySelector(`.ms-hero-slot[data-position="${position}"]`);
+                    
+                    if (select && heroData.id) {
+                        select.value = heroData.id;
+                        
+                        // Get hero info from data
+                        const heroInfo = MARCH_SIZE_DATA.heroes.heroList[heroData.id];
+                        
+                        // Update hero image
+                        if (imgElement && heroInfo) {
+                            imgElement.src = heroInfo.img.startsWith('resources/') ? heroInfo.img : 'resources/' + heroInfo.img;
+                            imgElement.classList.add('has-hero');
+                        }
+                        
+                        // Update quality styling
+                        if (slotElement && heroInfo) {
+                            slotElement.classList.add('hero-selected');
+                            slotElement.classList.remove('hero-exquisite', 'hero-legendary');
+                            if (heroInfo.quality === 'legendary') {
+                                slotElement.classList.add('hero-legendary');
+                            } else if (heroInfo.quality === 'exquisite') {
+                                slotElement.classList.add('hero-exquisite');
+                            }
+                        }
+                        
+                        // Set slider max based on hero's maxLevel, then set value
+                        if (slider && heroInfo) {
+                            slider.disabled = false;
+                            slider.max = heroInfo.maxLevel || 60;
+                            // Clamp saved level to current max
+                            const level = Math.min(heroData.level || 0, heroInfo.maxLevel || 60);
+                            slider.value = level;
+                        }
+                        
+                        // Update level display
+                        updateHeroLevelDisplay(position);
+                    }
+                });
+            }
+            
+            // Apply gear
+            if (state.gear) {
+                Object.entries(state.gear).forEach(([slot, gearData]) => {
+                    const select = document.getElementById(`msGearSelect-${slot}`);
+                    const qualitySelect = document.getElementById(`msGearQuality-${slot}`);
+                    const levelSelect = document.getElementById(`msGearLevelSelect-${slot}`);
+                    
+                    if (select && gearData.name) {
+                        select.value = gearData.name;
+                        // Trigger change to update image
+                        updateGearImage(slot);
+                    }
+                    if (qualitySelect && gearData.quality) {
+                        qualitySelect.value = gearData.quality;
+                    }
+                    if (levelSelect && gearData.level) {
+                        levelSelect.value = gearData.level;
+                    }
+                    
+                    // Update bonus display
+                    updateGearBonusDisplay(slot);
+                });
+            }
+            
+            // Apply SoP title
+            if (state.title) {
+                const titleSelect = document.getElementById('msTitleSelect');
+                if (titleSelect) {
+                    titleSelect.value = state.title;
+                    updateTitleDisplay();
+                }
+            }
+            
+            // Update all section totals
+            updateAllSectionTotals();
+            
+            console.log('State loaded successfully');
+            return true;
+        } catch (error) {
+            console.error('Error applying state:', error);
+            return false;
+        }
+    }
+    
+    // Save to localStorage
+    function saveToLocalStorage() {
+        try {
+            const state = gatherCurrentState();
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            console.log('Saved to localStorage');
+            return true;
+        } catch (error) {
+            console.error('Error saving to localStorage:', error);
+            return false;
+        }
+    }
+    
+    // Load from localStorage
+    function loadFromLocalStorage() {
+        try {
+            const savedData = localStorage.getItem(STORAGE_KEY);
+            if (savedData) {
+                const state = JSON.parse(savedData);
+                return applyState(state);
+            }
+            return false;
+        } catch (error) {
+            console.error('Error loading from localStorage:', error);
+            return false;
+        }
+    }
+    
+    // Export to JSON file
+    function exportToJsonFile() {
+        try {
+            const state = gatherCurrentState();
+            const jsonString = JSON.stringify(state, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `march-size-config-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showStorageNotification('Configuration exported successfully!', 'success');
+            return true;
+        } catch (error) {
+            console.error('Error exporting to JSON:', error);
+            showStorageNotification('Error exporting configuration', 'error');
+            return false;
+        }
+    }
+    
+    // Import from JSON file
+    function importFromJsonFile(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            
+            reader.onload = (e) => {
+                try {
+                    const state = JSON.parse(e.target.result);
+                    if (applyState(state)) {
+                        saveToLocalStorage(); // Also save to localStorage
+                        showStorageNotification('Configuration imported successfully!', 'success');
+                        resolve(true);
+                    } else {
+                        showStorageNotification('Invalid configuration file', 'error');
+                        resolve(false);
+                    }
+                } catch (error) {
+                    console.error('Error parsing JSON:', error);
+                    showStorageNotification('Error reading configuration file', 'error');
+                    reject(error);
+                }
+            };
+            
+            reader.onerror = () => {
+                showStorageNotification('Error reading file', 'error');
+                reject(reader.error);
+            };
+            
+            reader.readAsText(file);
+        });
+    }
+    
+    // Show notification for storage operations
+    function showStorageNotification(message, type = 'info') {
+        // Remove existing notification
+        const existingNotification = document.querySelector('.ms-storage-notification');
+        if (existingNotification) existingNotification.remove();
+        
+        const notification = document.createElement('div');
+        notification.className = `ms-storage-notification ms-storage-notification--${type}`;
+        notification.innerHTML = `
+            <span class="ms-storage-notification__icon">${type === 'success' ? '✓' : type === 'error' ? '✗' : 'ℹ'}</span>
+            <span class="ms-storage-notification__message">${message}</span>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Animate in
+        setTimeout(() => notification.classList.add('show'), 10);
+        
+        // Remove after 3 seconds
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+    }
+    
+    // Setup storage UI event listeners (buttons are in header HTML)
+    function setupStorageUI() {
+        // Setup event listeners for header storage buttons
+        document.getElementById('msSaveConfigHeader')?.addEventListener('click', () => {
+            if (saveToLocalStorage()) {
+                showStorageNotification('Configuration saved!', 'success');
+            }
+        });
+        
+        document.getElementById('msExportConfigHeader')?.addEventListener('click', exportToJsonFile);
+        
+        // Import button triggers hidden file input
+        document.getElementById('msImportConfigHeader')?.addEventListener('click', () => {
+            document.getElementById('msImportFileHeader')?.click();
+        });
+        
+        document.getElementById('msImportFileHeader')?.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                await importFromJsonFile(file);
+                e.target.value = ''; // Reset file input
+            }
+        });
+    }
+    
+    // Show/hide storage buttons in header based on calculator mode
+    function updateStorageVisibility(isMarSizeMode) {
+        const storageTrigger = document.getElementById('msStorageTrigger');
+        if (storageTrigger) {
+            storageTrigger.style.display = isMarSizeMode ? 'flex' : 'none';
+        }
+    }
+    
+    // Auto-save on changes (debounced)
+    let autoSaveTimeout = null;
+    function triggerAutoSave() {
+        if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
+        autoSaveTimeout = setTimeout(() => {
+            saveToLocalStorage();
+        }, 2000); // Save 2 seconds after last change
+    }
+
+    // ============================================
     // INITIALIZATION ON DOM READY
     // ============================================
 
@@ -2476,7 +3641,11 @@
         init,
         switchCalculatorMode,
         calculateMarchSize,
-        resetCalculator
+        resetCalculator,
+        saveToLocalStorage,
+        loadFromLocalStorage,
+        exportToJsonFile,
+        importFromJsonFile
     };
 
 })();

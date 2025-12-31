@@ -546,8 +546,8 @@ const MARCH_SIZE_DATA = {
                 title: "Servant of Many-Faced God",
                 img: "heroes/jaqen_b.png",
                 positions: ["ships"],
-                maxLevel: 60,
-                quality: "legendary",
+                maxLevel: 50,
+                quality: "exquisite",
                 // Council skill 6 at level 40: +3,084 flat march size (MarchSizeVsPlayer)
                 councilMarchSize: { type: 'flat', unlockLevel: 40, value: 3084 }
             },
@@ -639,12 +639,12 @@ const MARCH_SIZE_DATA = {
             northernArtifacts: { name: "Northern Artifacts", type: "trinket", minLevel: 0, maxLevel: 150, minMS: 0, maxMS: 854 },
             ancientOrders: { name: "Ancient Order's", type: "trinket", minLevel: 0, maxLevel: 150, minMS: 0, maxMS: 854 }
         },
-        // Dragon Armories (126+ level range)
         // Dragon Armories (0-150 level range, max 895 march size)
+        // Ordered by game season (newest first)
         dragon: {
+            tarnishedSeafarer: { name: "Tarnished Seafarer", type: "dragon", minLevel: 0, maxLevel: 150, minMS: 0, maxMS: 895 },
             tideBreaker: { name: "Tide Breaker", type: "dragon", minLevel: 0, maxLevel: 150, minMS: 0, maxMS: 895 },
-            regalSerpent: { name: "Regal Serpent", type: "dragon", minLevel: 0, maxLevel: 150, minMS: 0, maxMS: 895 },
-            tarnishedSeafarer: { name: "Tarnished Seafarer", type: "dragon", minLevel: 0, maxLevel: 150, minMS: 0, maxMS: 895 }
+            regalSerpent: { name: "Regal Serpent", type: "dragon", minLevel: 0, maxLevel: 150, minMS: 0, maxMS: 895 }
         }
     },
 
