@@ -13,7 +13,7 @@
 	<link rel="icon" type="image/png" sizes="64x64" href="stark-favicon.png">
 	<link rel="icon" type="image/png" sizes="32x32" href="stark-favicon.png">
 	<link rel="apple-touch-icon" sizes="180x180" href="stark-logo.png">
-    <link rel="stylesheet" href="style.css?v=2.0">
+    <link rel="stylesheet" href="style.css?v=3.6">
         <script>
                 (function () {
                         const params = new URLSearchParams(window.location.search);
@@ -56,8 +56,9 @@
     <script defer src="template-planner.js?v=1.0"></script>
     <script defer src="wizard.js?v=1.0"></script>
     <script defer src="history.js?v=1.0"></script>
-    <script defer src="march-size/ms-data.js?v=4.2"></script>
-    <script defer src="march-size/ms-calculator.js?v=4.2"></script>
+    <script defer src="gear-database.js?v=1.0"></script>
+    <script defer src="march-size/ms-data.js?v=4.3"></script>
+    <script defer src="march-size/ms-calculator.js?v=5.6"></script>
 </head>
 <body>
     <div class="wrapper">
@@ -67,6 +68,19 @@
                 <button id="openHistoryBtn" type="button" aria-label="View calculation history" aria-haspopup="dialog" aria-expanded="false">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg>
                 </button>
+            </div>
+            <!-- March Size Storage Actions (only visible in MS mode) -->
+            <div class="ms-storage-trigger" id="msStorageTrigger" style="display: none;">
+                <button id="msSaveConfigHeader" type="button" aria-label="Save configuration" title="Save">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M64 32C28.7 32 0 60.7 0 96V416c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V173.3c0-17-6.7-33.3-18.7-45.3L352 50.7C340 38.7 323.7 32 306.7 32H64zm0 96c0-17.7 14.3-32 32-32H288c17.7 0 32 14.3 32 32v64c0 17.7-14.3 32-32 32H96c-17.7 0-32-14.3-32-32V128zM224 288a64 64 0 1 1 0 128 64 64 0 1 1 0-128z"/></svg>
+                </button>
+                <button id="msExportConfigHeader" type="button" aria-label="Export to JSON" title="Export">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><path d="M0 64C0 28.7 28.7 0 64 0H224V128c0 17.7 14.3 32 32 32H384V288H216c-13.3 0-24 10.7-24 24s10.7 24 24 24H384V448c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V64zM384 336V288H494.1l-47-47c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l88 88c9.4 9.4 9.4 24.6 0 33.9l-88 88c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l47-47H384zm0-208H256V0L384 128z"/></svg>
+                </button>
+                <button id="msImportConfigHeader" type="button" aria-label="Import from JSON" title="Import">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M128 64c0-35.3 28.7-64 64-64H352V128c0 17.7 14.3 32 32 32H512V448c0 35.3-28.7 64-64 64H192c-35.3 0-64-28.7-64-64V336H302.1l-39 39c-9.4 9.4-9.4 24.6 0 33.9s24.6 9.4 33.9 0l80-80c9.4-9.4 9.4-24.6 0-33.9l-80-80c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l39 39H128V64zm0 224v48H24c-13.3 0-24-10.7-24-24s10.7-24 24-24H128zM512 128H384V0L512 128z"/></svg>
+                </button>
+                <input type="file" id="msImportFileHeader" accept=".json" style="display: none;">
             </div>
             <div class="update-log-trigger">
                 <button id="openUpdateLog" type="button" aria-label="View the latest updates" aria-haspopup="dialog" aria-expanded="false">
@@ -1018,7 +1032,20 @@
                 <!-- MS Step 1: Scenario Selection -->
                 <div class="wizard-step active" id="ms-step-scenario" data-step="1">
                     <div class="wizard-step__header">
-                        <h2>Select Your Scenario</h2>
+                        <h2>Select Your Scenario
+                            <span class="info-btn-wrapper">
+                                <button class="info-btn" aria-label="Scenario info">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M256 48a208 208 0 1 1 0 416 208 208 0 1 1 0-416zm0 464A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM216 336c-13.3 0-24 10.7-24 24s10.7 24 24 24l80 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-8 0 0-88c0-13.3-10.7-24-24-24l-48 0c-13.3 0-24 10.7-24 24s10.7 24 24 24l24 0 0 64-24 0zm40-144a32 32 0 1 0 0-64 32 32 0 1 0 0 64z"/></svg>
+                                </button>
+                                <div class="info-popover">
+                                    <b>🎯 Scenario Types</b><br><br>
+                                    <b>vs Seat of Power:</b> Bonuses active when attacking SoP.<br><br>
+                                    <b>vs Keep:</b> Bonuses active when attacking player keeps.<br><br>
+                                    <b>Reinforcing:</b> Bonuses when reinforcing allies.<br><br>
+                                    Each scenario uses different gear stats and bonuses.
+                                </div>
+                            </span>
+                        </h2>
                         <p>Choose what you're optimizing your march size for</p>
                     </div>
 
@@ -1115,7 +1142,19 @@
 
                     <!-- Account Configuration Section -->
                     <div class="ms-account-config">
-                        <h3 class="ms-account-config__title">Your Account Stats</h3>
+                        <h3 class="ms-account-config__title">Your Account Stats
+                            <span class="info-btn-wrapper">
+                                <button class="info-btn info-btn--small" aria-label="Account stats info">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M256 48a208 208 0 1 1 0 416 208 208 0 1 1 0-416zm0 464A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM216 336c-13.3 0-24 10.7-24 24s10.7 24 24 24l80 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-8 0 0-88c0-13.3-10.7-24-24-24l-48 0c-13.3 0-24 10.7-24 24s10.7 24 24 24l24 0 0 64-24 0zm40-144a32 32 0 1 0 0-64 32 32 0 1 0 0 64z"/></svg>
+                                </button>
+                                <div class="info-popover info-popover--compact">
+                                    <b>📊 Base March Size</b><br><br>
+                                    Your base march size from buildings, research, armories, and heroes.<br><br>
+                                    <b>Flat bonuses</b> add directly to march size.<br>
+                                    <b>Percentage bonuses</b> multiply based on your base.
+                                </div>
+                            </span>
+                        </h3>
                         
                         <!-- Total Base March Size Display -->
                         <div class="ms-base-total">
@@ -1137,11 +1176,25 @@
 
                     <!-- Buildings Section -->
                     <div class="glass-card ms-input-card">
-                        <button class="accordion-toggle" aria-expanded="false" data-target="ms-buildings">
-                            <span>Building Levels</span>
+                        <div class="accordion-toggle" role="button" tabindex="0" aria-expanded="false" data-target="ms-buildings">
+                            <span class="accordion-toggle__label">
+                                <span>Building Levels</span>
+                                <span class="info-btn-wrapper ms-accordion-info">
+                                    <button type="button" class="info-btn info-btn--small" aria-label="Buildings info">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M256 48a208 208 0 1 1 0 416 208 208 0 1 1 0-416zm0 464A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM216 336c-13.3 0-24 10.7-24 24s10.7 24 24 24l80 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-8 0 0-88c0-13.3-10.7-24-24-24l-48 0c-13.3 0-24 10.7-24 24s10.7 24 24 24l24 0 0 64-24 0zm40-144a32 32 0 1 0 0-64 32 32 0 1 0 0 64z"/></svg>
+                                    </button>
+                                    <div class="info-popover info-popover--compact">
+                                        <b>🏰 Building Bonuses</b><br><br>
+                                        <b>Keep:</b> Primary march size source (Lv 34-40)<br>
+                                        <b>Training Yard:</b> Unlocks troop tiers<br>
+                                        <b>Rookery:</b> Additional march capacity<br><br>
+                                        Higher levels = more troops per march.
+                                    </div>
+                                </span>
+                            </span>
                             <span class="ms-section-total" id="msBuildingsTotal">(+0 / 94,600)</span>
                             <svg class="accordion-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"/></svg>
-                        </button>
+                        </div>
                         <div id="ms-buildings" class="accordion-content ms-armories-content" style="display:none;">
                             <div class="ms-armory-category">
                                 <h4 class="ms-armory-category__title">Building Levels <span class="ms-stat-hint">(34-40 range)</span></h4>
@@ -1177,11 +1230,23 @@
 
                     <!-- Enhancements Section -->
                     <div class="glass-card ms-input-card">
-                        <button class="accordion-toggle" aria-expanded="false" data-target="ms-enhancements">
-                            <span>Enhancements</span>
+                        <div class="accordion-toggle" role="button" tabindex="0" aria-expanded="false" data-target="ms-enhancements">
+                            <span class="accordion-toggle__label">
+                                <span>Enhancements</span>
+                                <span class="info-btn-wrapper ms-accordion-info">
+                                    <button type="button" class="info-btn info-btn--small" aria-label="Enhancements info">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M256 48a208 208 0 1 1 0 416 208 208 0 1 1 0-416zm0 464A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM216 336c-13.3 0-24 10.7-24 24s10.7 24 24 24l80 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-8 0 0-88c0-13.3-10.7-24-24-24l-48 0c-13.3 0-24 10.7-24 24s10.7 24 24 24l24 0 0 64-24 0zm40-144a32 32 0 1 0 0-64 32 32 0 1 0 0 64z"/></svg>
+                                    </button>
+                                    <div class="info-popover info-popover--compact">
+                                        <b>✨ Castle Enhancements</b><br><br>
+                                        Permanent upgrades to your castle that provide flat march size bonuses.<br><br>
+                                        Set slider to your current enhancement level for each of your buildings.
+                                    </div>
+                                </span>
+                            </span>
                             <span class="ms-section-total" id="msEnhancementsTotal">(+0 / 7,500)</span>
                             <svg class="accordion-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"/></svg>
-                        </button>
+                        </div>
                         <div id="ms-enhancements" class="accordion-content ms-armories-content" style="display:none;">
                             <div class="ms-armory-category">
                                 <h4 class="ms-armory-category__title">Building Enhancements</h4>
@@ -1229,15 +1294,29 @@
 
                     <!-- Armories Section -->
                     <div class="glass-card ms-input-card">
-                        <button class="accordion-toggle" aria-expanded="false" data-target="ms-armories">
-                            <span>Armories</span>
-                            <span class="ms-section-total" id="msArmoriesTotal">(+0 / 42,481)</span>
+                        <div class="accordion-toggle" role="button" tabindex="0" aria-expanded="false" data-target="ms-armories">
+                            <span class="accordion-toggle__label">
+                                <span>Armories</span>
+                                <span class="info-btn-wrapper ms-accordion-info">
+                                    <button type="button" class="info-btn info-btn--small" aria-label="Armories info">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M256 48a208 208 0 1 1 0 416 208 208 0 1 1 0-416zm0 464A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM216 336c-13.3 0-24 10.7-24 24s10.7 24 24 24l80 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-8 0 0-88c0-13.3-10.7-24-24-24l-48 0c-13.3 0-24 10.7-24 24s10.7 24 24 24l24 0 0 64-24 0zm40-144a32 32 0 1 0 0-64 32 32 0 1 0 0 64z"/></svg>
+                                    </button>
+                                    <div class="info-popover info-popover--compact">
+                                        <b>🛡️ Armory Collection</b><br><br>
+                                        Set bonuses from equipped gear sets. Higher collection levels = more bonus.<br><br>
+                                        <b>Standard:</b> Lord gear sets<br>
+                                        <b>Trinket:</b> Trinket sets<br>
+                                        <b>Dragon:</b> Dragon gear sets
+                                    </div>
+                                </span>
+                            </span>
+                            <span class="ms-section-total" id="msArmoriesTotal">(+0 / 44,648)</span>
                             <svg class="accordion-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"/></svg>
-                        </button>
+                        </div>
                         <div id="ms-armories" class="accordion-content ms-armories-content" style="display:none;">
                             <!-- Standard Armories -->
                             <div class="ms-armory-category" data-category="standard">
-                                <h4 class="ms-armory-category__title">Standard Armories <span class="ms-category-total" id="msStandardArmoriesTotal">(+0 / 34,672)</span></h4>
+                                <h4 class="ms-armory-category__title">Standard Armories <span class="ms-category-total" id="msStandardArmoriesTotal">(+0 / 36,839)</span></h4>
                                 <div class="ms-armory-grid ms-armory-grid--vertical">
                                     <!-- Ordered by game season (newest first) -->
                                     <div class="ms-armory-item ms-armory-item--vertical">
@@ -1289,6 +1368,14 @@
                                         </div>
                                     </div>
                                     <div class="ms-armory-item ms-armory-item--vertical">
+                                        <label for="msArmoryKeepArchitect">Keep Architect</label>
+                                        <img src="resources/armories/keepArchitect.png" alt="KeepArchitect" class="ms-armory-icon">
+                                        <div class="ms-armory-slider-group">
+                                            <input type="range" id="msArmoryKeepArchitect" class="ms-armory-slider" min="0" max="236" value="0" data-armory="keepArchitect">
+                                            <span class="ms-armory-value" id="msArmoryKeepArchitectDisplay">0</span>
+                                        </div>
+                                    </div>
+                                    <div class="ms-armory-item ms-armory-item--vertical">
                                         <label for="msArmoryDrownedDisciple">Drowned Disciple</label>
                                         <img src="resources/armories/drownedDisciple.png" alt="DrownedDisciple" class="ms-armory-icon">
                                         <div class="ms-armory-slider-group">
@@ -1321,19 +1408,19 @@
                                         </div>
                                     </div>
                                     <div class="ms-armory-item ms-armory-item--vertical">
-                                        <label for="msArmoryCeremonial">Ceremonial</label>
-                                        <img src="resources/armories/ceremonial.png" alt="Ceremonial" class="ms-armory-icon">
-                                        <div class="ms-armory-slider-group">
-                                            <input type="range" id="msArmoryCeremonial" class="ms-armory-slider" min="0" max="236" value="0" data-armory="ceremonial">
-                                            <span class="ms-armory-value" id="msArmoryCeremonialDisplay">0</span>
-                                        </div>
-                                    </div>
-                                    <div class="ms-armory-item ms-armory-item--vertical">
                                         <label for="msArmoryBattleScarred">Battle-Scarred</label>
                                         <img src="resources/armories/battleScarred.png" alt="BattleScarred" class="ms-armory-icon">
                                         <div class="ms-armory-slider-group">
                                             <input type="range" id="msArmoryBattleScarred" class="ms-armory-slider" min="0" max="236" value="0" data-armory="battleScarred">
                                             <span class="ms-armory-value" id="msArmoryBattleScarredDisplay">0</span>
+                                        </div>
+                                    </div>
+                                    <div class="ms-armory-item ms-armory-item--vertical">
+                                        <label for="msArmoryCeremonial">Ceremonial</label>
+                                        <img src="resources/armories/ceremonial.png" alt="Ceremonial" class="ms-armory-icon">
+                                        <div class="ms-armory-slider-group">
+                                            <input type="range" id="msArmoryCeremonial" class="ms-armory-slider" min="0" max="236" value="0" data-armory="ceremonial">
+                                            <span class="ms-armory-value" id="msArmoryCeremonialDisplay">0</span>
                                         </div>
                                     </div>
                                     <div class="ms-armory-item ms-armory-item--vertical">
@@ -1391,9 +1478,9 @@
                                     <div class="ms-armory-item ms-armory-item--vertical">
                                         <label for="msArmoryNorthernArtifacts">Northern Artifacts</label>
                                         <div class="ms-armory-icons">
-                                            <img src="resources/trinkets/icon_eq_events_kingsguard2_trinket_1.png" alt="Mormont Coin" class="ms-armory-icon">
-                                            <img src="resources/trinkets/icon_eq_events_Harrenhal_trinket02_1.png" alt="Harrenhal Necklace" class="ms-armory-icon">
-                                            <img src="resources/trinkets/icon_eq_events_Mormont_trinket02_1.png" alt="Mormont Collar" class="ms-armory-icon">
+                                            <img src="resources/trinkets/icon_eq_events_snow1_trinket_1.png" alt="Kraken Hook" class="ms-armory-icon">
+                                            <img src="resources/trinkets/icon_eq_events_snow3_trinket_1.png" alt="Scorpion Bolt" class="ms-armory-icon">
+                                            <img src="resources/trinkets/icon_eq_events_kingsguard2_trinket_1.png" alt="Direwolf Pommel" class="ms-armory-icon">
                                         </div>
                                         <div class="ms-armory-slider-group">
                                             <input type="range" id="msArmoryNorthernArtifacts" class="ms-armory-slider" min="0" max="150" value="0" data-armory="northernArtifacts">
@@ -1456,6 +1543,14 @@
                                 <h4 class="ms-armory-category__title">Dragon Armories <span class="ms-category-total" id="msDragonArmoriesTotal">(+0 / 2,685)</span></h4>
                                 <div class="ms-armory-grid ms-armory-grid--vertical">
                                     <div class="ms-armory-item ms-armory-item--vertical">
+                                        <label for="msArmoryTarnishedSeafarer">Tarnished Seafarer</label>
+                                        <img src="resources/armories/tarnishedSeafarer.png" alt="TarnishedSeafarer" class="ms-armory-icon">
+                                        <div class="ms-armory-slider-group">
+                                            <input type="range" id="msArmoryTarnishedSeafarer" class="ms-armory-slider" min="0" max="150" value="0" data-armory="tarnishedSeafarer">
+                                            <span class="ms-armory-value" id="msArmoryTarnishedSeafarerDisplay">0</span>
+                                        </div>
+                                    </div>
+                                    <div class="ms-armory-item ms-armory-item--vertical">
                                         <label for="msArmoryTideBreaker">Tide Breaker</label>
                                         <img src="resources/armories/tideBreaker.png" alt="TideBreaker" class="ms-armory-icon">
                                         <div class="ms-armory-slider-group">
@@ -1471,14 +1566,6 @@
                                             <span class="ms-armory-value" id="msArmoryRegalSerpentDisplay">0</span>
                                         </div>
                                     </div>
-                                    <div class="ms-armory-item ms-armory-item--vertical">
-                                        <label for="msArmoryTarnishedSeafarer">Tarnished Seafarer</label>
-                                        <img src="resources/armories/tarnishedSeafarer.png" alt="TarnishedSeafarer" class="ms-armory-icon">
-                                        <div class="ms-armory-slider-group">
-                                            <input type="range" id="msArmoryTarnishedSeafarer" class="ms-armory-slider" min="0" max="150" value="0" data-armory="tarnishedSeafarer">
-                                            <span class="ms-armory-value" id="msArmoryTarnishedSeafarerDisplay">0</span>
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1486,11 +1573,24 @@
 
                     <!-- Research Section -->
                     <div class="glass-card ms-input-card">
-                        <button class="accordion-toggle" aria-expanded="false" data-target="ms-research">
-                            <span>Research</span>
+                        <div class="accordion-toggle" role="button" tabindex="0" aria-expanded="false" data-target="ms-research">
+                            <span class="accordion-toggle__label">
+                                <span>Research</span>
+                                <span class="info-btn-wrapper ms-accordion-info">
+                                    <button type="button" class="info-btn info-btn--small" aria-label="Research info">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M256 48a208 208 0 1 1 0 416 208 208 0 1 1 0-416zm0 464A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM216 336c-13.3 0-24 10.7-24 24s10.7 24 24 24l80 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-8 0 0-88c0-13.3-10.7-24-24-24l-48 0c-13.3 0-24 10.7-24 24s10.7 24 24 24l24 0 0 64-24 0zm40-144a32 32 0 1 0 0-64 32 32 0 1 0 0 64z"/></svg>
+                                    </button>
+                                    <div class="info-popover info-popover--compact">
+                                        <b>📚 Research Bonuses</b><br><br>
+                                        <b>Military I/II:</b> Basic march size research<br>
+                                        <b>Advanced Military:</b> Specialized SoP bonuses<br><br>
+                                        Set each slider to your current research level.
+                                    </div>
+                                </span>
+                            </span>
                             <span class="ms-section-total" id="msResearchTotal">(+0 / 60,000)</span>
                             <svg class="accordion-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"/></svg>
-                        </button>
+                        </div>
                         <div id="ms-research" class="accordion-content ms-research-grid" style="display:none;">
                             <!-- Military I -->
                             <div class="ms-research-category" data-category="military1">
@@ -1624,11 +1724,25 @@
 
                     <!-- Heroes Section -->
                     <div class="glass-card ms-input-card">
-                        <button class="accordion-toggle" aria-expanded="false" data-target="ms-heroes">
-                            <span>Heroes</span>
+                        <div class="accordion-toggle" role="button" tabindex="0" aria-expanded="false" data-target="ms-heroes">
+                            <span class="accordion-toggle__label">
+                                <span>Heroes</span>
+                                <span class="info-btn-wrapper ms-accordion-info">
+                                    <button type="button" class="info-btn info-btn--small" aria-label="Heroes info">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M256 48a208 208 0 1 1 0 416 208 208 0 1 1 0-416zm0 464A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM216 336c-13.3 0-24 10.7-24 24s10.7 24 24 24l80 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-8 0 0-88c0-13.3-10.7-24-24-24l-48 0c-13.3 0-24 10.7-24 24s10.7 24 24 24l24 0 0 64-24 0zm40-144a32 32 0 1 0 0-64 32 32 0 1 0 0 64z"/></svg>
+                                    </button>
+                                    <div class="info-popover info-popover--compact">
+                                        <b>🦸 Hero Bonuses</b><br><br>
+                                        <b>Council:</b> Heroes in council positions<br>
+                                        <b>Marching:</b> Hero leading the march<br>
+                                        <b>Hall of Heroes:</b> Adventurer rank bonus<br><br>
+                                        Set each hero's level using the sliders.
+                                    </div>
+                                </span>
+                            </span>
                             <span class="ms-section-total" id="msHeroesAccordionTotal">(+0)</span>
                             <svg class="accordion-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"/></svg>
-                        </button>
+                        </div>
                         <div id="ms-heroes" class="accordion-content ms-heroes-content" style="display:none;">
                             
                             <!-- ========== COUNCIL HEROES SECTION ========== -->
@@ -1854,20 +1968,6 @@
                                 </div>
                             </div>
 
-                            <!-- Heroes Aggregate Total -->
-                            <div class="ms-heroes-aggregate">
-                                <span>Total Hero Bonuses:</span>
-                                <strong id="msHeroesTotal">+0 troops</strong>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Manual Total Override -->
-                    <div class="glass-card ms-input-card">
-                        <div class="ms-manual-total">
-                            <label for="msManualTotal">Or Enter Base March Size Directly</label>
-                            <p class="ms-manual-total__hint">Check your march size in-game with gear unequipped</p>
-                            <input type="number" id="msManualTotal" class="ms-input ms-input--large" min="0" placeholder="e.g. 500000">
                         </div>
                     </div>
 
@@ -1876,8 +1976,47 @@
                 <!-- MS Step 2: Gear Selection -->
                 <div class="wizard-step" id="ms-step-input" data-step="2">
                     <div class="wizard-step__header">
-                        <h2>Select Your Gear</h2>
-                        <p>Choose the gear you want to calculate march size for</p>
+                        <h2>Select Your Gear & Title
+                            <span class="info-btn-wrapper">
+                                <button class="info-btn" aria-label="Gear info">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M256 48a208 208 0 1 1 0 416 208 208 0 1 1 0-416zm0 464A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM216 336c-13.3 0-24 10.7-24 24s10.7 24 24 24l80 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-8 0 0-88c0-13.3-10.7-24-24-24l-48 0c-13.3 0-24 10.7-24 24s10.7 24 24 24l24 0 0 64-24 0zm40-144a32 32 0 1 0 0-64 32 32 0 1 0 0 64z"/></svg>
+                                </button>
+                                <div class="info-popover">
+                                    <b>⚔️ Gear & Title</b><br><br>
+                                    <b>SoP Title:</b> Attack titles give flat march size bonus.<br><br>
+                                    <b>Flat Gear:</b> Adds fixed troop count.<br>
+                                    <b>% Gear:</b> Multiplies your base march size.<br><br>
+                                    Higher base = % gear becomes stronger.
+                                </div>
+                            </span>
+                        </h2>
+                        <p>Choose your SoP attacker title and gear to calculate march size</p>
+                    </div>
+
+                    <!-- SoP Title Selection -->
+                    <div class="glass-card ms-input-card ms-title-card">
+                        <span class="ms-title-card__bonus" id="msTitleBonus">+150,000</span>
+                        <div class="ms-input-card__header">
+                            <h3>Seat of Power Title</h3>
+                            <span class="ms-input-card__subtitle">Your attacker title affects march size and gear recommendations</span>
+                        </div>
+                        <div class="ms-title-selection">
+                            <div class="ms-title-selection__icon">
+                                <img src="resources/research/icon_research_march_size_vs_sop.png" alt="Title" id="msTitleIcon">
+                            </div>
+                            <div class="ms-title-selection__controls">
+                                <select class="ms-title-select" id="msTitleSelect">
+                                    <option value="none" selected>No Title (+0)</option>
+                                    <option value="star2">2-Star Attacker (+108,234)</option>
+                                    <option value="star2_5">2.5-Star Attacker (+113,009)</option>
+                                    <option value="star3">3-Star Attacker (+117,147)</option>
+                                    <option value="star3_5">3.5-Star Attacker (+120,967)</option>
+                                    <option value="star4">4-Star Attacker (+135,000)</option>
+                                    <option value="star4_5">4.5-Star Attacker (+150,000)</option>
+                                    <option value="kl">KL Attacker (+175,000)</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Gear Selection -->
@@ -1890,8 +2029,9 @@
                             <!-- Left Column: Helmet, Chest, Pants -->
                             <div class="ms-gear-column ms-gear-column--left">
                                 <div class="ms-gear-slot-visual" data-slot="helmet">
+                                    <span class="ms-gear-slot-visual__bonus" id="msGearBonus-helmet">+0</span>
                                     <div class="ms-gear-slot-visual__image">
-                                        <img src="resources/item/helmet.png" alt="Helmet" id="msGearImg-helmet">
+                                        <img src="resources/item/gear_slot_helmet.png" alt="Helmet" id="msGearImg-helmet">
                                     </div>
                                     <div class="ms-gear-slot-visual__info">
                                         <span class="ms-gear-slot-visual__label">Helmet</span>
@@ -1901,8 +2041,8 @@
                                         <div class="ms-gear-slot-visual__row">
                                             <select class="ms-gear-slot-visual__level-select" id="msGearLevelSelect-helmet" data-slot="helmet">
                                                 <option value="35">Lv. 35</option>
-                                                <option value="40">Lv. 40</option>
-                                                <option value="45" selected>Lv. 45</option>
+                                                <option value="40" selected>Lv. 40</option>
+                                                <option value="45">Lv. 45</option>
                                                 <option value="50">Lv. 50</option>
                                             </select>
                                             <select class="ms-gear-slot-visual__quality" id="msGearQuality-helmet" data-slot="helmet">
@@ -1917,8 +2057,9 @@
                                     </div>
                                 </div>
                                 <div class="ms-gear-slot-visual" data-slot="chest">
+                                    <span class="ms-gear-slot-visual__bonus" id="msGearBonus-chest">+0</span>
                                     <div class="ms-gear-slot-visual__image">
-                                        <img src="resources/item/plate.png" alt="Chest" id="msGearImg-chest">
+                                        <img src="resources/item/gear_slot_chest.png" alt="Chest" id="msGearImg-chest">
                                     </div>
                                     <div class="ms-gear-slot-visual__info">
                                         <span class="ms-gear-slot-visual__label">Chest</span>
@@ -1928,8 +2069,8 @@
                                         <div class="ms-gear-slot-visual__row">
                                             <select class="ms-gear-slot-visual__level-select" id="msGearLevelSelect-chest" data-slot="chest">
                                                 <option value="35">Lv. 35</option>
-                                                <option value="40">Lv. 40</option>
-                                                <option value="45" selected>Lv. 45</option>
+                                                <option value="40" selected>Lv. 40</option>
+                                                <option value="45">Lv. 45</option>
                                                 <option value="50">Lv. 50</option>
                                             </select>
                                             <select class="ms-gear-slot-visual__quality" id="msGearQuality-chest" data-slot="chest">
@@ -1944,8 +2085,9 @@
                                     </div>
                                 </div>
                                 <div class="ms-gear-slot-visual" data-slot="pants">
+                                    <span class="ms-gear-slot-visual__bonus" id="msGearBonus-pants">+0</span>
                                     <div class="ms-gear-slot-visual__image">
-                                        <img src="resources/item/pants.png" alt="Pants" id="msGearImg-pants">
+                                        <img src="resources/item/gear_slot_pants.png" alt="Pants" id="msGearImg-pants">
                                     </div>
                                     <div class="ms-gear-slot-visual__info">
                                         <span class="ms-gear-slot-visual__label">Pants</span>
@@ -1955,8 +2097,8 @@
                                         <div class="ms-gear-slot-visual__row">
                                             <select class="ms-gear-slot-visual__level-select" id="msGearLevelSelect-pants" data-slot="pants">
                                                 <option value="35">Lv. 35</option>
-                                                <option value="40">Lv. 40</option>
-                                                <option value="45" selected>Lv. 45</option>
+                                                <option value="40" selected>Lv. 40</option>
+                                                <option value="45">Lv. 45</option>
                                                 <option value="50">Lv. 50</option>
                                             </select>
                                             <select class="ms-gear-slot-visual__quality" id="msGearQuality-pants" data-slot="pants">
@@ -1971,8 +2113,9 @@
                                     </div>
                                 </div>
                                 <div class="ms-gear-slot-visual ms-gear-slot-visual--dragon-trinket" data-slot="dragonTrinket">
+                                    <span class="ms-gear-slot-visual__bonus" id="msGearBonus-dragonTrinket">+0</span>
                                     <div class="ms-gear-slot-visual__image">
-                                        <img src="resources/item/ring.png" alt="Dragon Trinket" id="msGearImg-dragonTrinket">
+                                        <img src="resources/item/gear_slot_trinket.png" alt="Dragon Trinket" id="msGearImg-dragonTrinket">
                                     </div>
                                     <div class="ms-gear-slot-visual__info">
                                         <span class="ms-gear-slot-visual__label">Dragon Trinket</span>
@@ -1982,8 +2125,8 @@
                                         <div class="ms-gear-slot-visual__row">
                                             <select class="ms-gear-slot-visual__level-select" id="msGearLevelSelect-dragonTrinket" data-slot="dragonTrinket">
                                                 <option value="35">Lv. 35</option>
-                                                <option value="40">Lv. 40</option>
-                                                <option value="45" selected>Lv. 45</option>
+                                                <option value="40" selected>Lv. 40</option>
+                                                <option value="45">Lv. 45</option>
                                                 <option value="50">Lv. 50</option>
                                             </select>
                                             <select class="ms-gear-slot-visual__quality" id="msGearQuality-dragonTrinket" data-slot="dragonTrinket">
@@ -2009,6 +2152,10 @@
                             <!-- Right Column: Weapon, Ring, Boots, Trinket -->
                             <div class="ms-gear-column ms-gear-column--right">
                                 <div class="ms-gear-slot-visual" data-slot="weapon">
+                                    <span class="ms-gear-slot-visual__bonus" id="msGearBonus-weapon">+0</span>
+                                    <div class="ms-gear-slot-visual__image">
+                                        <img src="resources/item/gear_slot_weapon.png" alt="Weapon" id="msGearImg-weapon">
+                                    </div>
                                     <div class="ms-gear-slot-visual__info">
                                         <span class="ms-gear-slot-visual__label">Weapon</span>
                                         <select class="ms-gear-slot-visual__select" id="msGearSelect-weapon" data-slot="weapon">
@@ -2017,8 +2164,8 @@
                                         <div class="ms-gear-slot-visual__row">
                                             <select class="ms-gear-slot-visual__level-select" id="msGearLevelSelect-weapon" data-slot="weapon">
                                                 <option value="35">Lv. 35</option>
-                                                <option value="40">Lv. 40</option>
-                                                <option value="45" selected>Lv. 45</option>
+                                                <option value="40" selected>Lv. 40</option>
+                                                <option value="45">Lv. 45</option>
                                                 <option value="50">Lv. 50</option>
                                             </select>
                                             <select class="ms-gear-slot-visual__quality" id="msGearQuality-weapon" data-slot="weapon">
@@ -2031,11 +2178,12 @@
                                             </select>
                                         </div>
                                     </div>
-                                    <div class="ms-gear-slot-visual__image">
-                                        <img src="resources/item/dagger.png" alt="Weapon" id="msGearImg-weapon">
-                                    </div>
                                 </div>
                                 <div class="ms-gear-slot-visual" data-slot="ring">
+                                    <span class="ms-gear-slot-visual__bonus" id="msGearBonus-ring">+0</span>
+                                    <div class="ms-gear-slot-visual__image">
+                                        <img src="resources/item/gear_slot_ring.png" alt="Ring" id="msGearImg-ring">
+                                    </div>
                                     <div class="ms-gear-slot-visual__info">
                                         <span class="ms-gear-slot-visual__label">Ring</span>
                                         <select class="ms-gear-slot-visual__select" id="msGearSelect-ring" data-slot="ring">
@@ -2044,8 +2192,8 @@
                                         <div class="ms-gear-slot-visual__row">
                                             <select class="ms-gear-slot-visual__level-select" id="msGearLevelSelect-ring" data-slot="ring">
                                                 <option value="35">Lv. 35</option>
-                                                <option value="40">Lv. 40</option>
-                                                <option value="45" selected>Lv. 45</option>
+                                                <option value="40" selected>Lv. 40</option>
+                                                <option value="45">Lv. 45</option>
                                                 <option value="50">Lv. 50</option>
                                             </select>
                                             <select class="ms-gear-slot-visual__quality" id="msGearQuality-ring" data-slot="ring">
@@ -2058,11 +2206,12 @@
                                             </select>
                                         </div>
                                     </div>
-                                    <div class="ms-gear-slot-visual__image">
-                                        <img src="resources/item/ring.png" alt="Ring" id="msGearImg-ring">
-                                    </div>
                                 </div>
                                 <div class="ms-gear-slot-visual" data-slot="boots">
+                                    <span class="ms-gear-slot-visual__bonus" id="msGearBonus-boots">+0</span>
+                                    <div class="ms-gear-slot-visual__image">
+                                        <img src="resources/item/gear_slot_boots.png" alt="Boots" id="msGearImg-boots">
+                                    </div>
                                     <div class="ms-gear-slot-visual__info">
                                         <span class="ms-gear-slot-visual__label">Boots</span>
                                         <select class="ms-gear-slot-visual__select" id="msGearSelect-boots" data-slot="boots">
@@ -2071,8 +2220,8 @@
                                         <div class="ms-gear-slot-visual__row">
                                             <select class="ms-gear-slot-visual__level-select" id="msGearLevelSelect-boots" data-slot="boots">
                                                 <option value="35">Lv. 35</option>
-                                                <option value="40">Lv. 40</option>
-                                                <option value="45" selected>Lv. 45</option>
+                                                <option value="40" selected>Lv. 40</option>
+                                                <option value="45">Lv. 45</option>
                                                 <option value="50">Lv. 50</option>
                                             </select>
                                             <select class="ms-gear-slot-visual__quality" id="msGearQuality-boots" data-slot="boots">
@@ -2085,11 +2234,12 @@
                                             </select>
                                         </div>
                                     </div>
-                                    <div class="ms-gear-slot-visual__image">
-                                        <img src="resources/item/shoos.png" alt="Boots" id="msGearImg-boots">
-                                    </div>
                                 </div>
                                 <div class="ms-gear-slot-visual" data-slot="trinket">
+                                    <span class="ms-gear-slot-visual__bonus" id="msGearBonus-trinket">+0</span>
+                                    <div class="ms-gear-slot-visual__image">
+                                        <img src="resources/item/gear_slot_trinket.png" alt="Trinket" id="msGearImg-trinket">
+                                    </div>
                                     <div class="ms-gear-slot-visual__info">
                                         <span class="ms-gear-slot-visual__label">Trinket</span>
                                         <select class="ms-gear-slot-visual__select" id="msGearSelect-trinket" data-slot="trinket">
@@ -2098,8 +2248,8 @@
                                         <div class="ms-gear-slot-visual__row">
                                             <select class="ms-gear-slot-visual__level-select" id="msGearLevelSelect-trinket" data-slot="trinket">
                                                 <option value="35">Lv. 35</option>
-                                                <option value="40">Lv. 40</option>
-                                                <option value="45" selected>Lv. 45</option>
+                                                <option value="40" selected>Lv. 40</option>
+                                                <option value="45">Lv. 45</option>
                                                 <option value="50">Lv. 50</option>
                                             </select>
                                             <select class="ms-gear-slot-visual__quality" id="msGearQuality-trinket" data-slot="trinket">
@@ -2112,9 +2262,6 @@
                                             </select>
                                         </div>
                                     </div>
-                                    <div class="ms-gear-slot-visual__image">
-                                        <img src="resources/item/ring.png" alt="Trinket" id="msGearImg-trinket">
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -2124,7 +2271,20 @@
                 <!-- MS Step 3: Results -->
                 <div class="wizard-step" id="ms-step-results" data-step="3">
                     <div class="wizard-step__header">
-                        <h2>March Size Results</h2>
+                        <h2>March Size Results
+                            <span class="info-btn-wrapper">
+                                <button class="info-btn" aria-label="Results info">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M256 48a208 208 0 1 1 0 416 208 208 0 1 1 0-416zm0 464A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM216 336c-13.3 0-24 10.7-24 24s10.7 24 24 24l80 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-8 0 0-88c0-13.3-10.7-24-24-24l-48 0c-13.3 0-24 10.7-24 24s10.7 24 24 24l24 0 0 64-24 0zm40-144a32 32 0 1 0 0-64 32 32 0 1 0 0 64z"/></svg>
+                                </button>
+                                <div class="info-popover">
+                                    <b>📊 Understanding Results</b><br><br>
+                                    <b>Total March Size:</b> Your final calculated troop capacity.<br><br>
+                                    <b>Gear Optimizer:</b> Compare current vs recommended gear. Shows breakeven points and min requirements.<br><br>
+                                    <b>✓ Green:</b> Your gear beats at this level<br>
+                                    <b>✗ Red:</b> Not recommended at this level
+                                </div>
+                            </span>
+                        </h2>
                         <p>Your total march size and gear recommendations</p>
                     </div>
 
@@ -2230,11 +2390,27 @@
             <h2 id="updateLogTitle">What&rsquo;s new</h2>
             <div class="changelog-entries">
                 <div class="changelog-entry">
-                    <button class="changelog-toggle" id="changelog-toggle-2025-12-29" aria-expanded="true" aria-controls="changelog-panel-2025-12-29">
+                    <button class="changelog-toggle" id="changelog-toggle-2025-12-30" aria-expanded="true" aria-controls="changelog-panel-2025-12-30">
+                        <span class="changelog-date">30/12/2025</span>
+                        <svg class="changelog-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512" aria-hidden="true" focusable="false"><path d="M41.4 150.6c12.5-12.5 32.8-12.5 45.3 0L160 223.9l73.4-73.4c12.5-12.5 32.8-12.5 45.3 0s12.5 32.8 0 45.3l-96 96c-12.5 12.5-32.8 12.5-45.3 0l-96-96c-12.5-12.5-12.5-32.8 0-45.3z"/></svg>
+                    </button>
+                    <div id="changelog-panel-2025-12-30" class="changelog-panel open" role="region" aria-labelledby="changelog-toggle-2025-12-30">
+                        <ul>
+                            <li><strong>March Size Calculator vs SoP:</strong> Fully functional calculator with buildings, research, armories, heroes, and equipped gear.</li>
+                            <li><strong>Interactive Gear Optimizer:</strong> Compare equipped vs recommended gear with real-time gain calculations.</li>
+                            <li><strong>Min. Requirements Display:</strong> Quality-colored badges show minimum level needed to beat current gear.</li>
+                            <li><strong>SoP Title in Results:</strong> Adjust attacker title on results page and see instant impact on recommendations.</li>
+                            <li><strong>Save/Load Config:</strong> Auto-save to browser, plus export/import JSON files for backup or sharing.</li>
+                            <li><strong>Info Tooltips:</strong> Helpful info buttons throughout the calculator to guide you.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="changelog-entry">
+                    <button class="changelog-toggle" id="changelog-toggle-2025-12-29" aria-expanded="false" aria-controls="changelog-panel-2025-12-29">
                         <span class="changelog-date">29/12/2025</span>
                         <svg class="changelog-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512" aria-hidden="true" focusable="false"><path d="M41.4 150.6c12.5-12.5 32.8-12.5 45.3 0L160 223.9l73.4-73.4c12.5-12.5 32.8-12.5 45.3 0s12.5 32.8 0 45.3l-96 96c-12.5 12.5-32.8 12.5-45.3 0l-96-96c-12.5-12.5-12.5-32.8 0-45.3z"/></svg>
                     </button>
-                    <div id="changelog-panel-2025-12-29" class="changelog-panel open" role="region" aria-labelledby="changelog-toggle-2025-12-29">
+                    <div id="changelog-panel-2025-12-29" class="changelog-panel" role="region" aria-labelledby="changelog-toggle-2025-12-29">
                         <ul>
                             <li><strong>OCR.space Integration:</strong> Improved screenshot scanning with automatic image compression and fallback to Tesseract.</li>
                             <li><strong>Template Plan Locking:</strong> Lock template levels to preserve manual inputs during recalculations.</li>

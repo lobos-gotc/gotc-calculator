@@ -62,10 +62,30 @@ const MARCH_SIZE_DATA = {
             "Val. Kingsguard": {
                 season: 13,
                 set: "Valyrian Kingsguard",
-                img: "item/season9/targaryen-kingsguard/chest.png",
+                img: "item/season13/valyrian-kingsguard/chest.png",
                 scenarios: ["sop", "keep", "reinforce"],
                 stats: {
                     legendary: { marchSize: 0, marchSizePct: 4.80 }
+                }
+            },
+            "Targ. Kingsguard": {
+                season: 9,
+                set: "Targaryen Kingsguard",
+                img: "item/season9/targaryen-kingsguard/chest.png",
+                scenarios: ["sop", "keep", "reinforce"],
+                stats: {
+                    // L50 = +4,230 flat march size (base L40 = 3254)
+                    legendary: { marchSize: 3254, marchSizePct: 0 }
+                }
+            },
+            "Burning Usurper": {
+                season: 12,
+                set: "Burning Usurper",
+                img: "item/season12/burning-usurper/chest.png",
+                scenarios: ["sop", "keep", "reinforce"],
+                stats: {
+                    // L40 Legendary = 4.00% march size (from game data)
+                    legendary: { marchSize: 0, marchSizePct: 4.00 }
                 }
             },
             "Frostfang Thenn": {
@@ -119,7 +139,7 @@ const MARCH_SIZE_DATA = {
             "Val. Kingsguard": {
                 season: 13,
                 set: "Valyrian Kingsguard",
-                img: "item/season9/targaryen-kingsguard/pants.png",
+                img: "item/season13/valyrian-kingsguard/pants.png",
                 scenarios: ["sop", "keep", "reinforce"],
                 stats: {
                     legendary: { marchSize: 0, marchSizePct: 4.80 }
@@ -224,7 +244,7 @@ const MARCH_SIZE_DATA = {
             "Val. Kingsguard": {
                 season: 13,
                 set: "Valyrian Kingsguard",
-                img: "item/season9/targaryen-kingsguard/ring.png",
+                img: "item/season13/valyrian-kingsguard/ring.png",
                 scenarios: ["sop", "keep", "reinforce"],
                 stats: {
                     legendary: { marchSize: 0, marchSizePct: 4.80 }
@@ -329,7 +349,7 @@ const MARCH_SIZE_DATA = {
             "KG White Cloak": {
                 season: 13,
                 set: "Kingsguard",
-                img: "item/ring.png",
+                img: "trinkets/kg_white_cloak.png",
                 scenarios: ["sop", "keep", "reinforce"],
                 stats: {
                     legendary: { marchSize: 4162, marchSizePct: 0 }
@@ -338,7 +358,7 @@ const MARCH_SIZE_DATA = {
             "Floral Brooch": {
                 season: 12,
                 set: "Floral",
-                img: "item/ring.png",
+                img: "trinkets/icon_eq_events_harvest_trinket_1.png",
                 scenarios: ["sop", "keep", "reinforce"],
                 stats: {
                     legendary: { marchSize: 3721, marchSizePct: 0 }
@@ -346,8 +366,8 @@ const MARCH_SIZE_DATA = {
             },
             "Bronze Cutlery": {
                 season: 11,
-                set: "Bronze",
-                img: "item/ring.png",
+                set: "Relics of the First Man",
+                img: "trinkets/icon_eq_events_thenn_trinket_1.png",
                 scenarios: ["sop", "keep", "reinforce"],
                 stats: {
                     legendary: { marchSize: 3216, marchSizePct: 0 }
@@ -359,7 +379,7 @@ const MARCH_SIZE_DATA = {
             "KG White Cloak": {
                 season: 13,
                 set: "Kingsguard",
-                img: "item/ring.png",
+                img: "trinkets/kg_white_cloak.png",
                 scenarios: ["sop", "keep", "reinforce"],
                 stats: {
                     legendary: { marchSize: 4162, marchSizePct: 0 }
@@ -368,7 +388,7 @@ const MARCH_SIZE_DATA = {
             "Floral Brooch": {
                 season: 12,
                 set: "Floral",
-                img: "item/ring.png",
+                img: "trinkets/icon_eq_events_harvest_trinket_1.png",
                 scenarios: ["sop", "keep", "reinforce"],
                 stats: {
                     legendary: { marchSize: 3721, marchSizePct: 0 }
@@ -376,8 +396,8 @@ const MARCH_SIZE_DATA = {
             },
             "Bronze Cutlery": {
                 season: 11,
-                set: "Bronze",
-                img: "item/ring.png",
+                set: "Relics of the First Man",
+                img: "trinkets/icon_eq_events_thenn_trinket_1.png",
                 scenarios: ["sop", "keep", "reinforce"],
                 stats: {
                     legendary: { marchSize: 3216, marchSizePct: 0 }
@@ -526,8 +546,8 @@ const MARCH_SIZE_DATA = {
                 title: "Servant of Many-Faced God",
                 img: "heroes/jaqen_b.png",
                 positions: ["ships"],
-                maxLevel: 60,
-                quality: "legendary",
+                maxLevel: 50,
+                quality: "exquisite",
                 // Council skill 6 at level 40: +3,084 flat march size (MarchSizeVsPlayer)
                 councilMarchSize: { type: 'flat', unlockLevel: 40, value: 3084 }
             },
@@ -619,12 +639,12 @@ const MARCH_SIZE_DATA = {
             northernArtifacts: { name: "Northern Artifacts", type: "trinket", minLevel: 0, maxLevel: 150, minMS: 0, maxMS: 854 },
             ancientOrders: { name: "Ancient Order's", type: "trinket", minLevel: 0, maxLevel: 150, minMS: 0, maxMS: 854 }
         },
-        // Dragon Armories (126+ level range)
         // Dragon Armories (0-150 level range, max 895 march size)
+        // Ordered by game season (newest first)
         dragon: {
+            tarnishedSeafarer: { name: "Tarnished Seafarer", type: "dragon", minLevel: 0, maxLevel: 150, minMS: 0, maxMS: 895 },
             tideBreaker: { name: "Tide Breaker", type: "dragon", minLevel: 0, maxLevel: 150, minMS: 0, maxMS: 895 },
-            regalSerpent: { name: "Regal Serpent", type: "dragon", minLevel: 0, maxLevel: 150, minMS: 0, maxMS: 895 },
-            tarnishedSeafarer: { name: "Tarnished Seafarer", type: "dragon", minLevel: 0, maxLevel: 150, minMS: 0, maxMS: 895 }
+            regalSerpent: { name: "Regal Serpent", type: "dragon", minLevel: 0, maxLevel: 150, minMS: 0, maxMS: 895 }
         }
     },
 
@@ -888,6 +908,22 @@ const MARCH_SIZE_DATA = {
     // QUALITY TIERS
     // ============================================
     qualities: ["poor", "common", "fine", "exquisite", "epic", "legendary"],
+    // ============================================
+    // SOP ATTACKER TITLES
+    // Title bonuses based on the Seat of Power you hold
+    // Community naming: X-Star Attacker vs Seat of Power
+    // ============================================
+    sopTitles: {
+        none: { name: "No Title", stars: 0, marchSize: 0 },
+        star2: { name: "2-Star Attacker", stars: 2, marchSize: 108234 },
+        star2_5: { name: "2.5-Star Attacker", stars: 2.5, marchSize: 113009 },
+        star3: { name: "3-Star Attacker", stars: 3, marchSize: 117147 },
+        star3_5: { name: "3.5-Star Attacker", stars: 3.5, marchSize: 120967 },
+        star4: { name: "4-Star Attacker", stars: 4, marchSize: 135000 },
+        star4_5: { name: "4.5-Star Attacker", stars: 4.5, marchSize: 150000 },
+        kl: { name: "KL Attacker", stars: 5, marchSize: 175000 }
+    },
+
     qualityColors: {
         poor: "#9d9d9d",
         common: "#32CD32",
