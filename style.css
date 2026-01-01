@@ -10496,12 +10496,13 @@ button.multiplier-btn {
 /* Gear Card Container */
 .ms-gear-card {
     overflow: visible;
+    padding: 0 !important; /* Remove padding to gain more room */
 }
 
 .ms-gear-card .ms-input-card__header {
     text-align: center;
     border-bottom: 1px solid var(--glass-border);
-    padding-bottom: 16px;
+    padding: 20px 20px 16px 20px; /* Add padding back to header only */
     margin-bottom: 0;
 }
 
@@ -10596,8 +10597,8 @@ button.multiplier-btn {
 
 .ms-gear-slot-visual__image {
     position: relative;
-    width: 90px;
-    height: 90px;
+    width: 100px;
+    height: 100px;
     border-radius: 12px;
     overflow: hidden;
     background: rgba(128, 128, 128, 0.3);
@@ -11372,6 +11373,83 @@ button.multiplier-btn {
     }
 }
 
+/* Pixel 7 and similar devices (412px) - Single column for better readability */
+@media (max-width: 450px) {
+    .ms-armory-grid.ms-armory-grid--vertical {
+        grid-template-columns: 1fr; /* Single column for better readability */
+        gap: 12px;
+    }
+    
+    .ms-armory-item.ms-armory-item--vertical {
+        padding: 0;
+        gap: 6px;
+        display: flex;
+        align-items: center;
+        text-align: center;
+    }
+    
+    .ms-armory-item.ms-armory-item--vertical > label {
+        font-size: var(--font-size-sm);
+        min-height: auto;
+        line-height: 1.2;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+    
+    /* Icon container - 80px by 80px */
+    .ms-armory-item.ms-armory-item--vertical > .ms-armory-icon {
+        width: 80px;
+        height: 80px;
+        min-width: 80px;
+        min-height: 80px;
+        padding: 8px;
+        object-fit: contain;
+    }
+    
+    .ms-armory-item.ms-armory-item--vertical > .ms-armory-icons {
+        height: 80px;
+        min-width: 100%;
+        min-height: 80px;
+        padding: 8px;
+    }
+    
+    .ms-armory-item.ms-armory-item--vertical > .ms-armory-icons .ms-armory-icon {
+        width: 60px !important;
+        height: 60px !important;
+        max-width: 60px !important;
+        max-height: 60px !important;
+    }
+    
+    /* Slider group */
+    .ms-armory-item.ms-armory-item--vertical > .ms-armory-slider-group {
+        width: 100%;
+        align-items: center;
+    }
+    
+    /* Larger slider for better visibility on small screens */
+    .ms-armory-slider {
+        height: 8px;
+    }
+    
+    .ms-armory-slider::-webkit-slider-thumb {
+        width: 20px;
+        height: 20px;
+        border-width: 2px;
+    }
+    
+    .ms-armory-slider::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+        border-width: 2px;
+    }
+    
+    .ms-armory-slider-group .ms-armory-value {
+        text-align: center !important;
+        width: 100%;
+        display: block;
+    }
+}
+
 /* Legacy horizontal layout responsive */
 @media (max-width: 1200px) {
     .ms-armory-grid:not(.ms-armory-grid--vertical) {
@@ -11470,6 +11548,8 @@ button.multiplier-btn {
     grid-template-columns: repeat(3, 1fr);
     gap: 16px;
     padding: 16px;
+    overflow: hidden; /* Prevent overflow */
+    box-sizing: border-box;
 }
 
 @media (max-width: 1200px) {
@@ -11481,6 +11561,32 @@ button.multiplier-btn {
 @media (max-width: 768px) {
     .ms-research-grid {
         grid-template-columns: 1fr;
+        padding: 12px;
+        gap: 12px;
+    }
+    
+    .ms-research-category {
+        padding: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .ms-research-grid {
+        padding: 8px;
+        gap: 10px;
+    }
+    
+    .ms-research-category {
+        padding: 8px;
+    }
+    
+    .ms-research-slider-item {
+        padding: 5px 6px;
+        gap: 6px;
+    }
+    
+    .ms-research-items {
+        gap: 6px;
     }
 }
 
@@ -11489,6 +11595,9 @@ button.multiplier-btn {
     border-radius: 8px;
     padding: 12px;
     border: 1px solid rgba(255, 255, 255, 0.05);
+    overflow: hidden; /* Prevent content from overflowing */
+    box-sizing: border-box;
+    max-width: 100%; /* Ensure it doesn't exceed container */
 }
 
 .ms-research-category__header {
@@ -12515,10 +12624,22 @@ button.multiplier-btn {
 
 /* Recommendations Card */
 .ms-recommendations-card {
-    padding: 20px;
+    padding: 16px;
     margin-bottom: 20px;
     width: 100%;
     box-sizing: border-box;
+}
+
+@media (max-width: 900px) {
+    .ms-recommendations-card {
+        padding: 12px;
+    }
+}
+
+@media (max-width: 600px) {
+    .ms-recommendations-card {
+        padding: 8px;
+    }
 }
 
 .ms-recommendations-card__title {
@@ -12952,6 +13073,16 @@ button.multiplier-btn {
     text-align: center;
 }
 
+/* Move label to top in current gear display */
+.ms-opt-gear--current {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ms-opt-gear--current .ms-opt-gear__label {
+    order: -1; /* Move label to top */
+    margin-bottom: 8px;
+}
+
 .ms-opt-gear__label {
     font-size: 0.65rem;
     text-transform: uppercase;
@@ -12960,22 +13091,49 @@ button.multiplier-btn {
     margin-bottom: 4px;
 }
 
-.ms-opt-gear--current {
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
 
-.ms-opt-gear--recommended {
-    border: 1px dashed rgba(255, 193, 7, 0.4);
-}
-
+/* Larger images for better visibility - 80px for both current and recommended */
 .ms-opt-gear__image {
-    width: 50px;
-    height: 50px;
+    width: 80px;
+    height: 80px;
     border-radius: 8px;
     overflow: hidden;
     background: rgba(0, 0, 0, 0.3);
     border: 2px solid;
     flex-shrink: 0;
+}
+
+/* Recommended gear - label at top, image shifted to the right (similar to ms-gear-slot-visual) */
+.ms-opt-gear--recommended {
+    border: 1px dashed rgba(255, 193, 7, 0.4);
+    flex-direction: row;
+    align-items: flex-start;
+    text-align: left;
+    position: relative;
+}
+
+.ms-opt-gear--recommended .ms-opt-gear__label {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    order: 0;
+    margin-bottom: 0;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: rgba(255, 193, 7, 0.9);
+}
+
+.ms-opt-gear--recommended .ms-opt-gear__image {
+    margin-left: auto; /* Push image to the right */
+    order: 2;
+}
+
+.ms-opt-gear--recommended .ms-opt-gear__info {
+    flex: 1;
+    order: 1;
+    padding-right: 12px;
+    min-width: 0;
 }
 
 .ms-opt-gear__image img {
@@ -13477,8 +13635,13 @@ button.multiplier-btn {
     }
     
     .ms-opt-gear__image {
-        width: 50px;
-        height: 50px;
+        width: 70px;
+        height: 70px;
+    }
+    
+    .ms-opt-gear--recommended .ms-opt-gear__image {
+        width: 70px;
+        height: 70px;
     }
     
     .ms-opt-title-card {
@@ -13543,10 +13706,45 @@ button.multiplier-btn {
         padding: 8px;
     }
     
+    .ms-opt-gear--current {
+        flex-direction: column; /* Keep vertical layout on mobile for label on top */
+        text-align: center;
+    }
+    
+    .ms-opt-gear--current .ms-opt-gear__label {
+        order: -1;
+        margin-bottom: 6px;
+    }
+    
     .ms-opt-gear__image {
-        width: 45px;
-        height: 45px;
+        width: 60px;
+        height: 60px;
         flex-shrink: 0;
+    }
+    
+    .ms-opt-gear--recommended {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .ms-opt-gear--recommended .ms-opt-gear__label {
+        position: static;
+        order: -1;
+        margin-bottom: 8px;
+        left: auto;
+        top: auto;
+    }
+    
+    .ms-opt-gear--recommended .ms-opt-gear__image {
+        margin-left: 0;
+        order: 0;
+        width: 60px;
+        height: 60px;
+    }
+    
+    .ms-opt-gear--recommended .ms-opt-gear__info {
+        order: 1;
+        padding-right: 0;
     }
     
     .ms-opt-gear__name {
@@ -13656,8 +13854,13 @@ button.multiplier-btn {
     }
     
     .ms-opt-gear__image {
-        width: 40px;
-        height: 40px;
+        width: 50px;
+        height: 50px;
+    }
+    
+    .ms-opt-gear--recommended .ms-opt-gear__image {
+        width: 50px;
+        height: 50px;
     }
     
     .ms-opt-gear__name {
@@ -13889,8 +14092,8 @@ button.multiplier-btn {
     }
     
     .ms-gear-slot-visual__image {
-        width: 80px;
-        height: 80px;
+        width: 90px;
+        height: 90px;
     }
 }
 
@@ -13902,8 +14105,8 @@ button.multiplier-btn {
     }
     
     .ms-gear-slot-visual__image {
-        width: 70px;
-        height: 70px;
+        width: 80px;
+        height: 80px;
     }
     
     .ms-gear-slot-visual__label {
@@ -13943,8 +14146,8 @@ button.multiplier-btn {
     }
 
     .ms-gear-slot-visual__image {
-        width: 55px;
-        height: 55px;
+        width: 80px;
+        height: 80px;
         flex-shrink: 0;
     }
 
@@ -14001,8 +14204,8 @@ button.multiplier-btn {
 
     .ms-gear-slot-visual__image {
         position: static;
-        width: 45px;
-        height: 45px;
+        width: 80px;
+        height: 80px;
         flex-shrink: 0;
     }
 
@@ -14301,9 +14504,14 @@ button.multiplier-btn {
     }
     
     .accordion-toggle {
-        padding: 12px;
+        padding: 1px;
         font-size: var(--font-size-sm);
     }
+    
+    .ms-section-total {
+        margin-right: 0px;
+    }
+
     
     .ms-heroes-category {
         padding: 12px;
