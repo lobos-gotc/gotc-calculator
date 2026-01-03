@@ -572,8 +572,8 @@ const MARCH_SIZE_DATA = {
                 positions: ["commander"],
                 maxLevel: 60,
                 quality: "legendary",
-                // Council skill 3 at level 20: +1,148 flat march size
-                councilMarchSize: { type: 'flat', unlockLevel: 20, value: 1148 }
+                // Council skill 3 at level 10: +1,148 flat march size
+                councilMarchSize: { type: 'flat', unlockLevel: 10, value: 1148 }
             },
             gwayne: {
                 name: "Gwayne Hightower",
