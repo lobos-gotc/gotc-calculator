@@ -11014,6 +11014,139 @@ button.multiplier-btn {
     text-align: center;
 }
 
+/* Picker Wheel Styles */
+.ms-building-card--expandable {
+    cursor: pointer;
+    position: relative;
+}
+
+.ms-building-card--expanded {
+    min-height: 250px;
+}
+
+.ms-building-card__picker-container {
+    position: relative;
+    width: 100%;
+    min-height: 200px;
+    margin-top: 16px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.ms-building-card__picker-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+    opacity: 0.15;
+    filter: blur(8px);
+}
+
+.ms-building-card__picker-background img {
+    max-width: 200%;
+    max-height: 200%;
+    object-fit: contain;
+}
+
+.ms-picker-wheel {
+    position: relative;
+    display: flex;
+    width: 100%;
+    height: 200px;
+    z-index: 2;
+    padding: 0;
+    justify-content: center;
+}
+
+.ms-picker-wheel__column {
+    width: 100%;
+    max-width: 300px;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    scroll-snap-type: y proximity;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    position: relative;
+    padding: 80px 0;
+}
+
+.ms-picker-wheel__column::-webkit-scrollbar {
+    display: none;
+}
+
+.ms-picker-wheel__column {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.ms-picker-wheel__item {
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    scroll-snap-align: center;
+    scroll-snap-stop: always;
+    font-size: var(--font-size-base);
+    color: var(--text-color);
+    transition: all 0.2s ease;
+    user-select: none;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.ms-picker-wheel__item.selected {
+    color: var(--primary-color);
+    font-weight: var(--font-weight-bold);
+    font-size: var(--font-size-lg);
+}
+
+.ms-picker-wheel__item.selected span {
+    color: var(--success-color);
+    font-weight: var(--font-weight-semibold);
+}
+
+.ms-picker-wheel__selection {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 40px;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    z-index: 3;
+    pointer-events: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.ms-picker-wheel__column::before,
+.ms-picker-wheel__column::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 80px;
+    z-index: 4;
+    pointer-events: none;
+}
+
+.ms-picker-wheel__column::before {
+    top: 0;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0) 100%);
+}
+
+.ms-picker-wheel__column::after {
+    bottom: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0) 100%);
+}
+
 /* Responsive for building cards */
 @media (max-width: 900px) {
     .ms-building-grid.ms-building-grid--3col {
@@ -11030,6 +11163,40 @@ button.multiplier-btn {
     
     .ms-building-card__image {
         height: 120px;
+    }
+    
+    .ms-building-card--expanded {
+        min-height: 250px;
+    }
+    
+    .ms-building-card__picker-container {
+        min-height: 180px;
+    }
+    
+    .ms-picker-wheel {
+        height: 180px;
+    }
+    
+    .ms-picker-wheel__column {
+        padding: 70px 0;
+    }
+    
+    .ms-picker-wheel__item {
+        height: 40px;
+        font-size: var(--font-size-base);
+    }
+    
+    .ms-picker-wheel__item.selected {
+        font-size: var(--font-size-lg);
+    }
+    
+    .ms-picker-wheel__selection {
+        height: 40px;
+    }
+    
+    .ms-picker-wheel__column::before,
+    .ms-picker-wheel__column::after {
+        height: 70px;
     }
 }
 
@@ -11054,6 +11221,44 @@ button.multiplier-btn {
     border-color: var(--primary-color);
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.ms-armory-item--expandable {
+    cursor: pointer;
+}
+
+.ms-armory-item--expandable.ms-armory-item--expanded {
+    min-height: 250px;
+}
+
+.ms-armory-item__picker-container {
+    position: relative;
+    width: 100%;
+    min-height: 200px;
+    margin-top: 12px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.ms-armory-item__picker-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+    opacity: 0.15;
+    filter: blur(8px);
+}
+
+.ms-armory-item__picker-background img {
+    max-width: 150%;
+    max-height: 150%;
+    object-fit: contain;
 }
 
 .ms-armory-item.ms-armory-item--vertical > label {
@@ -11679,6 +11884,49 @@ button.multiplier-btn {
     border-color: rgba(255, 255, 255, 0.1);
 }
 
+.ms-research-slider-item--expandable {
+    cursor: pointer;
+    position: relative;
+}
+
+.ms-research-slider-item--expandable.ms-research-slider-item--expanded {
+    flex-direction: column;
+}
+
+.ms-research-slider-item--expanded {
+    min-height: 250px;
+}
+
+.ms-research-slider-item__picker-container {
+    position: relative;
+    width: 100%;
+    min-height: 200px;
+    margin-top: 8px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.ms-research-slider-item__picker-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+    opacity: 0.15;
+    filter: blur(8px);
+}
+
+.ms-research-slider-item__picker-background img {
+    max-width: 150%;
+    max-height: 150%;
+    object-fit: contain;
+}
+
 .ms-research-slider-icon {
     width: 28px;
     height: 28px;
@@ -12021,6 +12269,47 @@ button.multiplier-btn {
     display: flex;
     align-items: center;
     gap: 10px;
+    position: relative;
+}
+
+.ms-hall-slider-group--expandable {
+    cursor: pointer;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.ms-hall-slider-group--expandable.ms-hall-slider-group--expanded {
+    min-height: 250px;
+}
+
+.ms-hall-slider-group__picker-container {
+    position: relative;
+    width: 100%;
+    min-height: 200px;
+    margin-top: 8px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.ms-hall-slider-group__picker-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+    opacity: 0.15;
+    filter: blur(8px);
+}
+
+.ms-hall-slider-group__picker-background img {
+    max-width: 150%;
+    max-height: 150%;
+    object-fit: contain;
 }
 
 .ms-hall-slider {
@@ -12080,6 +12369,45 @@ button.multiplier-btn {
     display: flex;
     flex-direction: column;
     gap: 6px;
+    position: relative;
+}
+
+.ms-marching-slider-group--expandable {
+    cursor: pointer;
+}
+
+.ms-marching-slider-group--expandable.ms-marching-slider-group--expanded {
+    min-height: 250px;
+}
+
+.ms-marching-slider-group__picker-container {
+    position: relative;
+    width: 100%;
+    min-height: 200px;
+    margin-top: 8px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.ms-marching-slider-group__picker-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+    opacity: 0.15;
+    filter: blur(8px);
+}
+
+.ms-marching-slider-group__picker-background img {
+    max-width: 150%;
+    max-height: 150%;
+    object-fit: contain;
 }
 
 .ms-marching-slider {
@@ -12117,6 +12445,14 @@ button.multiplier-btn {
     border-radius: 10px;
     transition: all 0.2s ease;
     min-width: 140px;
+}
+
+.ms-hero-slot--expandable {
+    cursor: pointer;
+}
+
+.ms-hero-slot--expandable.ms-hero-slot--expanded {
+    min-height: 350px;
 }
 
 .ms-hero-slot:hover {
@@ -12295,6 +12631,83 @@ button.multiplier-btn {
     flex-direction: column;
     align-items: center;
     gap: 4px;
+    position: relative;
+}
+
+.ms-hero-slider-wrapper--expandable {
+    cursor: pointer;
+}
+
+.ms-hero-slider-wrapper--expandable.ms-hero-slider-wrapper--expanded {
+    flex-direction: column;
+}
+
+.ms-hero-slot__picker-container {
+    position: relative;
+    width: 100%;
+    min-height: 250px;
+    margin-top: 12px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.ms-hero-slot__picker-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+    opacity: 0.15;
+    filter: blur(8px);
+}
+
+.ms-hero-slot__picker-background img {
+    max-width: 150%;
+    max-height: 150%;
+    object-fit: contain;
+}
+
+.ms-picker-wheel-dual {
+    position: relative;
+    display: flex;
+    width: 100%;
+    height: 250px;
+    z-index: 2;
+    padding: 0;
+    justify-content: center;
+    gap: 16px;
+}
+
+.ms-picker-wheel-dual .ms-picker-wheel {
+    flex: 1;
+    max-width: calc(50% - 8px);
+    position: relative;
+}
+
+.ms-picker-wheel-dual .ms-picker-wheel__column {
+    width: 100%;
+    max-width: 100%;
+}
+
+/* Allow text wrapping for hero names in picker wheels */
+.ms-picker-wheel--hero .ms-picker-wheel__item {
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    line-height: 1.3;
+    padding: 8px 4px;
+    text-align: center;
+    hyphens: auto;
+}
+
+/* Level picker items can stay single line */
+.ms-picker-wheel--level .ms-picker-wheel__item {
+    white-space: nowrap;
 }
 
 .ms-hero-slider {

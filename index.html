@@ -1199,28 +1199,50 @@
                             <div class="ms-armory-category">
                                 <h4 class="ms-armory-category__title">Building Levels <span class="ms-stat-hint">(34-40 range)</span></h4>
                                 <div class="ms-building-grid">
-                                    <div class="ms-building-card">
+                                    <div class="ms-building-card ms-building-card--expandable" data-building="keep" data-building-id="msKeepLevel">
                                         <div class="ms-building-card__image">
                                             <img src="resources/buildings/structures_keep_icon_02.png" alt="Keep">
                                         </div>
                                         <div class="ms-building-card__content">
                                             <label for="msKeepLevel" class="ms-building-card__title">Keep</label>
                                             <div class="ms-building-card__slider">
-                                                <input type="range" id="msKeepLevel" class="ms-armory-slider" min="1" max="40" value="35">
-                                                <span class="ms-armory-value" id="msKeepLevelDisplay">Lv 35</span>
+                                                <input type="hidden" id="msKeepLevel" value="40">
+                                                <span class="ms-armory-value" id="msKeepLevelDisplay">Lv 40</span>
                                             </div>
                                         </div>
+                                        <div class="ms-building-card__picker-container" style="display: none;">
+                                            <div class="ms-building-card__picker-background">
+                                                <img src="resources/buildings/structures_keep_icon_02.png" alt="Keep">
+                                            </div>
+                                            <div class="ms-picker-wheel">
+                                                <div class="ms-picker-wheel__column" id="msKeepLevelPicker">
+                                                    <!-- Level and value combined will be populated by JavaScript -->
+                                                </div>
+                                            </div>
+                                            <div class="ms-picker-wheel__selection"></div>
+                                        </div>
                                     </div>
-                                    <div class="ms-building-card">
+                                    <div class="ms-building-card ms-building-card--expandable" data-building="trainingYard" data-building-id="msTrainingYardLevel">
                                         <div class="ms-building-card__image">
                                             <img src="resources/buildings/structures_trainingyard_icon_01.png" alt="Training Yard">
                                         </div>
                                         <div class="ms-building-card__content">
                                             <label for="msTrainingYardLevel" class="ms-building-card__title">Training Yard</label>
                                             <div class="ms-building-card__slider">
-                                                <input type="range" id="msTrainingYardLevel" class="ms-armory-slider" min="0" max="40" value="0">
-                                                <span class="ms-armory-value" id="msTrainingYardLevelDisplay">Lv 0</span>
+                                                <input type="hidden" id="msTrainingYardLevel" value="40">
+                                                <span class="ms-armory-value" id="msTrainingYardLevelDisplay">Lv 40</span>
                                             </div>
+                                        </div>
+                                        <div class="ms-building-card__picker-container" style="display: none;">
+                                            <div class="ms-building-card__picker-background">
+                                                <img src="resources/buildings/structures_trainingyard_icon_01.png" alt="Training Yard">
+                                            </div>
+                                            <div class="ms-picker-wheel">
+                                                <div class="ms-picker-wheel__column" id="msTrainingYardLevelPicker">
+                                                    <!-- Level and value combined will be populated by JavaScript -->
+                                                </div>
+                                            </div>
+                                            <div class="ms-picker-wheel__selection"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -1251,40 +1273,73 @@
                             <div class="ms-armory-category">
                                 <h4 class="ms-armory-category__title">Building Enhancements</h4>
                                 <div class="ms-building-grid ms-building-grid--3col">
-                                    <div class="ms-building-card">
+                                    <div class="ms-building-card ms-building-card--expandable" data-building="greatHall" data-building-id="msGreatHallLevel">
                                         <div class="ms-building-card__image">
                                             <img src="resources/buildings/structures_greathall_icon_01.png" alt="Great Hall">
                                         </div>
                                         <div class="ms-building-card__content">
                                             <label for="msGreatHallLevel" class="ms-building-card__title">Great Hall</label>
                                             <div class="ms-building-card__slider">
-                                                <input type="range" id="msGreatHallLevel" class="ms-armory-slider" min="0" max="25" value="0">
-                                                <span class="ms-armory-value" id="msGreatHallLevelDisplay">Lv 0</span>
+                                                <input type="hidden" id="msGreatHallLevel" value="25">
+                                                <span class="ms-armory-value" id="msGreatHallLevelDisplay">Lv 25</span>
                                             </div>
                                         </div>
+                                        <div class="ms-building-card__picker-container" style="display: none;">
+                                            <div class="ms-building-card__picker-background">
+                                                <img src="resources/buildings/structures_greathall_icon_01.png" alt="Great Hall">
+                                            </div>
+                                            <div class="ms-picker-wheel">
+                                                <div class="ms-picker-wheel__column" id="msGreatHallLevelPicker">
+                                                    <!-- Level and value combined will be populated by JavaScript -->
+                                                </div>
+                                            </div>
+                                            <div class="ms-picker-wheel__selection"></div>
+                                        </div>
                                     </div>
-                                    <div class="ms-building-card">
+                                    <div class="ms-building-card ms-building-card--expandable" data-building="watchtower" data-building-id="msWatchtowerLevel">
                                         <div class="ms-building-card__image">
                                             <img src="resources/buildings/structures_watchtower_icon_01.png" alt="Watchtower">
                                         </div>
                                         <div class="ms-building-card__content">
                                             <label for="msWatchtowerLevel" class="ms-building-card__title">Watchtower</label>
                                             <div class="ms-building-card__slider">
-                                                <input type="range" id="msWatchtowerLevel" class="ms-armory-slider" min="0" max="20" value="0">
-                                                <span class="ms-armory-value" id="msWatchtowerLevelDisplay">Lv 0</span>
+                                                <input type="hidden" id="msWatchtowerLevel" value="20">
+                                                <span class="ms-armory-value" id="msWatchtowerLevelDisplay">Lv 20</span>
                                             </div>
                                         </div>
+                                        <div class="ms-building-card__picker-container" style="display: none;">
+                                            <div class="ms-building-card__picker-background">
+                                                <img src="resources/buildings/structures_watchtower_icon_01.png" alt="Watchtower">
+                                            </div>
+                                            <div class="ms-picker-wheel">
+                                                <div class="ms-picker-wheel__column" id="msWatchtowerLevelPicker">
+                                                    <!-- Level and value combined will be populated by JavaScript -->
+                                                </div>
+                                            </div>
+                                            <div class="ms-picker-wheel__selection"></div>
+                                        </div>
                                     </div>
-                                    <div class="ms-building-card">
+                                    <div class="ms-building-card ms-building-card--expandable" data-building="keepEnhancement" data-building-id="msKeepEnhancementLevel">
                                         <div class="ms-building-card__image">
                                             <img src="resources/buildings/structures_keep_icon_02.png" alt="Keep Enhancement">
                                         </div>
                                         <div class="ms-building-card__content">
                                             <label for="msKeepEnhancementLevel" class="ms-building-card__title">Keep (March Size %)</label>
                                             <div class="ms-building-card__slider">
-                                                <input type="range" id="msKeepEnhancementLevel" class="ms-armory-slider" min="0" max="40" value="0">
-                                                <span class="ms-armory-value" id="msKeepEnhancementLevelDisplay">Lv 0</span>
+                                                <input type="hidden" id="msKeepEnhancementLevel" value="40">
+                                                <span class="ms-armory-value" id="msKeepEnhancementLevelDisplay">Lv 40</span>
                                             </div>
+                                        </div>
+                                        <div class="ms-building-card__picker-container" style="display: none;">
+                                            <div class="ms-building-card__picker-background">
+                                                <img src="resources/buildings/structures_keep_icon_02.png" alt="Keep Enhancement">
+                                            </div>
+                                            <div class="ms-picker-wheel">
+                                                <div class="ms-picker-wheel__column" id="msKeepEnhancementLevelPicker">
+                                                    <!-- Level and value combined will be populated by JavaScript -->
+                                                </div>
+                                            </div>
+                                            <div class="ms-picker-wheel__selection"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -1319,20 +1374,42 @@
                                 <h4 class="ms-armory-category__title">Standard Armories <span class="ms-category-total" id="msStandardArmoriesTotal">(+0 / 36,839)</span></h4>
                                 <div class="ms-armory-grid ms-armory-grid--vertical">
                                     <!-- Ordered by game season (newest first) -->
-                                    <div class="ms-armory-item ms-armory-item--vertical">
+                                    <div class="ms-armory-item ms-armory-item--vertical ms-armory-item--expandable" data-armory-id="msArmoryOneEyedPrince" data-armory-key="oneEyedPrince">
                                         <label for="msArmoryOneEyedPrince">One Eyed Prince</label>
                                         <img src="resources/armories/oneEyedPrince.png" alt="OneEyedPrince" class="ms-armory-icon">
                                         <div class="ms-armory-slider-group">
-                                            <input type="range" id="msArmoryOneEyedPrince" class="ms-armory-slider" min="0" max="236" value="0" data-armory="oneEyedPrince">
+                                            <input type="hidden" id="msArmoryOneEyedPrince" value="0" data-armory="oneEyedPrince">
                                             <span class="ms-armory-value" id="msArmoryOneEyedPrinceDisplay">0</span>
                                         </div>
+                                        <div class="ms-armory-item__picker-container" style="display: none;">
+                                            <div class="ms-armory-item__picker-background">
+                                                <img src="resources/armories/oneEyedPrince.png" alt="One Eyed Prince">
+                                            </div>
+                                            <div class="ms-picker-wheel">
+                                                <div class="ms-picker-wheel__column" id="msArmoryOneEyedPrincePicker">
+                                                    <!-- Levels will be populated by JavaScript -->
+                                                </div>
+                                            </div>
+                                            <div class="ms-picker-wheel__selection"></div>
+                                        </div>
                                     </div>
-                                    <div class="ms-armory-item ms-armory-item--vertical">
+                                    <div class="ms-armory-item ms-armory-item--vertical ms-armory-item--expandable" data-armory-id="msArmoryFrozenStark" data-armory-key="frozenStark">
                                         <label for="msArmoryFrozenStark">Frozen Stark</label>
                                         <img src="resources/armories/frozenStark.png" alt="FrozenStark" class="ms-armory-icon">
                                         <div class="ms-armory-slider-group">
-                                            <input type="range" id="msArmoryFrozenStark" class="ms-armory-slider" min="0" max="236" value="0" data-armory="frozenStark">
+                                            <input type="hidden" id="msArmoryFrozenStark" value="0" data-armory="frozenStark">
                                             <span class="ms-armory-value" id="msArmoryFrozenStarkDisplay">0</span>
+                                        </div>
+                                        <div class="ms-armory-item__picker-container" style="display: none;">
+                                            <div class="ms-armory-item__picker-background">
+                                                <img src="resources/armories/frozenStark.png" alt="Frozen Stark">
+                                            </div>
+                                            <div class="ms-picker-wheel">
+                                                <div class="ms-picker-wheel__column" id="msArmoryFrozenStarkPicker">
+                                                    <!-- Levels will be populated by JavaScript -->
+                                                </div>
+                                            </div>
+                                            <div class="ms-picker-wheel__selection"></div>
                                         </div>
                                     </div>
                                     <div class="ms-armory-item ms-armory-item--vertical">
@@ -1599,34 +1676,67 @@
                                     <h4>Military I <span class="ms-category-total" id="msMilitary1Total">(+0 / 30,000)</span></h4>
                                 </div>
                                 <div class="ms-research-sliders">
-                                    <div class="ms-research-slider-item">
+                                    <div class="ms-research-slider-item ms-research-slider-item--expandable" data-research-id="msCommand" data-research-key="command">
                                         <img src="resources/research/icon_research_command.png" alt="Command" class="ms-research-slider-icon">
                                         <div class="ms-research-slider-content">
                                             <div class="ms-research-slider-header">
                                                 <span class="ms-research-slider-name">Command</span>
                                                 <span class="ms-research-slider-value" id="msCommandValue">0 / 6,000</span>
                                             </div>
-                                            <input type="range" id="msCommand" class="ms-research-range" min="0" max="3" value="0">
+                                            <input type="hidden" id="msCommand" value="3">
+                                        </div>
+                                        <div class="ms-research-slider-item__picker-container" style="display: none;">
+                                            <div class="ms-research-slider-item__picker-background">
+                                                <img src="resources/research/icon_research_command.png" alt="Command">
+                                            </div>
+                                            <div class="ms-picker-wheel">
+                                                <div class="ms-picker-wheel__column" id="msCommandPicker">
+                                                    <!-- Levels will be populated by JavaScript -->
+                                                </div>
+                                            </div>
+                                            <div class="ms-picker-wheel__selection"></div>
                                         </div>
                                     </div>
-                                    <div class="ms-research-slider-item">
+                                    <div class="ms-research-slider-item ms-research-slider-item--expandable" data-research-id="msCommand2" data-research-key="command2">
                                         <img src="resources/research/icon_research_command.png" alt="Command II" class="ms-research-slider-icon">
                                         <div class="ms-research-slider-content">
                                             <div class="ms-research-slider-header">
                                                 <span class="ms-research-slider-name">Command II</span>
                                                 <span class="ms-research-slider-value" id="msCommand2Value">0 / 10,000</span>
                                             </div>
-                                            <input type="range" id="msCommand2" class="ms-research-range" min="0" max="5" value="0">
+                                            <input type="hidden" id="msCommand2" value="0">
+                                        </div>
+                                        <div class="ms-research-slider-item__picker-container" style="display: none;">
+                                            <div class="ms-research-slider-item__picker-background">
+                                                <img src="resources/research/icon_research_command.png" alt="Command II">
+                                            </div>
+                                            <div class="ms-picker-wheel">
+                                                <div class="ms-picker-wheel__column" id="msCommand2Picker">
+                                                    <!-- Levels will be populated by JavaScript -->
+                                                </div>
+                                            </div>
+                                            <div class="ms-picker-wheel__selection"></div>
                                         </div>
                                     </div>
-                                    <div class="ms-research-slider-item">
+                                    <div class="ms-research-slider-item ms-research-slider-item--expandable" data-research-id="msCommand3" data-research-key="command3">
                                         <img src="resources/research/icon_research_command.png" alt="Command III" class="ms-research-slider-icon">
                                         <div class="ms-research-slider-content">
                                             <div class="ms-research-slider-header">
                                                 <span class="ms-research-slider-name">Command III</span>
                                                 <span class="ms-research-slider-value" id="msCommand3Value">0 / 14,000</span>
                                             </div>
-                                            <input type="range" id="msCommand3" class="ms-research-range" min="0" max="7" value="0">
+                                            <input type="hidden" id="msCommand3" value="7">
+                                        </div>
+                                        <div class="ms-research-slider-item__picker-container" style="display: none;">
+                                            <div class="ms-research-slider-item__picker-background">
+                                                <img src="resources/research/icon_research_command.png" alt="Command III">
+                                            </div>
+                                            <div class="ms-picker-wheel">
+                                                <div class="ms-picker-wheel__column" id="msCommand3Picker">
+                                                    <!-- Levels will be populated by JavaScript -->
+                                                </div>
+                                            </div>
+                                            <div class="ms-picker-wheel__selection"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -1638,44 +1748,88 @@
                                     <h4>Military II <span class="ms-category-total" id="msMilitary2Total">(+0 / 22,500)</span></h4>
                                 </div>
                                 <div class="ms-research-sliders">
-                                    <div class="ms-research-slider-item">
+                                    <div class="ms-research-slider-item ms-research-slider-item--expandable" data-research-id="msArmyExpertise" data-research-key="armyExpertise">
                                         <img src="resources/research/icon_research_command.png" alt="Army Expertise" class="ms-research-slider-icon">
                                         <div class="ms-research-slider-content">
                                             <div class="ms-research-slider-header">
                                                 <span class="ms-research-slider-name">Command of Army Expertise</span>
                                                 <span class="ms-research-slider-value" id="msArmyExpertiseValue">0 / 10,000</span>
                                             </div>
-                                            <input type="range" id="msArmyExpertise" class="ms-research-range" min="0" max="4" value="0">
+                                            <input type="hidden" id="msArmyExpertise" value="0">
+                                        </div>
+                                        <div class="ms-research-slider-item__picker-container" style="display: none;">
+                                            <div class="ms-research-slider-item__picker-background">
+                                                <img src="resources/research/icon_research_command.png" alt="Army Expertise">
+                                            </div>
+                                            <div class="ms-picker-wheel">
+                                                <div class="ms-picker-wheel__column" id="msArmyExpertisePicker">
+                                                    <!-- Levels will be populated by JavaScript -->
+                                                </div>
+                                            </div>
+                                            <div class="ms-picker-wheel__selection"></div>
                                         </div>
                                     </div>
-                                    <div class="ms-research-slider-item">
+                                    <div class="ms-research-slider-item ms-research-slider-item--expandable" data-research-id="msSop" data-research-key="sopMarchSize">
                                         <img src="resources/research/icon_research_march_size_vs_sop.png" alt="March Size vs SoP" class="ms-research-slider-icon">
                                         <div class="ms-research-slider-content">
                                             <div class="ms-research-slider-header">
                                                 <span class="ms-research-slider-name">March Size vs. SoP</span>
                                                 <span class="ms-research-slider-value" id="msSopValue">0 / 1,250</span>
                                             </div>
-                                            <input type="range" id="msSop" class="ms-research-range" min="0" max="5" value="0">
+                                            <input type="hidden" id="msSop" value="5">
+                                        </div>
+                                        <div class="ms-research-slider-item__picker-container" style="display: none;">
+                                            <div class="ms-research-slider-item__picker-background">
+                                                <img src="resources/research/icon_research_march_size_vs_sop.png" alt="March Size vs SoP">
+                                            </div>
+                                            <div class="ms-picker-wheel">
+                                                <div class="ms-picker-wheel__column" id="msSopPicker">
+                                                    <!-- Levels will be populated by JavaScript -->
+                                                </div>
+                                            </div>
+                                            <div class="ms-picker-wheel__selection"></div>
                                         </div>
                                     </div>
-                                    <div class="ms-research-slider-item">
+                                    <div class="ms-research-slider-item ms-research-slider-item--expandable" data-research-id="msArmyExpertise2" data-research-key="armyExpertise2">
                                         <img src="resources/research/icon_research_command.png" alt="Army Expertise II" class="ms-research-slider-icon">
                                         <div class="ms-research-slider-content">
                                             <div class="ms-research-slider-header">
                                                 <span class="ms-research-slider-name">Command of Army Expertise II</span>
                                                 <span class="ms-research-slider-value" id="msArmyExpertise2Value">0 / 10,000</span>
                                             </div>
-                                            <input type="range" id="msArmyExpertise2" class="ms-research-range" min="0" max="4" value="0">
+                                            <input type="hidden" id="msArmyExpertise2" value="0">
+                                        </div>
+                                        <div class="ms-research-slider-item__picker-container" style="display: none;">
+                                            <div class="ms-research-slider-item__picker-background">
+                                                <img src="resources/research/icon_research_command.png" alt="Army Expertise II">
+                                            </div>
+                                            <div class="ms-picker-wheel">
+                                                <div class="ms-picker-wheel__column" id="msArmyExpertise2Picker">
+                                                    <!-- Levels will be populated by JavaScript -->
+                                                </div>
+                                            </div>
+                                            <div class="ms-picker-wheel__selection"></div>
                                         </div>
                                     </div>
-                                    <div class="ms-research-slider-item">
+                                    <div class="ms-research-slider-item ms-research-slider-item--expandable" data-research-id="msSop2" data-research-key="sopMarchSize2">
                                         <img src="resources/research/icon_research_march_size_vs_sop.png" alt="March Size vs SoP II" class="ms-research-slider-icon">
                                         <div class="ms-research-slider-content">
                                             <div class="ms-research-slider-header">
                                                 <span class="ms-research-slider-name">March Size vs. SoP II</span>
                                                 <span class="ms-research-slider-value" id="msSop2Value">0 / 1,250</span>
                                             </div>
-                                            <input type="range" id="msSop2" class="ms-research-range" min="0" max="5" value="0">
+                                            <input type="hidden" id="msSop2" value="5">
+                                        </div>
+                                        <div class="ms-research-slider-item__picker-container" style="display: none;">
+                                            <div class="ms-research-slider-item__picker-background">
+                                                <img src="resources/research/icon_research_march_size_vs_sop.png" alt="March Size vs SoP II">
+                                            </div>
+                                            <div class="ms-picker-wheel">
+                                                <div class="ms-picker-wheel__column" id="msSop2Picker">
+                                                    <!-- Levels will be populated by JavaScript -->
+                                                </div>
+                                            </div>
+                                            <div class="ms-picker-wheel__selection"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -1687,34 +1841,67 @@
                                     <h4>Advanced Military <span class="ms-category-total" id="msAdvancedMilitaryTotal">(+0 / 5,750)</span></h4>
                                 </div>
                                 <div class="ms-research-sliders">
-                                    <div class="ms-research-slider-item">
+                                    <div class="ms-research-slider-item ms-research-slider-item--expandable" data-research-id="msTroopSurge1" data-research-key="troopSurge1">
                                         <img src="resources/research/icon_research_command.png" alt="Troop Surge I" class="ms-research-slider-icon">
                                         <div class="ms-research-slider-content">
                                             <div class="ms-research-slider-header">
                                                 <span class="ms-research-slider-name">Troop Surge I</span>
                                                 <span class="ms-research-slider-value" id="msTroopSurge1Value">0 / 750</span>
                                             </div>
-                                            <input type="range" id="msTroopSurge1" class="ms-research-range" min="0" max="3" value="0">
+                                            <input type="hidden" id="msTroopSurge1" value="3">
+                                        </div>
+                                        <div class="ms-research-slider-item__picker-container" style="display: none;">
+                                            <div class="ms-research-slider-item__picker-background">
+                                                <img src="resources/research/icon_research_command.png" alt="Troop Surge I">
+                                            </div>
+                                            <div class="ms-picker-wheel">
+                                                <div class="ms-picker-wheel__column" id="msTroopSurge1Picker">
+                                                    <!-- Levels will be populated by JavaScript -->
+                                                </div>
+                                            </div>
+                                            <div class="ms-picker-wheel__selection"></div>
                                         </div>
                                     </div>
-                                    <div class="ms-research-slider-item">
+                                    <div class="ms-research-slider-item ms-research-slider-item--expandable" data-research-id="msTroopSurge2" data-research-key="troopSurge2">
                                         <img src="resources/research/icon_research_command.png" alt="Troop Surge II" class="ms-research-slider-icon">
                                         <div class="ms-research-slider-content">
                                             <div class="ms-research-slider-header">
                                                 <span class="ms-research-slider-name">Troop Surge II</span>
                                                 <span class="ms-research-slider-value" id="msTroopSurge2Value">0 / 2,500</span>
                                             </div>
-                                            <input type="range" id="msTroopSurge2" class="ms-research-range" min="0" max="5" value="0">
+                                            <input type="hidden" id="msTroopSurge2" value="0">
+                                        </div>
+                                        <div class="ms-research-slider-item__picker-container" style="display: none;">
+                                            <div class="ms-research-slider-item__picker-background">
+                                                <img src="resources/research/icon_research_command.png" alt="Troop Surge II">
+                                            </div>
+                                            <div class="ms-picker-wheel">
+                                                <div class="ms-picker-wheel__column" id="msTroopSurge2Picker">
+                                                    <!-- Levels will be populated by JavaScript -->
+                                                </div>
+                                            </div>
+                                            <div class="ms-picker-wheel__selection"></div>
                                         </div>
                                     </div>
-                                    <div class="ms-research-slider-item">
+                                    <div class="ms-research-slider-item ms-research-slider-item--expandable" data-research-id="msTroopSurge3" data-research-key="troopSurge3">
                                         <img src="resources/research/icon_research_command.png" alt="Troop Surge III" class="ms-research-slider-icon">
                                         <div class="ms-research-slider-content">
                                             <div class="ms-research-slider-header">
                                                 <span class="ms-research-slider-name">Troop Surge III</span>
                                                 <span class="ms-research-slider-value" id="msTroopSurge3Value">0 / 2,500</span>
                                             </div>
-                                            <input type="range" id="msTroopSurge3" class="ms-research-range" min="0" max="5" value="0">
+                                            <input type="hidden" id="msTroopSurge3" value="5">
+                                        </div>
+                                        <div class="ms-research-slider-item__picker-container" style="display: none;">
+                                            <div class="ms-research-slider-item__picker-background">
+                                                <img src="resources/research/icon_research_command.png" alt="Troop Surge III">
+                                            </div>
+                                            <div class="ms-picker-wheel">
+                                                <div class="ms-picker-wheel__column" id="msTroopSurge3Picker">
+                                                    <!-- Levels will be populated by JavaScript -->
+                                                </div>
+                                            </div>
+                                            <div class="ms-picker-wheel__selection"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -1756,136 +1943,288 @@
                                 
                                 <!-- Top Row: Hand, War, Coin, Whispers -->
                                 <div class="ms-heroes-row">
-                                <div class="ms-hero-slot" data-position="hand">
+                                <div class="ms-hero-slot ms-hero-slot--expandable" data-position="hand" data-hero-position="hand">
                                     <div class="ms-hero-slot__visual">
                                         <img id="msHeroImg-hand" src="resources/heroes/icon-hand.png" alt="Hand" class="ms-hero-slot__image" data-default="heroes/icon-hand.png">
                                     </div>
                                     <div class="ms-hero-slot__controls">
                                         <span class="ms-hero-slot__title">Hand</span>
-                                        <select id="msHeroSelect-hand" class="ms-input ms-hero-select" data-position="hand">
+                                        <select id="msHeroSelect-hand" class="ms-input ms-hero-select" data-position="hand" style="display: none;">
                                             <option value="">-- None --</option>
                                         </select>
                                         <div class="ms-hero-slider-wrapper">
-                                            <input type="range" id="msHeroLevel-hand" class="ms-hero-slider" min="0" max="60" step="10" value="0" disabled data-position="hand">
+                                            <input type="hidden" id="msHeroLevel-hand" value="0" data-position="hand">
                                             <span class="ms-hero-level-display" id="msHeroLevelDisplay-hand">Lv 0</span>
                                         </div>
                                         <span class="ms-hero-slot__bonus" id="msHeroBonus-hand"></span>
                                     </div>
+                                    <div class="ms-hero-slot__picker-container" style="display: none;">
+                                        <div class="ms-hero-slot__picker-background">
+                                            <img id="msHeroPickerImg-hand" src="resources/heroes/icon-hand.png" alt="Hand">
+                                        </div>
+                                        <div class="ms-picker-wheel-dual">
+                                            <div class="ms-picker-wheel ms-picker-wheel--hero">
+                                                <div class="ms-picker-wheel__column" id="msHeroSelect-handPicker">
+                                                    <!-- Heroes will be populated by JavaScript -->
+                                                </div>
+                                                <div class="ms-picker-wheel__selection"></div>
+                                            </div>
+                                            <div class="ms-picker-wheel ms-picker-wheel--level">
+                                                <div class="ms-picker-wheel__column" id="msHeroLevel-handPicker">
+                                                    <!-- Levels will be populated by JavaScript based on selected hero -->
+                                                </div>
+                                                <div class="ms-picker-wheel__selection"></div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="ms-hero-slot" data-position="war">
+                                <div class="ms-hero-slot ms-hero-slot--expandable" data-position="war" data-hero-position="war">
                                     <div class="ms-hero-slot__visual">
                                         <img id="msHeroImg-war" src="resources/heroes/icon-war.png" alt="War" class="ms-hero-slot__image" data-default="heroes/icon-war.png">
                                     </div>
                                     <div class="ms-hero-slot__controls">
                                         <span class="ms-hero-slot__title">War</span>
-                                        <select id="msHeroSelect-war" class="ms-input ms-hero-select" data-position="war">
+                                        <select id="msHeroSelect-war" class="ms-input ms-hero-select" data-position="war" style="display: none;">
                                             <option value="">-- None --</option>
                                         </select>
                                         <div class="ms-hero-slider-wrapper">
-                                            <input type="range" id="msHeroLevel-war" class="ms-hero-slider" min="0" max="60" step="10" value="0" disabled data-position="war">
+                                            <input type="hidden" id="msHeroLevel-war" value="0" data-position="war">
                                             <span class="ms-hero-level-display" id="msHeroLevelDisplay-war">Lv 0</span>
                                         </div>
                                         <span class="ms-hero-slot__bonus" id="msHeroBonus-war"></span>
                                     </div>
+                                    <div class="ms-hero-slot__picker-container" style="display: none;">
+                                        <div class="ms-hero-slot__picker-background">
+                                            <img id="msHeroPickerImg-war" src="resources/heroes/icon-war.png" alt="War">
+                                        </div>
+                                        <div class="ms-picker-wheel-dual">
+                                            <div class="ms-picker-wheel ms-picker-wheel--hero">
+                                                <div class="ms-picker-wheel__column" id="msHeroSelect-warPicker">
+                                                    <!-- Heroes will be populated by JavaScript -->
+                                                </div>
+                                                <div class="ms-picker-wheel__selection"></div>
+                                            </div>
+                                            <div class="ms-picker-wheel ms-picker-wheel--level">
+                                                <div class="ms-picker-wheel__column" id="msHeroLevel-warPicker">
+                                                    <!-- Levels will be populated by JavaScript based on selected hero -->
+                                                </div>
+                                                <div class="ms-picker-wheel__selection"></div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="ms-hero-slot" data-position="coin">
+                                <div class="ms-hero-slot ms-hero-slot--expandable" data-position="coin" data-hero-position="coin">
                                     <div class="ms-hero-slot__visual">
                                         <img id="msHeroImg-coin" src="resources/heroes/icon-coin.png" alt="Coin" class="ms-hero-slot__image" data-default="heroes/icon-coin.png">
                                     </div>
                                     <div class="ms-hero-slot__controls">
                                         <span class="ms-hero-slot__title">Coin</span>
-                                        <select id="msHeroSelect-coin" class="ms-input ms-hero-select" data-position="coin">
+                                        <select id="msHeroSelect-coin" class="ms-input ms-hero-select" data-position="coin" style="display: none;">
                                             <option value="">-- None --</option>
                                         </select>
                                         <div class="ms-hero-slider-wrapper">
-                                            <input type="range" id="msHeroLevel-coin" class="ms-hero-slider" min="0" max="60" step="10" value="0" disabled data-position="coin">
+                                            <input type="hidden" id="msHeroLevel-coin" value="0" data-position="coin">
                                             <span class="ms-hero-level-display" id="msHeroLevelDisplay-coin">Lv 0</span>
                                         </div>
                                         <span class="ms-hero-slot__bonus" id="msHeroBonus-coin"></span>
                                     </div>
+                                    <div class="ms-hero-slot__picker-container" style="display: none;">
+                                        <div class="ms-hero-slot__picker-background">
+                                            <img id="msHeroPickerImg-coin" src="resources/heroes/icon-coin.png" alt="Coin">
+                                        </div>
+                                        <div class="ms-picker-wheel-dual">
+                                            <div class="ms-picker-wheel ms-picker-wheel--hero">
+                                                <div class="ms-picker-wheel__column" id="msHeroSelect-coinPicker">
+                                                    <!-- Heroes will be populated by JavaScript -->
+                                                </div>
+                                                <div class="ms-picker-wheel__selection"></div>
+                                            </div>
+                                            <div class="ms-picker-wheel ms-picker-wheel--level">
+                                                <div class="ms-picker-wheel__column" id="msHeroLevel-coinPicker">
+                                                    <!-- Levels will be populated by JavaScript based on selected hero -->
+                                                </div>
+                                                <div class="ms-picker-wheel__selection"></div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="ms-hero-slot" data-position="whispers">
+                                <div class="ms-hero-slot ms-hero-slot--expandable" data-position="whispers" data-hero-position="whispers">
                                     <div class="ms-hero-slot__visual">
                                         <img id="msHeroImg-whispers" src="resources/heroes/icon-whispers.png" alt="Whispers" class="ms-hero-slot__image" data-default="heroes/icon-whispers.png">
                                     </div>
                                     <div class="ms-hero-slot__controls">
                                         <span class="ms-hero-slot__title">Whispers</span>
-                                        <select id="msHeroSelect-whispers" class="ms-input ms-hero-select" data-position="whispers">
+                                        <select id="msHeroSelect-whispers" class="ms-input ms-hero-select" data-position="whispers" style="display: none;">
                                             <option value="">-- None --</option>
                                         </select>
                                         <div class="ms-hero-slider-wrapper">
-                                            <input type="range" id="msHeroLevel-whispers" class="ms-hero-slider" min="0" max="60" step="10" value="0" disabled data-position="whispers">
+                                            <input type="hidden" id="msHeroLevel-whispers" value="0" data-position="whispers">
                                             <span class="ms-hero-level-display" id="msHeroLevelDisplay-whispers">Lv 0</span>
                                         </div>
                                         <span class="ms-hero-slot__bonus" id="msHeroBonus-whispers"></span>
+                                    </div>
+                                    <div class="ms-hero-slot__picker-container" style="display: none;">
+                                        <div class="ms-hero-slot__picker-background">
+                                            <img id="msHeroPickerImg-whispers" src="resources/heroes/icon-whispers.png" alt="Whispers">
+                                        </div>
+                                        <div class="ms-picker-wheel-dual">
+                                            <div class="ms-picker-wheel ms-picker-wheel--hero">
+                                                <div class="ms-picker-wheel__column" id="msHeroSelect-whispersPicker">
+                                                    <!-- Heroes will be populated by JavaScript -->
+                                                </div>
+                                                <div class="ms-picker-wheel__selection"></div>
+                                            </div>
+                                            <div class="ms-picker-wheel ms-picker-wheel--level">
+                                                <div class="ms-picker-wheel__column" id="msHeroLevel-whispersPicker">
+                                                    <!-- Levels will be populated by JavaScript based on selected hero -->
+                                                </div>
+                                                <div class="ms-picker-wheel__selection"></div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Bottom Row: Law, Ships, Commander, Maester -->
                             <div class="ms-heroes-row">
-                                <div class="ms-hero-slot" data-position="law">
+                                <div class="ms-hero-slot ms-hero-slot--expandable" data-position="law" data-hero-position="law">
                                     <div class="ms-hero-slot__visual">
                                         <img id="msHeroImg-law" src="resources/heroes/icon-law.png" alt="Law" class="ms-hero-slot__image" data-default="heroes/icon-law.png">
                                     </div>
                                     <div class="ms-hero-slot__controls">
                                         <span class="ms-hero-slot__title">Law</span>
-                                        <select id="msHeroSelect-law" class="ms-input ms-hero-select" data-position="law">
+                                        <select id="msHeroSelect-law" class="ms-input ms-hero-select" data-position="law" style="display: none;">
                                             <option value="">-- None --</option>
                                         </select>
                                         <div class="ms-hero-slider-wrapper">
-                                            <input type="range" id="msHeroLevel-law" class="ms-hero-slider" min="0" max="60" step="10" value="0" disabled data-position="law">
+                                            <input type="hidden" id="msHeroLevel-law" value="0" data-position="law">
                                             <span class="ms-hero-level-display" id="msHeroLevelDisplay-law">Lv 0</span>
                                         </div>
                                         <span class="ms-hero-slot__bonus" id="msHeroBonus-law"></span>
                                     </div>
+                                    <div class="ms-hero-slot__picker-container" style="display: none;">
+                                        <div class="ms-hero-slot__picker-background">
+                                            <img id="msHeroPickerImg-law" src="resources/heroes/icon-law.png" alt="Law">
+                                        </div>
+                                        <div class="ms-picker-wheel-dual">
+                                            <div class="ms-picker-wheel ms-picker-wheel--hero">
+                                                <div class="ms-picker-wheel__column" id="msHeroSelect-lawPicker">
+                                                    <!-- Heroes will be populated by JavaScript -->
+                                                </div>
+                                                <div class="ms-picker-wheel__selection"></div>
+                                            </div>
+                                            <div class="ms-picker-wheel ms-picker-wheel--level">
+                                                <div class="ms-picker-wheel__column" id="msHeroLevel-lawPicker">
+                                                    <!-- Levels will be populated by JavaScript based on selected hero -->
+                                                </div>
+                                                <div class="ms-picker-wheel__selection"></div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="ms-hero-slot" data-position="ships">
+                                <div class="ms-hero-slot ms-hero-slot--expandable" data-position="ships" data-hero-position="ships">
                                     <div class="ms-hero-slot__visual">
                                         <img id="msHeroImg-ships" src="resources/heroes/icon-ships.png" alt="Ships" class="ms-hero-slot__image" data-default="heroes/icon-ships.png">
                                     </div>
                                     <div class="ms-hero-slot__controls">
                                         <span class="ms-hero-slot__title">Ships</span>
-                                        <select id="msHeroSelect-ships" class="ms-input ms-hero-select" data-position="ships">
+                                        <select id="msHeroSelect-ships" class="ms-input ms-hero-select" data-position="ships" style="display: none;">
                                             <option value="">-- None --</option>
                                         </select>
                                         <div class="ms-hero-slider-wrapper">
-                                            <input type="range" id="msHeroLevel-ships" class="ms-hero-slider" min="0" max="60" step="10" value="0" disabled data-position="ships">
+                                            <input type="hidden" id="msHeroLevel-ships" value="0" data-position="ships">
                                             <span class="ms-hero-level-display" id="msHeroLevelDisplay-ships">Lv 0</span>
                                         </div>
                                         <span class="ms-hero-slot__bonus" id="msHeroBonus-ships"></span>
                                     </div>
+                                    <div class="ms-hero-slot__picker-container" style="display: none;">
+                                        <div class="ms-hero-slot__picker-background">
+                                            <img id="msHeroPickerImg-ships" src="resources/heroes/icon-ships.png" alt="Ships">
+                                        </div>
+                                        <div class="ms-picker-wheel-dual">
+                                            <div class="ms-picker-wheel ms-picker-wheel--hero">
+                                                <div class="ms-picker-wheel__column" id="msHeroSelect-shipsPicker">
+                                                    <!-- Heroes will be populated by JavaScript -->
+                                                </div>
+                                                <div class="ms-picker-wheel__selection"></div>
+                                            </div>
+                                            <div class="ms-picker-wheel ms-picker-wheel--level">
+                                                <div class="ms-picker-wheel__column" id="msHeroLevel-shipsPicker">
+                                                    <!-- Levels will be populated by JavaScript based on selected hero -->
+                                                </div>
+                                                <div class="ms-picker-wheel__selection"></div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="ms-hero-slot" data-position="commander">
+                                <div class="ms-hero-slot ms-hero-slot--expandable" data-position="commander" data-hero-position="commander">
                                     <div class="ms-hero-slot__visual">
                                         <img id="msHeroImg-commander" src="resources/heroes/icon-commander.png" alt="Commander" class="ms-hero-slot__image" data-default="heroes/icon-commander.png">
                                     </div>
                                     <div class="ms-hero-slot__controls">
                                         <span class="ms-hero-slot__title">Commander</span>
-                                        <select id="msHeroSelect-commander" class="ms-input ms-hero-select" data-position="commander">
+                                        <select id="msHeroSelect-commander" class="ms-input ms-hero-select" data-position="commander" style="display: none;">
                                             <option value="">-- None --</option>
                                         </select>
                                         <div class="ms-hero-slider-wrapper">
-                                            <input type="range" id="msHeroLevel-commander" class="ms-hero-slider" min="0" max="60" step="10" value="0" disabled data-position="commander">
+                                            <input type="hidden" id="msHeroLevel-commander" value="0" data-position="commander">
                                             <span class="ms-hero-level-display" id="msHeroLevelDisplay-commander">Lv 0</span>
                                         </div>
                                         <span class="ms-hero-slot__bonus" id="msHeroBonus-commander"></span>
                                     </div>
+                                    <div class="ms-hero-slot__picker-container" style="display: none;">
+                                        <div class="ms-hero-slot__picker-background">
+                                            <img id="msHeroPickerImg-commander" src="resources/heroes/icon-commander.png" alt="Commander">
+                                        </div>
+                                        <div class="ms-picker-wheel-dual">
+                                            <div class="ms-picker-wheel ms-picker-wheel--hero">
+                                                <div class="ms-picker-wheel__column" id="msHeroSelect-commanderPicker">
+                                                    <!-- Heroes will be populated by JavaScript -->
+                                                </div>
+                                                <div class="ms-picker-wheel__selection"></div>
+                                            </div>
+                                            <div class="ms-picker-wheel ms-picker-wheel--level">
+                                                <div class="ms-picker-wheel__column" id="msHeroLevel-commanderPicker">
+                                                    <!-- Levels will be populated by JavaScript based on selected hero -->
+                                                </div>
+                                                <div class="ms-picker-wheel__selection"></div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="ms-hero-slot" data-position="maester">
+                                <div class="ms-hero-slot ms-hero-slot--expandable" data-position="maester" data-hero-position="maester">
                                     <div class="ms-hero-slot__visual">
                                         <img id="msHeroImg-maester" src="resources/heroes/icon-maester.png" alt="Maester" class="ms-hero-slot__image" data-default="heroes/icon-maester.png">
                                     </div>
                                     <div class="ms-hero-slot__controls">
                                         <span class="ms-hero-slot__title">Maester</span>
-                                        <select id="msHeroSelect-maester" class="ms-input ms-hero-select" data-position="maester">
+                                        <select id="msHeroSelect-maester" class="ms-input ms-hero-select" data-position="maester" style="display: none;">
                                             <option value="">-- None --</option>
                                         </select>
                                         <div class="ms-hero-slider-wrapper">
-                                            <input type="range" id="msHeroLevel-maester" class="ms-hero-slider" min="0" max="60" step="10" value="0" disabled data-position="maester">
+                                            <input type="hidden" id="msHeroLevel-maester" value="0" data-position="maester">
                                             <span class="ms-hero-level-display" id="msHeroLevelDisplay-maester">Lv 0</span>
                                         </div>
                                         <span class="ms-hero-slot__bonus" id="msHeroBonus-maester"></span>
+                                    </div>
+                                    <div class="ms-hero-slot__picker-container" style="display: none;">
+                                        <div class="ms-hero-slot__picker-background">
+                                            <img id="msHeroPickerImg-maester" src="resources/heroes/icon-maester.png" alt="Maester">
+                                        </div>
+                                        <div class="ms-picker-wheel-dual">
+                                            <div class="ms-picker-wheel ms-picker-wheel--hero">
+                                                <div class="ms-picker-wheel__column" id="msHeroSelect-maesterPicker">
+                                                    <!-- Heroes will be populated by JavaScript -->
+                                                </div>
+                                                <div class="ms-picker-wheel__selection"></div>
+                                            </div>
+                                            <div class="ms-picker-wheel ms-picker-wheel--level">
+                                                <div class="ms-picker-wheel__column" id="msHeroLevel-maesterPicker">
+                                                    <!-- Levels will be populated by JavaScript based on selected hero -->
+                                                </div>
+                                                <div class="ms-picker-wheel__selection"></div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1906,9 +2245,20 @@
                                     </div>
                                     <div class="ms-marching-hero__controls">
                                         <label for="msMarchingHeroLevel">Hero Level</label>
-                                        <div class="ms-marching-slider-group">
-                                            <input type="range" id="msMarchingHeroLevel" class="ms-marching-slider" min="0" max="60" value="60" data-marching="level">
+                                        <div class="ms-marching-slider-group ms-marching-slider-group--expandable" data-marching-hero-id="msMarchingHeroLevel">
+                                            <input type="hidden" id="msMarchingHeroLevel" value="60" data-marching="level">
                                             <span class="ms-marching-value" id="msMarchingHeroLevelDisplay">Lv 60 | (8,813 / 8,813)</span>
+                                            <div class="ms-marching-slider-group__picker-container" style="display: none;">
+                                                <div class="ms-marching-slider-group__picker-background">
+                                                    <img id="msMarchingHeroPickerImg" src="resources/heroes/daenerys.png" alt="Marching Hero">
+                                                </div>
+                                                <div class="ms-picker-wheel">
+                                                    <div class="ms-picker-wheel__column" id="msMarchingHeroLevelPicker">
+                                                        <!-- Levels will be populated by JavaScript -->
+                                                    </div>
+                                                </div>
+                                                <div class="ms-picker-wheel__selection"></div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -1960,9 +2310,20 @@
                                     <!-- Slider Controls -->
                                     <div class="ms-hall-controls">
                                         <label for="msHallLevel">Rising Adventurer Rank (13-21)</label>
-                                        <div class="ms-hall-slider-group">
-                                            <input type="range" id="msHallLevel" class="ms-hall-slider" min="0" max="21" value="21" data-hall="level">
+                                        <div class="ms-hall-slider-group ms-hall-slider-group--expandable" data-hall-id="msHallLevel">
+                                            <input type="hidden" id="msHallLevel" value="21" data-hall="level">
                                             <span class="ms-hall-value" id="msHallLevelDisplay">Lv 21 | (2,000 / 2,000)</span>
+                                            <div class="ms-hall-slider-group__picker-container" style="display: none;">
+                                                <div class="ms-hall-slider-group__picker-background">
+                                                    <img src="resources/heroes/eddison.png" alt="Hall of Heroes">
+                                                </div>
+                                                <div class="ms-picker-wheel">
+                                                    <div class="ms-picker-wheel__column" id="msHallLevelPicker">
+                                                        <!-- Levels will be populated by JavaScript -->
+                                                    </div>
+                                                </div>
+                                                <div class="ms-picker-wheel__selection"></div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

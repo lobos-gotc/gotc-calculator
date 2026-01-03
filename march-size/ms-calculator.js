@@ -88,14 +88,14 @@
             troopSurge3: 5     // Troop Surge III max level
         };
         
-        // Enhancement max levels (default to max)
+        // Enhancement defaults (set to max)
         const enhancementDefaults = {
             greatHall: 25,           // Great Hall max level
             watchtower: 20,          // Watchtower max level
-            keepEnhancement: 40      // Keep Enhancement max level (for 8% bonus)
+            keepEnhancement: 40      // Keep Enhancement max level
         };
         
-        // Building defaults (max levels)
+        // Building defaults (set to max)
         const buildingDefaults = {
             keep: 40,           // Keep max level
             trainingYard: 40    // Training Yard max level
@@ -177,11 +177,14 @@
                         }
                     }
                     
-                    // Set slider max based on hero and enable it
+                    // Set input value and update picker wheel
                     if (slider) {
-                        slider.disabled = false; // Enable the slider
-                        slider.max = hero.maxLevel || 60;
+                        const maxLevel = hero.maxLevel || 60;
                         slider.value = defaults.level;
+                        // Update level picker wheel for this hero
+                        updateHeroLevelPickerWheel(position, defaults.id);
+                        // Sync picker wheels to current values
+                        syncHeroPickerToInput(position);
                     }
                 }
             }
@@ -458,78 +461,40 @@
     }
     
     function setupBaseMarchSizeListeners() {
-        // Buildings - sliders
-        if (elements.keepLevel) {
-            elements.keepLevel.addEventListener('input', () => {
-                updateBuildingSliderDisplay('msKeepLevel', 'msKeepLevelDisplay', 'keep');
-                updateHeroBonusDisplay();
-                updateAllSectionTotals();
-            });
-        }
-        if (elements.trainingYardLevel) {
-            elements.trainingYardLevel.addEventListener('input', () => {
-                updateBuildingSliderDisplay('msTrainingYardLevel', 'msTrainingYardLevelDisplay', 'trainingYard');
-                updateHeroBonusDisplay();
-                updateAllSectionTotals();
-            });
-        }
-        if (elements.greatHallLevel) {
-            elements.greatHallLevel.addEventListener('input', () => {
-                updateBuildingSliderDisplay('msGreatHallLevel', 'msGreatHallLevelDisplay', 'greatHall');
-                updateHeroBonusDisplay();
-                updateAllSectionTotals();
-            });
-        }
-        if (elements.watchtowerLevel) {
-            elements.watchtowerLevel.addEventListener('input', () => {
-                updateBuildingSliderDisplay('msWatchtowerLevel', 'msWatchtowerLevelDisplay', 'watchtower');
-                updateHeroBonusDisplay();
-                updateAllSectionTotals();
-            });
-        }
-        if (elements.keepEnhancementLevel) {
-            elements.keepEnhancementLevel.addEventListener('input', () => {
-                updateBuildingSliderDisplay('msKeepEnhancementLevel', 'msKeepEnhancementLevelDisplay', 'keepEnhancement');
-                updateHeroBonusDisplay();
-                updateAllSectionTotals();
-            });
-        }
+        // Buildings - sliders (Keep uses picker wheel only, no slider event listener needed)
+        // Buildings and enhancements use picker wheels only (no slider event listeners needed)
         
-        // Armories - sliders
+        // Initialize picker wheels for all buildings and enhancements
+        initPickerWheel('msKeepLevel', 'keep');
+        initPickerWheel('msTrainingYardLevel', 'trainingYard');
+        initPickerWheel('msGreatHallLevel', 'greatHall');
+        initPickerWheel('msWatchtowerLevel', 'watchtower');
+        initPickerWheel('msKeepEnhancementLevel', 'keepEnhancement');
+        
+        // Armories use picker wheels only (no slider event listeners needed)
+        // Initialize armory picker wheels
         elements.armoryInputs.forEach(input => {
-            input.addEventListener('input', () => {
-                updateArmorySliderDisplay(input);
-                updateHeroBonusDisplay();
-                updateAllSectionTotals();
-            });
-        });
-        
-        // Research sliders
-        Object.entries(elements.researchSliders).forEach(([key, slider]) => {
-            if (slider) {
-                slider.addEventListener('input', () => {
-                    updateResearchSliderDisplay(key);
-                    updateHeroBonusDisplay();
-                    updateAllSectionTotals();
-                });
+            const armoryId = input.id;
+            const armoryKey = input.dataset.armory;
+            if (armoryId && armoryKey) {
+                initArmoryPickerWheel(armoryId, armoryKey);
             }
         });
         
-        // Marching Hero level slider
-        if (elements.marchingHeroLevel) {
-            elements.marchingHeroLevel.addEventListener('input', () => {
-                updateMarchingHeroDisplay();
-                updateAllSectionTotals();
-            });
-        }
+        // Research uses picker wheels only (no slider event listeners needed)
+        // Initialize research picker wheels
+        Object.keys(elements.researchSliders).forEach(key => {
+            const sliderId = elements.researchSliders[key]?.id;
+            if (sliderId) {
+                initResearchPickerWheel(sliderId, key);
+            }
+        });
         
-        // Hall of Heroes level slider
-        if (elements.hallLevel) {
-            elements.hallLevel.addEventListener('input', () => {
-                updateHallLevelDisplay();
-                updateAllSectionTotals();
-            });
-        }
+        // Marching Hero uses picker wheel only (no slider event listener needed)
+        initMarchingHeroPickerWheel();
+
+        // Hall of Heroes uses picker wheel only (no slider event listener needed)
+        initHallPickerWheel();
         
         // Manual total input
         if (elements.manualTotal) {
@@ -1034,27 +999,28 @@
                             slotElement.classList.add('hero-legendary');
                         }
                     }
-                    // Enable slider and set max level based on hero quality
+                    // Update hidden input and set to max level based on hero quality
                     if (slider) {
-                        slider.disabled = false;
-                        slider.max = heroData.maxLevel || 60;
-                        slider.value = slider.max; // Set to max by default
+                        const maxLevel = heroData.maxLevel || 60;
+                        slider.value = maxLevel; // Set to max by default
+                        // Update level picker wheel for this hero (but don't sync to prevent loops)
+                        updateHeroLevelPickerWheel(position, heroId);
                     }
                 } else {
                     if (imgElement) {
-                        // Reset to position icon
-                        imgElement.src = defaultIcon;
+                        // Reset to position icon (ensure resources/ prefix)
+                        imgElement.src = `resources/${defaultIcon}`;
                         imgElement.classList.remove('has-hero');
                     }
-                    // Disable slider and reset
+                    // Reset hidden input
                     if (slider) {
-                        slider.disabled = true;
                         slider.value = 0;
-                        slider.max = 60;
                     }
                     if (levelDisplay) {
-                        levelDisplay.textContent = 'Lv 0';
+                        levelDisplay.textContent = '0';
                     }
+                    // Clear level picker wheel (but don't sync to prevent loops)
+                    updateHeroLevelPickerWheel(position, '');
                 }
                 
                 // Update hero bonus display
@@ -1063,32 +1029,26 @@
                 updateAllSectionTotals();
             });
             
-            // Add level slider event listener
-            const slider = document.getElementById(`msHeroLevel-${position}`);
-            if (slider) {
-                slider.addEventListener('input', () => {
-                    updateHeroLevelDisplay(position);
-                    updateHeroBonusDisplay();
-                    updateAllSectionTotals();
-                });
-            }
+            // Heroes use picker wheels only (no slider event listener needed)
+            // Initialize hero picker wheel for this position
+            initHeroPickerWheel(position);
         });
     }
     
     // Update hero level display with council march size bonus
     // Format: Lv X | (current / max) | (Unlocks lvY) or (Maxed)
     function updateHeroLevelDisplay(position) {
-        const slider = document.getElementById(`msHeroLevel-${position}`);
+        const input = document.getElementById(`msHeroLevel-${position}`);
         const display = document.getElementById(`msHeroLevelDisplay-${position}`);
         const select = document.getElementById(`msHeroSelect-${position}`);
         
-        if (slider && display) {
-            const level = parseInt(slider.value) || 0;
-            const maxLevel = parseInt(slider.max) || 60;
+        if (input && display) {
+            const level = parseInt(input.value) || 0;
             const heroId = select?.value;
+            const hero = heroId ? MARCH_SIZE_DATA.heroes.heroList[heroId] : null;
+            const maxLevel = hero ? (hero.maxLevel || 60) : 60;
             
-            if (heroId && MARCH_SIZE_DATA.heroes.heroList[heroId]) {
-                const hero = MARCH_SIZE_DATA.heroes.heroList[heroId];
+            if (heroId && hero) {
                 
                 // Get council march size bonus (only show this, not capacity)
                 if (hero.councilMarchSize) {
@@ -1119,13 +1079,13 @@
                         statusStr = `(Unlocks Lv${unlockLevel})`;
                     }
                     
-                    display.textContent = `Lv ${level} | (${bonusStr}) | ${statusStr}`;
+                    display.textContent = `${level} | (${bonusStr}) | ${statusStr}`;
                 } else {
                     // Hero has no council march size bonus
-                    display.textContent = `Lv ${level} | (No march size bonus)`;
+                    display.textContent = `${level} | (No march size bonus)`;
                 }
             } else {
-                display.textContent = `Lv ${level}`;
+                display.textContent = `${level}`;
             }
         }
     }
@@ -1434,11 +1394,11 @@
     
     // Update marching hero display - format: Lv X | (current / max)
     function updateMarchingHeroDisplay() {
-        const slider = elements.marchingHeroLevel;
+        const input = elements.marchingHeroLevel;
         const display = document.getElementById('msMarchingHeroLevelDisplay');
         
-        if (slider && display) {
-            const level = parseInt(slider.value) || 0;
+        if (input && display) {
+            const level = parseInt(input.value) || 0;
             const currentMS = getMarchingHeroMS(level);
             const maxMS = 8813; // Max at level 60
             if (level === 0) {
@@ -1473,12 +1433,12 @@
     
     // Update Hall of Heroes display - format: Lv X | (current / max)
     function updateHallLevelDisplay() {
-        const slider = elements.hallLevel;
+        const input = elements.hallLevel;
         const display = document.getElementById('msHallLevelDisplay');
         const bonusDisplay = document.getElementById('msRisingAdventurerBonus');
         
-        if (slider && display) {
-            const level = parseInt(slider.value) || 0;
+        if (input && display) {
+            const level = parseInt(input.value) || 0;
             const currentMS = getHallMS(level);
             const maxMS = 2000; // Max at rank 21
             
@@ -1524,9 +1484,11 @@
                 currentMS = data.marchSize || 0;
                 maxMS = 2500; // Max watchtower march size at level 20
             } else if (buildingType === 'keepEnhancement') {
-                const data = getEnhancementMarchSize('keepEnhancement', level);
-                currentMS = data.marchSize || 0;
-                maxMS = 50000; // Max keep enhancement march size at level 40
+                // Keep Enhancement is percentage-based: 8% at level 40, 0% for levels 0-39
+                const currentPct = level >= 40 ? 8.0 : 0.0;
+                const maxPct = 8.0;
+                display.textContent = `Lv ${level} | (${currentPct.toFixed(1)}% / ${maxPct.toFixed(1)}%)`;
+                return;
             } else {
                 // Fallback for unknown types - just show level
                 display.textContent = `Lv ${level}`;
@@ -2833,25 +2795,25 @@
             updateGearSlotQuality(slot, '');
         });
 
-        // Reset building levels and their displays
+        // Reset building levels and their displays (to max)
         if (elements.keepLevel) {
-            elements.keepLevel.value = '35';
+            elements.keepLevel.value = '40';
             updateBuildingSliderDisplay('msKeepLevel', 'msKeepLevelDisplay', 'keep');
         }
         if (elements.trainingYardLevel) {
-            elements.trainingYardLevel.value = '0';
+            elements.trainingYardLevel.value = '40';
             updateBuildingSliderDisplay('msTrainingYardLevel', 'msTrainingYardLevelDisplay', 'trainingYard');
         }
         if (elements.greatHallLevel) {
-            elements.greatHallLevel.value = '0';
+            elements.greatHallLevel.value = '25';
             updateBuildingSliderDisplay('msGreatHallLevel', 'msGreatHallLevelDisplay', 'greatHall');
         }
         if (elements.watchtowerLevel) {
-            elements.watchtowerLevel.value = '0';
+            elements.watchtowerLevel.value = '20';
             updateBuildingSliderDisplay('msWatchtowerLevel', 'msWatchtowerLevelDisplay', 'watchtower');
         }
         if (elements.keepEnhancementLevel) {
-            elements.keepEnhancementLevel.value = '0';
+            elements.keepEnhancementLevel.value = '40';
             updateBuildingSliderDisplay('msKeepEnhancementLevel', 'msKeepEnhancementLevelDisplay', 'keepEnhancement');
         }
 
@@ -2863,10 +2825,15 @@
             });
         }
 
-        // Reset research sliders
+        // Reset research sliders (to max)
         Object.entries(elements.researchSliders).forEach(([key, slider]) => {
             if (slider) {
-                slider.value = 0;
+                const researchData = MARCH_SIZE_DATA.research[key];
+                if (researchData) {
+                    slider.value = researchData.maxLevel;
+                } else {
+                    slider.value = 0;
+                }
                 updateResearchSliderDisplay(key);
             }
         });
@@ -2885,12 +2852,12 @@
             if (select) select.value = '';
             if (slider) {
                 slider.value = 0;
-                slider.disabled = true;
-                slider.max = 60;
             }
-            if (levelDisplay) levelDisplay.textContent = 'Lv 0';
+            if (levelDisplay) levelDisplay.textContent = '0';
+            // Clear level picker wheel
+            updateHeroLevelPickerWheel(position, '');
             if (imgElement) {
-                imgElement.src = defaultIcon;
+                imgElement.src = `resources/${defaultIcon}`;
                 imgElement.classList.remove('has-hero');
             }
             if (slotElement) {
@@ -3522,17 +3489,19 @@
                             }
                         }
                         
-                        // Set slider max based on hero's maxLevel, then set value
+                        // Set input value and update picker wheel
                         if (slider && heroInfo) {
-                            slider.disabled = false;
-                            slider.max = heroInfo.maxLevel || 60;
+                            const maxLevel = heroInfo.maxLevel || 60;
                             // Clamp saved level to current max
-                            const level = Math.min(heroData.level || 0, heroInfo.maxLevel || 60);
+                            const level = Math.min(heroData.level || maxLevel, maxLevel);
                             slider.value = level;
+                            // Update level picker wheel for this hero
+                            updateHeroLevelPickerWheel(position, heroData.id);
                         }
                         
-                        // Update level display
+                        // Update level display and sync picker wheels
                         updateHeroLevelDisplay(position);
+                        syncHeroPickerToInput(position);
                     }
                 });
             }
@@ -3749,6 +3718,1353 @@
         init();
     }
 
+    // ============================================
+    // PICKER WHEEL FUNCTIONS
+    // ============================================
+    
+    // Initialize picker wheel for a building
+    function initPickerWheel(buildingId, buildingType) {
+        const buildingCard = document.querySelector(`[data-building-id="${buildingId}"]`);
+        if (!buildingCard) return;
+        
+        // For Keep, use specific IDs
+        const columnId = buildingId === 'msKeepLevel' ? 'msKeepLevelPicker' : `${buildingId}Picker`;
+        
+        const column = document.getElementById(columnId);
+        if (!column) return;
+        
+        // Determine min/max levels based on building type
+        let minLevel = 1;
+        let maxLevel = 40;
+        
+        if (buildingType === 'keep') {
+            minLevel = 1;
+            maxLevel = 40;
+        } else if (buildingType === 'trainingYard') {
+            minLevel = 0;
+            maxLevel = 40;
+        } else if (buildingType === 'greatHall') {
+            minLevel = 0;
+            maxLevel = 25;
+        } else         if (buildingType === 'watchtower') {
+            minLevel = 0;
+            maxLevel = 20;
+        } else if (buildingType === 'keepEnhancement') {
+            minLevel = 0;
+            maxLevel = 40;
+        }
+        
+        // Populate column with level and value combined
+        column.innerHTML = '';
+        for (let level = minLevel; level <= maxLevel; level++) {
+            const item = document.createElement('div');
+            item.className = 'ms-picker-wheel__item';
+            item.dataset.level = level;
+            
+            let value = 0;
+            let isPercentage = false;
+            if (buildingType === 'keep' || buildingType === 'trainingYard') {
+                const data = getBuildingMarchSize(buildingType, level);
+                value = data.marchSize || 0;
+            } else if (buildingType === 'keepEnhancement') {
+                // Keep Enhancement is percentage-based: 8% at level 40, 0% for levels 0-39
+                value = level >= 40 ? 8.0 : 0.0;
+                isPercentage = true;
+            } else {
+                const data = getEnhancementMarchSize(buildingType, level);
+                value = data.marchSize || 0;
+            }
+            
+            // Create level text
+            const levelText = document.createTextNode(`Level ${level} (`);
+            item.appendChild(levelText);
+            
+            // Create value span with green color
+            const valueSpan = document.createElement('span');
+            valueSpan.style.color = 'var(--success-color)';
+            if (isPercentage) {
+                valueSpan.textContent = `${value.toFixed(1)}%`;
+            } else {
+                valueSpan.textContent = `+${formatNumber(value)}`;
+            }
+            item.appendChild(valueSpan);
+            
+            // Create closing parenthesis
+            const closeText = document.createTextNode(')');
+            item.appendChild(closeText);
+            
+            // Add click handler to item
+            item.addEventListener('click', () => {
+                selectPickerItem(column, level, buildingId, buildingType);
+            });
+            
+            column.appendChild(item);
+        }
+        
+        // Set up click handler for building card
+        buildingCard.addEventListener('click', (e) => {
+            // Don't toggle if clicking inside the picker
+            if (e.target.closest('.ms-building-card__picker-container')) {
+                return;
+            }
+            toggleBuildingPicker(buildingCard, buildingId, buildingType);
+        });
+        
+        // Set up scroll handler - no synchronization needed with single column
+        let scrollTimeout = null;
+        let lastScrollPosition = column.scrollTop;
+        
+        column.addEventListener('scroll', () => {
+            // Debounce the selection update - only update when scrolling has completely stopped
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(() => {
+                // Check if scroll position has stabilized (scrolling has stopped)
+                const currentScroll = column.scrollTop;
+                const scrollDiff = Math.abs(currentScroll - lastScrollPosition);
+                
+                if (scrollDiff < 2) {
+                    // Scrolling has stopped, update selection
+                    handlePickerScroll(column, buildingId, buildingType);
+                }
+                lastScrollPosition = currentScroll;
+            }, 200);
+        }, { passive: true });
+        
+        // Sync picker to current input value on initialization
+        syncPickerToSlider(buildingId, buildingType);
+    }
+    
+    // Toggle picker open/closed
+    function toggleBuildingPicker(buildingCard, buildingId, buildingType) {
+        const pickerContainer = buildingCard.querySelector('.ms-building-card__picker-container');
+        if (!pickerContainer) return;
+        
+        const isExpanded = buildingCard.classList.contains('ms-building-card--expanded');
+        
+        if (isExpanded) {
+            // Close picker
+            buildingCard.classList.remove('ms-building-card--expanded');
+            pickerContainer.style.display = 'none';
+        } else {
+            // Open picker
+            buildingCard.classList.add('ms-building-card--expanded');
+            pickerContainer.style.display = 'block';
+            syncPickerToSlider(buildingId, buildingType);
+        }
+    }
+    
+    // Select a specific item in the picker and update input value
+    function selectPickerItem(column, level, buildingId, buildingType) {
+        const items = column.querySelectorAll('.ms-picker-wheel__item');
+        const itemHeight = 40;
+        const padding = 80; // Match CSS padding
+        
+        items.forEach((item, index) => {
+            if (parseInt(item.dataset.level) === level) {
+                const containerHeight = column.offsetHeight;
+                // Calculate scroll position: item position (accounting for padding) - center offset
+                const scrollPosition = padding + (index * itemHeight) + (itemHeight / 2) - (containerHeight / 2);
+                column.scrollTop = Math.max(0, scrollPosition);
+                
+                // Update selected state
+                items.forEach(i => i.classList.remove('selected'));
+                item.classList.add('selected');
+                
+                // Update slider
+                syncSliderToPicker(buildingId, level, buildingType);
+            }
+        });
+    }
+    
+    // Sync picker to current input value (from hidden input)
+    function syncPickerToSlider(buildingId, buildingType) {
+        const input = document.getElementById(buildingId);
+        if (!input) return;
+        
+        const level = parseInt(input.value) || 0;
+        const columnId = buildingId === 'msKeepLevel' ? 'msKeepLevelPicker' : `${buildingId}Picker`;
+        
+        const column = document.getElementById(columnId);
+        if (!column) return;
+        
+        // Wait for column to be rendered
+        setTimeout(() => {
+            selectPickerItem(column, level, buildingId, buildingType);
+        }, 50);
+    }
+    
+    // Handle picker scroll and update input value
+    function handlePickerScroll(column, buildingId, buildingType) {
+        const items = column.querySelectorAll('.ms-picker-wheel__item');
+        if (items.length === 0) return;
+        
+        const containerHeight = column.offsetHeight;
+        const scrollTop = column.scrollTop;
+        const itemHeight = 40; // Match CSS height
+        const centerY = containerHeight / 2;
+        const padding = 80; // Match CSS padding
+        
+        // Calculate which item should be at the center
+        // The center position accounts for the padding at the top
+        const centerScrollPosition = scrollTop + centerY;
+        const itemIndexAtCenter = Math.round((centerScrollPosition - padding) / itemHeight);
+        
+        // Clamp to valid range
+        const validIndex = Math.max(0, Math.min(itemIndexAtCenter, items.length - 1));
+        const closestItem = items[validIndex];
+        
+        if (closestItem) {
+            const selectedLevel = parseInt(closestItem.dataset.level);
+            
+            // Update selected state
+            items.forEach(item => item.classList.remove('selected'));
+            closestItem.classList.add('selected');
+            
+            // Update input value immediately (this is already debounced by the scroll handler)
+            syncSliderToPicker(buildingId, selectedLevel, buildingType);
+        }
+    }
+    
+    // Sync input (hidden) to picker value - update hidden input and display
+    function syncSliderToPicker(buildingId, level, buildingType) {
+        const input = document.getElementById(buildingId);
+        if (!input) return;
+        
+        // Update hidden input value
+        input.value = level;
+        
+        // Map building IDs to display IDs and types
+        const buildingMap = {
+            'msKeepLevel': { displayId: 'msKeepLevelDisplay', type: 'keep' },
+            'msTrainingYardLevel': { displayId: 'msTrainingYardLevelDisplay', type: 'trainingYard' },
+            'msGreatHallLevel': { displayId: 'msGreatHallLevelDisplay', type: 'greatHall' },
+            'msWatchtowerLevel': { displayId: 'msWatchtowerLevelDisplay', type: 'watchtower' },
+            'msKeepEnhancementLevel': { displayId: 'msKeepEnhancementLevelDisplay', type: 'keepEnhancement' }
+        };
+        
+        const buildingInfo = buildingMap[buildingId];
+        if (buildingInfo) {
+            updateBuildingSliderDisplay(buildingId, buildingInfo.displayId, buildingInfo.type);
+            updateHeroBonusDisplay();
+            updateAllSectionTotals();
+        }
+    }
+
+    // ============================================
+    // RESEARCH PICKER WHEEL FUNCTIONS
+    // ============================================
+    
+    // Initialize picker wheel for a research item
+    function initResearchPickerWheel(researchId, researchKey) {
+        const researchItem = document.querySelector(`[data-research-id="${researchId}"]`);
+        if (!researchItem) return;
+        
+        const columnId = `${researchId}Picker`;
+        const column = document.getElementById(columnId);
+        if (!column) return;
+        
+        const researchData = MARCH_SIZE_DATA.research[researchKey];
+        if (!researchData) return;
+        
+        const minLevel = 0;
+        const maxLevel = researchData.maxLevel;
+        
+        // Populate column with level and value
+        column.innerHTML = '';
+        for (let level = minLevel; level <= maxLevel; level++) {
+            const item = document.createElement('div');
+            item.className = 'ms-picker-wheel__item';
+            item.dataset.level = level;
+            
+            const value = level * researchData.perLevel;
+            
+            // Create level text
+            const levelText = document.createTextNode(`Level ${level} (`);
+            item.appendChild(levelText);
+            
+            // Create value span with green color
+            const valueSpan = document.createElement('span');
+            valueSpan.style.color = 'var(--success-color)';
+            valueSpan.textContent = `+${formatNumber(value)}`;
+            item.appendChild(valueSpan);
+            
+            // Create closing parenthesis
+            const closeText = document.createTextNode(')');
+            item.appendChild(closeText);
+            
+            // Add click handler
+            item.addEventListener('click', () => {
+                selectResearchPickerItem(column, level, researchId, researchKey);
+            });
+            
+            column.appendChild(item);
+        }
+        
+        // Set up click handler for research item
+        researchItem.addEventListener('click', (e) => {
+            // Don't toggle if clicking inside the picker
+            if (e.target.closest('.ms-research-slider-item__picker-container')) {
+                return;
+            }
+            toggleResearchPicker(researchItem, researchId, researchKey);
+        });
+        
+        // Set up scroll handler
+        let scrollTimeout = null;
+        let lastScrollPosition = column.scrollTop;
+        
+        column.addEventListener('scroll', () => {
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(() => {
+                const currentScroll = column.scrollTop;
+                const scrollDiff = Math.abs(currentScroll - lastScrollPosition);
+                
+                if (scrollDiff < 2) {
+                    handleResearchPickerScroll(column, researchId, researchKey);
+                }
+                lastScrollPosition = currentScroll;
+            }, 200);
+        }, { passive: true });
+        
+        // Sync picker to current input value on initialization
+        syncResearchPickerToInput(researchId, researchKey);
+    }
+    
+    // Toggle research picker open/closed
+    function toggleResearchPicker(researchItem, researchId, researchKey) {
+        const pickerContainer = researchItem.querySelector('.ms-research-slider-item__picker-container');
+        if (!pickerContainer) return;
+        
+        const isExpanded = researchItem.classList.contains('ms-research-slider-item--expanded');
+        
+        if (isExpanded) {
+            researchItem.classList.remove('ms-research-slider-item--expanded');
+            pickerContainer.style.display = 'none';
+        } else {
+            researchItem.classList.add('ms-research-slider-item--expanded');
+            pickerContainer.style.display = 'block';
+            syncResearchPickerToInput(researchId, researchKey);
+        }
+    }
+    
+    // Select a specific item in the research picker
+    function selectResearchPickerItem(column, level, researchId, researchKey) {
+        const items = column.querySelectorAll('.ms-picker-wheel__item');
+        const itemHeight = 40;
+        const padding = 80;
+        
+        items.forEach((item, index) => {
+            if (parseInt(item.dataset.level) === level) {
+                const containerHeight = column.offsetHeight;
+                const scrollPosition = padding + (index * itemHeight) + (itemHeight / 2) - (containerHeight / 2);
+                column.scrollTop = Math.max(0, scrollPosition);
+                
+                items.forEach(i => i.classList.remove('selected'));
+                item.classList.add('selected');
+                
+                syncResearchInputToPicker(researchId, level, researchKey);
+            }
+        });
+    }
+    
+    // Sync research picker to current input value
+    function syncResearchPickerToInput(researchId, researchKey) {
+        const input = document.getElementById(researchId);
+        if (!input) return;
+        
+        const level = parseInt(input.value) || 0;
+        const columnId = `${researchId}Picker`;
+        const column = document.getElementById(columnId);
+        if (!column) return;
+        
+        setTimeout(() => {
+            selectResearchPickerItem(column, level, researchId, researchKey);
+        }, 50);
+    }
+    
+    // Handle research picker scroll
+    function handleResearchPickerScroll(column, researchId, researchKey) {
+        const items = column.querySelectorAll('.ms-picker-wheel__item');
+        if (items.length === 0) return;
+        
+        const containerHeight = column.offsetHeight;
+        const scrollTop = column.scrollTop;
+        const itemHeight = 40;
+        const centerY = containerHeight / 2;
+        const padding = 80;
+        
+        const centerScrollPosition = scrollTop + centerY;
+        const itemIndexAtCenter = Math.round((centerScrollPosition - padding) / itemHeight);
+        
+        const validIndex = Math.max(0, Math.min(itemIndexAtCenter, items.length - 1));
+        const closestItem = items[validIndex];
+        
+        if (closestItem) {
+            const selectedLevel = parseInt(closestItem.dataset.level);
+            
+            items.forEach(item => item.classList.remove('selected'));
+            closestItem.classList.add('selected');
+            
+            syncResearchInputToPicker(researchId, selectedLevel, researchKey);
+        }
+    }
+    
+    // Sync research input to picker value
+    function syncResearchInputToPicker(researchId, level, researchKey) {
+        const input = document.getElementById(researchId);
+        if (!input) return;
+        
+        input.value = level;
+        
+        // Update display and trigger calculations
+        updateResearchSliderDisplay(researchKey);
+        updateHeroBonusDisplay();
+        updateAllSectionTotals();
+    }
+    
+    // ============================================
+    // HERO PICKER WHEEL FUNCTIONS (DUAL WHEEL: HERO + LEVEL)
+    // ============================================
+    
+    // Initialize dual-wheel picker for a hero position
+    function initHeroPickerWheel(position) {
+        const heroSlot = document.querySelector(`.ms-hero-slot[data-position="${position}"]`);
+        if (!heroSlot) return;
+        
+        const heroColumnId = `msHeroSelect-${position}Picker`;
+        const levelColumnId = `msHeroLevel-${position}Picker`;
+        const heroColumn = document.getElementById(heroColumnId);
+        const levelColumn = document.getElementById(levelColumnId);
+        if (!heroColumn || !levelColumn) return;
+        
+        // Set up click handler for entire hero slot
+        heroSlot.addEventListener('click', (e) => {
+            // Don't toggle if clicking inside the picker container
+            if (e.target.closest('.ms-hero-slot__picker-container')) {
+                return;
+            }
+            toggleHeroPicker(heroSlot, position);
+        });
+        
+        // Set up scroll handlers for both wheels (only once)
+        setupHeroPickerScroll(heroColumn, position, 'hero');
+        setupHeroPickerScroll(levelColumn, position, 'level');
+        
+        // Populate hero wheel with available heroes for this position
+        populateHeroPickerWheel(position);
+        
+        // Sync both wheels to current values on initialization
+        syncHeroPickerToInput(position);
+    }
+    
+    // Set up scroll handler for a picker column
+    function setupHeroPickerScroll(column, position, type) {
+        let scrollTimeout = null;
+        let lastScrollPosition = column.scrollTop;
+        
+        column.addEventListener('scroll', () => {
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(() => {
+                const currentScroll = column.scrollTop;
+                const scrollDiff = Math.abs(currentScroll - lastScrollPosition);
+                
+                if (scrollDiff < 2) {
+                    if (type === 'hero') {
+                        handleHeroPickerScroll(column, position);
+                    } else {
+                        handleHeroLevelPickerScroll(column, position);
+                    }
+                }
+                lastScrollPosition = currentScroll;
+            }, 200);
+        }, { passive: true });
+    }
+    
+    // Populate hero picker wheel with heroes available for this position
+    function populateHeroPickerWheel(position) {
+        const heroColumnId = `msHeroSelect-${position}Picker`;
+        const heroColumn = document.getElementById(heroColumnId);
+        if (!heroColumn) return;
+        
+        const heroList = MARCH_SIZE_DATA.heroes.heroList;
+        
+        // Clear column
+        heroColumn.innerHTML = '';
+        
+        // Add "None" option
+        const noneItem = document.createElement('div');
+        noneItem.className = 'ms-picker-wheel__item';
+        noneItem.dataset.heroId = '';
+        noneItem.textContent = '-- None --';
+        noneItem.addEventListener('click', () => {
+            selectHeroPickerItem(heroColumn, '', position);
+        });
+        heroColumn.appendChild(noneItem);
+        
+        // Find heroes that can be assigned to this position
+        for (const [heroId, heroData] of Object.entries(heroList)) {
+            if (heroData.positions && heroData.positions.includes(position)) {
+                const item = document.createElement('div');
+                item.className = 'ms-picker-wheel__item';
+                item.dataset.heroId = heroId;
+                
+                // Display name with title (if available)
+                let displayText = heroData.name;
+                if (heroData.title) {
+                    displayText += ` - ${heroData.title}`;
+                }
+                item.textContent = displayText;
+                
+                // Add click handler
+                item.addEventListener('click', () => {
+                    selectHeroPickerItem(heroColumn, heroId, position);
+                });
+                
+                heroColumn.appendChild(item);
+            }
+        }
+    }
+    
+    // Update level picker wheel based on selected hero's max level
+    function updateHeroLevelPickerWheel(position, heroId) {
+        const levelColumnId = `msHeroLevel-${position}Picker`;
+        const levelColumn = document.getElementById(levelColumnId);
+        if (!levelColumn) return;
+        
+        // Clear column
+        levelColumn.innerHTML = '';
+        
+        if (!heroId) {
+            // No hero selected - leave empty
+            return;
+        }
+        
+        // Get hero data
+        const hero = MARCH_SIZE_DATA.heroes.heroList[heroId];
+        if (!hero) return;
+        
+        const maxLevel = hero.maxLevel || 60;
+        
+        // Hero levels use step 10: 0, 10, 20, 30, 40, 50, 60 (but capped at maxLevel)
+        const validLevels = [];
+        for (let level = 0; level <= maxLevel; level += 10) {
+            validLevels.push(level);
+        }
+        
+        // Populate column with levels
+        validLevels.forEach(level => {
+            const item = document.createElement('div');
+            item.className = 'ms-picker-wheel__item';
+            item.dataset.level = level;
+            item.textContent = `${level}`; // Just show the number, no "Level" prefix
+            
+            // Add click handler
+            item.addEventListener('click', () => {
+                selectHeroLevelPickerItem(levelColumn, level, position);
+            });
+            
+            levelColumn.appendChild(item);
+        });
+    }
+    
+    // Toggle hero picker open/closed
+    function toggleHeroPicker(heroSlot, position) {
+        const pickerContainer = heroSlot.querySelector('.ms-hero-slot__picker-container');
+        if (!pickerContainer) return;
+        
+        const isExpanded = heroSlot.classList.contains('ms-hero-slot--expanded');
+        
+        if (isExpanded) {
+            heroSlot.classList.remove('ms-hero-slot--expanded');
+            pickerContainer.style.display = 'none';
+        } else {
+            heroSlot.classList.add('ms-hero-slot--expanded');
+            pickerContainer.style.display = 'block';
+            syncHeroPickerToInput(position);
+        }
+    }
+    
+    // Select a specific hero in the hero picker
+    function selectHeroPickerItem(heroColumn, heroId, position, skipSync = false) {
+        const items = heroColumn.querySelectorAll('.ms-picker-wheel__item');
+        const itemHeight = 40;
+        const padding = 80;
+        
+        items.forEach((item, index) => {
+            if (item.dataset.heroId === heroId) {
+                const containerHeight = heroColumn.offsetHeight;
+                const scrollPosition = padding + (index * itemHeight) + (itemHeight / 2) - (containerHeight / 2);
+                heroColumn.scrollTop = Math.max(0, scrollPosition);
+                
+                items.forEach(i => i.classList.remove('selected'));
+                item.classList.add('selected');
+                
+                // Only sync if not called from syncHeroPickerToInput (prevents loops)
+                if (!skipSync) {
+                    syncHeroSelectionToInput(position, heroId);
+                }
+            }
+        });
+    }
+    
+    // Select a specific level in the level picker
+    function selectHeroLevelPickerItem(levelColumn, level, position) {
+        const items = levelColumn.querySelectorAll('.ms-picker-wheel__item');
+        const itemHeight = 40;
+        const padding = 80;
+        
+        items.forEach((item, index) => {
+            if (parseInt(item.dataset.level) === level) {
+                const containerHeight = levelColumn.offsetHeight;
+                const scrollPosition = padding + (index * itemHeight) + (itemHeight / 2) - (containerHeight / 2);
+                levelColumn.scrollTop = Math.max(0, scrollPosition);
+                
+                items.forEach(i => i.classList.remove('selected'));
+                item.classList.add('selected');
+                
+                syncHeroLevelToInput(position, level);
+            }
+        });
+    }
+    
+    // Sync hero selection from picker to hidden select and update level wheel
+    function syncHeroSelectionToInput(position, heroId) {
+        const select = document.getElementById(`msHeroSelect-${position}`);
+        if (!select) return;
+        
+        // Prevent infinite loops by checking if value is already set
+        if (select.value === heroId) {
+            return;
+        }
+        
+        select.value = heroId;
+        
+        // Update UI directly instead of triggering change event (which causes cascade)
+        const imgElement = document.getElementById(`msHeroImg-${position}`);
+        const slotElement = document.querySelector(`.ms-hero-slot[data-position="${position}"]`);
+        const levelInput = document.getElementById(`msHeroLevel-${position}`);
+        const heroList = MARCH_SIZE_DATA.heroes.heroList;
+        const defaultIcon = imgElement?.dataset.default || `heroes/icon-${position}.png`;
+        
+        // Remove previous quality classes
+        if (slotElement) {
+            slotElement.classList.remove('hero-selected', 'hero-exquisite', 'hero-legendary');
+        }
+        
+        if (heroId && heroList[heroId]) {
+            const heroData = heroList[heroId];
+            if (imgElement) {
+                imgElement.src = 'resources/' + heroData.img;
+                imgElement.classList.add('has-hero');
+                imgElement.onerror = function() {
+                    this.src = `resources/${defaultIcon}`;
+                };
+            }
+            if (slotElement) {
+                slotElement.classList.add('hero-selected');
+                if (heroData.quality === 'exquisite') {
+                    slotElement.classList.add('hero-exquisite');
+                } else if (heroData.quality === 'legendary') {
+                    slotElement.classList.add('hero-legendary');
+                }
+            }
+            
+            // Update level wheel based on selected hero
+            const maxLevel = heroData.maxLevel || 60;
+            updateHeroLevelPickerWheel(position, heroId);
+            
+            // Set level to max by default when hero is selected
+            if (levelInput) {
+                levelInput.value = maxLevel;
+                syncHeroLevelToInput(position, maxLevel);
+            }
+            
+            // Update picker background image
+            const pickerImg = document.getElementById(`msHeroPickerImg-${position}`);
+            if (pickerImg && imgElement && imgElement.classList.contains('has-hero')) {
+                pickerImg.src = 'resources/' + heroData.img;
+            }
+        } else {
+            if (imgElement) {
+                imgElement.src = `resources/${defaultIcon}`;
+                imgElement.classList.remove('has-hero');
+            }
+            // No hero selected - clear level wheel and reset level
+            updateHeroLevelPickerWheel(position, '');
+            if (levelInput) {
+                levelInput.value = 0;
+            }
+            updateHeroLevelDisplay(position);
+            updateHeroBonusDisplay();
+            updateAllSectionTotals();
+            
+            // Update picker background image to default
+            const pickerImg = document.getElementById(`msHeroPickerImg-${position}`);
+            if (pickerImg) {
+                pickerImg.src = `resources/${defaultIcon}`;
+            }
+        }
+    }
+    
+    // Sync hero level from picker to input
+    function syncHeroLevelToInput(position, level) {
+        const input = document.getElementById(`msHeroLevel-${position}`);
+        if (!input) return;
+        
+        input.value = level;
+        
+        // Update display and trigger calculations
+        updateHeroLevelDisplay(position);
+        updateHeroBonusDisplay();
+        updateAllSectionTotals();
+    }
+    
+    // Sync both picker wheels to current input values
+    function syncHeroPickerToInput(position) {
+        const select = document.getElementById(`msHeroSelect-${position}`);
+        const input = document.getElementById(`msHeroLevel-${position}`);
+        if (!select || !input) return;
+        
+        const heroId = select.value || '';
+        const level = parseInt(input.value) || 0;
+        
+        const heroColumnId = `msHeroSelect-${position}Picker`;
+        const levelColumnId = `msHeroLevel-${position}Picker`;
+        const heroColumn = document.getElementById(heroColumnId);
+        const levelColumn = document.getElementById(levelColumnId);
+        
+        // Sync hero wheel (use requestAnimationFrame for better performance, skip sync to prevent loops)
+        if (heroColumn) {
+            requestAnimationFrame(() => {
+                selectHeroPickerItem(heroColumn, heroId, position, true);
+            });
+        }
+        
+        // Sync level wheel (if hero is selected)
+        if (levelColumn && heroId) {
+            // Make sure level wheel is populated
+            updateHeroLevelPickerWheel(position, heroId);
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    selectHeroLevelPickerItem(levelColumn, level, position);
+                });
+            });
+        }
+    }
+    
+    // Handle hero picker scroll (hero selection wheel)
+    function handleHeroPickerScroll(heroColumn, position) {
+        const items = heroColumn.querySelectorAll('.ms-picker-wheel__item');
+        if (items.length === 0) return;
+        
+        const containerHeight = heroColumn.offsetHeight;
+        const scrollTop = heroColumn.scrollTop;
+        const itemHeight = 40;
+        const centerY = containerHeight / 2;
+        const padding = 80;
+        
+        const centerScrollPosition = scrollTop + centerY;
+        const itemIndexAtCenter = Math.round((centerScrollPosition - padding) / itemHeight);
+        
+        const validIndex = Math.max(0, Math.min(itemIndexAtCenter, items.length - 1));
+        const closestItem = items[validIndex];
+        
+        if (closestItem) {
+            const selectedHeroId = closestItem.dataset.heroId || '';
+            
+            items.forEach(item => item.classList.remove('selected'));
+            closestItem.classList.add('selected');
+            
+            syncHeroSelectionToInput(position, selectedHeroId);
+        }
+    }
+    
+    // Handle hero level picker scroll (level selection wheel)
+    function handleHeroLevelPickerScroll(levelColumn, position) {
+        const items = levelColumn.querySelectorAll('.ms-picker-wheel__item');
+        if (items.length === 0) return;
+        
+        const containerHeight = levelColumn.offsetHeight;
+        const scrollTop = levelColumn.scrollTop;
+        const itemHeight = 40;
+        const centerY = containerHeight / 2;
+        const padding = 80;
+        
+        const centerScrollPosition = scrollTop + centerY;
+        const itemIndexAtCenter = Math.round((centerScrollPosition - padding) / itemHeight);
+        
+        const validIndex = Math.max(0, Math.min(itemIndexAtCenter, items.length - 1));
+        const closestItem = items[validIndex];
+        
+        if (closestItem) {
+            const selectedLevel = parseInt(closestItem.dataset.level);
+            
+            items.forEach(item => item.classList.remove('selected'));
+            closestItem.classList.add('selected');
+            
+            syncHeroLevelToInput(position, selectedLevel);
+        }
+    }
+    
+    // ============================================
+    // ARMORY PICKER WHEEL FUNCTIONS
+    // ============================================
+    
+    // Initialize picker wheel for an armory
+    function initArmoryPickerWheel(armoryId, armoryKey) {
+        const armoryItem = document.querySelector(`[data-armory-id="${armoryId}"]`);
+        if (!armoryItem) return;
+        
+        const columnId = `${armoryId}Picker`;
+        const column = document.getElementById(columnId);
+        if (!column) return;
+        
+        // Determine armory type and max level
+        let armoryType = 'standard';
+        let maxLevel = 236;
+        
+        if (MARCH_SIZE_DATA.armories.trinket[armoryKey]) {
+            armoryType = 'trinket';
+            maxLevel = 150;
+        } else if (MARCH_SIZE_DATA.armories.dragon[armoryKey]) {
+            armoryType = 'dragon';
+            maxLevel = 150;
+        }
+        
+        const minLevel = 0;
+        
+        // Set up click handler for armory item
+        armoryItem.addEventListener('click', (e) => {
+            // Don't toggle if clicking inside the picker
+            if (e.target.closest('.ms-armory-item__picker-container')) {
+                return;
+            }
+            toggleArmoryPicker(armoryItem, armoryId, armoryKey);
+        });
+        
+        // Set up scroll handler (only once)
+        let scrollTimeout = null;
+        let lastScrollPosition = column.scrollTop;
+        
+        column.addEventListener('scroll', () => {
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(() => {
+                const currentScroll = column.scrollTop;
+                const scrollDiff = Math.abs(currentScroll - lastScrollPosition);
+                
+                if (scrollDiff < 2) {
+                    handleArmoryPickerScroll(column, armoryId, armoryKey);
+                }
+                lastScrollPosition = currentScroll;
+            }, 200);
+        }, { passive: true });
+        
+        // Populate picker wheel
+        updateArmoryPickerWheel(armoryId, armoryKey, minLevel, maxLevel, armoryType);
+        
+        // Sync picker to current input value on initialization
+        syncArmoryPickerToInput(armoryId, armoryKey);
+    }
+    
+    // Update armory picker wheel with levels
+    function updateArmoryPickerWheel(armoryId, armoryKey, minLevel, maxLevel, armoryType) {
+        const columnId = `${armoryId}Picker`;
+        const column = document.getElementById(columnId);
+        if (!column) return;
+        
+        // Clear column
+        column.innerHTML = '';
+        
+        // Populate column with level and value
+        for (let level = minLevel; level <= maxLevel; level++) {
+            const item = document.createElement('div');
+            item.className = 'ms-picker-wheel__item';
+            item.dataset.level = level;
+            
+            // Calculate march size value for this level
+            const data = getArmoryMarchSize(armoryType, armoryKey, level);
+            const value = data.marchSize || 0;
+            
+            // Create level text
+            const levelText = document.createTextNode(`Level ${level} (`);
+            item.appendChild(levelText);
+            
+            // Create value span with green color
+            const valueSpan = document.createElement('span');
+            valueSpan.style.color = 'var(--success-color)';
+            valueSpan.textContent = `+${formatNumber(value)}`;
+            item.appendChild(valueSpan);
+            
+            // Create closing parenthesis
+            const closeText = document.createTextNode(')');
+            item.appendChild(closeText);
+            
+            // Add click handler
+            item.addEventListener('click', () => {
+                selectArmoryPickerItem(column, level, armoryId, armoryKey);
+            });
+            
+            column.appendChild(item);
+        }
+    }
+    
+    // Toggle armory picker open/closed
+    function toggleArmoryPicker(armoryItem, armoryId, armoryKey) {
+        const pickerContainer = armoryItem.querySelector('.ms-armory-item__picker-container');
+        if (!pickerContainer) return;
+        
+        const isExpanded = armoryItem.classList.contains('ms-armory-item--expanded');
+        
+        if (isExpanded) {
+            armoryItem.classList.remove('ms-armory-item--expanded');
+            pickerContainer.style.display = 'none';
+        } else {
+            armoryItem.classList.add('ms-armory-item--expanded');
+            pickerContainer.style.display = 'block';
+            syncArmoryPickerToInput(armoryId, armoryKey);
+        }
+    }
+    
+    // Select a specific item in the armory picker
+    function selectArmoryPickerItem(column, level, armoryId, armoryKey) {
+        const items = column.querySelectorAll('.ms-picker-wheel__item');
+        const itemHeight = 40;
+        const padding = 80;
+        
+        items.forEach((item, index) => {
+            if (parseInt(item.dataset.level) === level) {
+                const containerHeight = column.offsetHeight;
+                const scrollPosition = padding + (index * itemHeight) + (itemHeight / 2) - (containerHeight / 2);
+                column.scrollTop = Math.max(0, scrollPosition);
+                
+                items.forEach(i => i.classList.remove('selected'));
+                item.classList.add('selected');
+                
+                syncArmoryInputToPicker(armoryId, level, armoryKey);
+            }
+        });
+    }
+    
+    // Sync armory picker to current input value
+    function syncArmoryPickerToInput(armoryId, armoryKey) {
+        const input = document.getElementById(armoryId);
+        if (!input) return;
+        
+        const level = parseInt(input.value) || 0;
+        const columnId = `${armoryId}Picker`;
+        const column = document.getElementById(columnId);
+        if (!column) return;
+        
+        setTimeout(() => {
+            selectArmoryPickerItem(column, level, armoryId, armoryKey);
+        }, 50);
+    }
+    
+    // Handle armory picker scroll
+    function handleArmoryPickerScroll(column, armoryId, armoryKey) {
+        const items = column.querySelectorAll('.ms-picker-wheel__item');
+        if (items.length === 0) return;
+        
+        const containerHeight = column.offsetHeight;
+        const scrollTop = column.scrollTop;
+        const itemHeight = 40;
+        const centerY = containerHeight / 2;
+        const padding = 80;
+        
+        const centerScrollPosition = scrollTop + centerY;
+        const itemIndexAtCenter = Math.round((centerScrollPosition - padding) / itemHeight);
+        
+        const validIndex = Math.max(0, Math.min(itemIndexAtCenter, items.length - 1));
+        const closestItem = items[validIndex];
+        
+        if (closestItem) {
+            const selectedLevel = parseInt(closestItem.dataset.level);
+            
+            items.forEach(item => item.classList.remove('selected'));
+            closestItem.classList.add('selected');
+            
+            syncArmoryInputToPicker(armoryId, selectedLevel, armoryKey);
+        }
+    }
+    
+    // Sync armory input to picker value
+    function syncArmoryInputToPicker(armoryId, level, armoryKey) {
+        const input = document.getElementById(armoryId);
+        if (!input) return;
+        
+        input.value = level;
+        
+        // Update display and trigger calculations
+        updateArmorySliderDisplay(input);
+        updateHeroBonusDisplay();
+        updateAllSectionTotals();
+    }
+    
+    // ============================================
+    // MARCHING HERO PICKER WHEEL FUNCTIONS
+    // ============================================
+    
+    // Initialize picker wheel for marching hero
+    function initMarchingHeroPickerWheel() {
+        const sliderGroup = document.querySelector('[data-marching-hero-id="msMarchingHeroLevel"]');
+        if (!sliderGroup) return;
+        
+        const column = document.getElementById('msMarchingHeroLevelPicker');
+        if (!column) return;
+        
+        const input = document.getElementById('msMarchingHeroLevel');
+        if (!input) return;
+        
+        // Set up click handler for slider group
+        sliderGroup.addEventListener('click', (e) => {
+            // Don't toggle if clicking inside the picker
+            if (e.target.closest('.ms-marching-slider-group__picker-container')) {
+                return;
+            }
+            toggleMarchingHeroPicker(sliderGroup);
+        });
+        
+        // Set up scroll handler (only once)
+        let scrollTimeout = null;
+        let lastScrollPosition = column.scrollTop;
+        
+        column.addEventListener('scroll', () => {
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(() => {
+                const currentScroll = column.scrollTop;
+                const scrollDiff = Math.abs(currentScroll - lastScrollPosition);
+                
+                if (scrollDiff < 2) {
+                    handleMarchingHeroPickerScroll(column);
+                }
+                lastScrollPosition = currentScroll;
+            }, 200);
+        }, { passive: true });
+        
+        // Populate picker wheel (0-60 levels)
+        updateMarchingHeroPickerWheel();
+        
+        // Sync picker to current input value on initialization
+        syncMarchingHeroPickerToInput();
+    }
+    
+    // Update marching hero picker wheel with levels
+    function updateMarchingHeroPickerWheel() {
+        const column = document.getElementById('msMarchingHeroLevelPicker');
+        if (!column) return;
+        
+        // Clear column
+        column.innerHTML = '';
+        
+        // Populate with levels 0-60
+        for (let level = 0; level <= 60; level++) {
+            const item = document.createElement('div');
+            item.className = 'ms-picker-wheel__item';
+            item.dataset.level = level;
+            
+            // Calculate march size value for this level
+            const currentMS = getMarchingHeroMS(level);
+            const maxMS = 8813;
+            
+            // Create level text
+            const levelText = document.createTextNode(`Level ${level} (`);
+            item.appendChild(levelText);
+            
+            // Create value span with green color
+            const valueSpan = document.createElement('span');
+            valueSpan.style.color = 'var(--success-color)';
+            valueSpan.textContent = `+${currentMS.toLocaleString()} / ${maxMS.toLocaleString()}`;
+            item.appendChild(valueSpan);
+            
+            // Create closing parenthesis
+            const closeText = document.createTextNode(')');
+            item.appendChild(closeText);
+            
+            // Add click handler
+            item.addEventListener('click', () => {
+                selectMarchingHeroPickerItem(column, level);
+            });
+            
+            column.appendChild(item);
+        }
+    }
+    
+    // Toggle marching hero picker open/closed
+    function toggleMarchingHeroPicker(sliderGroup) {
+        const pickerContainer = sliderGroup.querySelector('.ms-marching-slider-group__picker-container');
+        if (!pickerContainer) return;
+        
+        const isExpanded = sliderGroup.classList.contains('ms-marching-slider-group--expanded');
+        
+        if (isExpanded) {
+            sliderGroup.classList.remove('ms-marching-slider-group--expanded');
+            pickerContainer.style.display = 'none';
+        } else {
+            sliderGroup.classList.add('ms-marching-slider-group--expanded');
+            pickerContainer.style.display = 'block';
+            syncMarchingHeroPickerToInput();
+        }
+    }
+    
+    // Select a specific item in the marching hero picker
+    function selectMarchingHeroPickerItem(column, level) {
+        const items = column.querySelectorAll('.ms-picker-wheel__item');
+        const itemHeight = 40;
+        const padding = 80;
+        
+        items.forEach((item, index) => {
+            if (parseInt(item.dataset.level) === level) {
+                const containerHeight = column.offsetHeight;
+                const scrollPosition = padding + (index * itemHeight) + (itemHeight / 2) - (containerHeight / 2);
+                column.scrollTop = Math.max(0, scrollPosition);
+                
+                items.forEach(i => i.classList.remove('selected'));
+                item.classList.add('selected');
+                
+                syncMarchingHeroInputToPicker(level);
+            }
+        });
+    }
+    
+    // Sync marching hero picker to current input value
+    function syncMarchingHeroPickerToInput() {
+        const input = document.getElementById('msMarchingHeroLevel');
+        if (!input) return;
+        
+        const level = parseInt(input.value) || 60;
+        const column = document.getElementById('msMarchingHeroLevelPicker');
+        if (!column) return;
+        
+        setTimeout(() => {
+            selectMarchingHeroPickerItem(column, level);
+        }, 50);
+    }
+    
+    // Handle marching hero picker scroll
+    function handleMarchingHeroPickerScroll(column) {
+        const items = column.querySelectorAll('.ms-picker-wheel__item');
+        if (items.length === 0) return;
+        
+        const containerHeight = column.offsetHeight;
+        const scrollTop = column.scrollTop;
+        const itemHeight = 40;
+        const centerY = containerHeight / 2;
+        const padding = 80;
+        
+        const centerScrollPosition = scrollTop + centerY;
+        const itemIndexAtCenter = Math.round((centerScrollPosition - padding) / itemHeight);
+        
+        const validIndex = Math.max(0, Math.min(itemIndexAtCenter, items.length - 1));
+        const closestItem = items[validIndex];
+        
+        if (closestItem) {
+            const selectedLevel = parseInt(closestItem.dataset.level);
+            
+            items.forEach(item => item.classList.remove('selected'));
+            closestItem.classList.add('selected');
+            
+            syncMarchingHeroInputToPicker(selectedLevel);
+        }
+    }
+    
+    // Sync marching hero input to picker value
+    function syncMarchingHeroInputToPicker(level) {
+        const input = document.getElementById('msMarchingHeroLevel');
+        if (!input) return;
+        
+        input.value = level;
+        
+        // Update display and trigger calculations
+        updateMarchingHeroDisplay();
+        updateAllSectionTotals();
+    }
+    
+    // ============================================
+    // HALL OF HEROES PICKER WHEEL FUNCTIONS
+    // ============================================
+    
+    // Initialize picker wheel for hall of heroes
+    function initHallPickerWheel() {
+        const sliderGroup = document.querySelector('[data-hall-id="msHallLevel"]');
+        if (!sliderGroup) return;
+        
+        const column = document.getElementById('msHallLevelPicker');
+        if (!column) return;
+        
+        const input = document.getElementById('msHallLevel');
+        if (!input) return;
+        
+        // Set up click handler for slider group
+        sliderGroup.addEventListener('click', (e) => {
+            // Don't toggle if clicking inside the picker
+            if (e.target.closest('.ms-hall-slider-group__picker-container')) {
+                return;
+            }
+            toggleHallPicker(sliderGroup);
+        });
+        
+        // Set up scroll handler (only once)
+        let scrollTimeout = null;
+        let lastScrollPosition = column.scrollTop;
+        
+        column.addEventListener('scroll', () => {
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(() => {
+                const currentScroll = column.scrollTop;
+                const scrollDiff = Math.abs(currentScroll - lastScrollPosition);
+                
+                if (scrollDiff < 2) {
+                    handleHallPickerScroll(column);
+                }
+                lastScrollPosition = currentScroll;
+            }, 200);
+        }, { passive: true });
+        
+        // Populate picker wheel (0-21 levels)
+        updateHallPickerWheel();
+        
+        // Sync picker to current input value on initialization
+        syncHallPickerToInput();
+    }
+    
+    // Update hall picker wheel with levels
+    function updateHallPickerWheel() {
+        const column = document.getElementById('msHallLevelPicker');
+        if (!column) return;
+        
+        // Clear column
+        column.innerHTML = '';
+        
+        // Populate with levels 0-21
+        for (let level = 0; level <= 21; level++) {
+            const item = document.createElement('div');
+            item.className = 'ms-picker-wheel__item';
+            item.dataset.level = level;
+            
+            // Calculate march size value for this level
+            const currentMS = getHallMS(level);
+            const maxMS = 2000;
+            
+            // Create level text
+            let levelText;
+            if (level < 13) {
+                levelText = document.createTextNode(`Level ${level} (Unlocks Lv13)`);
+            } else {
+                levelText = document.createTextNode(`Level ${level} (`);
+            }
+            item.appendChild(levelText);
+            
+            if (level >= 13) {
+                // Create value span with green color
+                const valueSpan = document.createElement('span');
+                valueSpan.style.color = 'var(--success-color)';
+                valueSpan.textContent = `+${currentMS.toLocaleString()} / ${maxMS.toLocaleString()}`;
+                item.appendChild(valueSpan);
+                
+                // Create closing parenthesis
+                const closeText = document.createTextNode(')');
+                item.appendChild(closeText);
+            }
+            
+            // Add click handler
+            item.addEventListener('click', () => {
+                selectHallPickerItem(column, level);
+            });
+            
+            column.appendChild(item);
+        }
+    }
+    
+    // Toggle hall picker open/closed
+    function toggleHallPicker(sliderGroup) {
+        const pickerContainer = sliderGroup.querySelector('.ms-hall-slider-group__picker-container');
+        if (!pickerContainer) return;
+        
+        const isExpanded = sliderGroup.classList.contains('ms-hall-slider-group--expanded');
+        
+        if (isExpanded) {
+            sliderGroup.classList.remove('ms-hall-slider-group--expanded');
+            pickerContainer.style.display = 'none';
+        } else {
+            sliderGroup.classList.add('ms-hall-slider-group--expanded');
+            pickerContainer.style.display = 'block';
+            syncHallPickerToInput();
+        }
+    }
+    
+    // Select a specific item in the hall picker
+    function selectHallPickerItem(column, level) {
+        const items = column.querySelectorAll('.ms-picker-wheel__item');
+        const itemHeight = 40;
+        const padding = 80;
+        
+        items.forEach((item, index) => {
+            if (parseInt(item.dataset.level) === level) {
+                const containerHeight = column.offsetHeight;
+                const scrollPosition = padding + (index * itemHeight) + (itemHeight / 2) - (containerHeight / 2);
+                column.scrollTop = Math.max(0, scrollPosition);
+                
+                items.forEach(i => i.classList.remove('selected'));
+                item.classList.add('selected');
+                
+                syncHallInputToPicker(level);
+            }
+        });
+    }
+    
+    // Sync hall picker to current input value
+    function syncHallPickerToInput() {
+        const input = document.getElementById('msHallLevel');
+        if (!input) return;
+        
+        const level = parseInt(input.value) || 21;
+        const column = document.getElementById('msHallLevelPicker');
+        if (!column) return;
+        
+        setTimeout(() => {
+            selectHallPickerItem(column, level);
+        }, 50);
+    }
+    
+    // Handle hall picker scroll
+    function handleHallPickerScroll(column) {
+        const items = column.querySelectorAll('.ms-picker-wheel__item');
+        if (items.length === 0) return;
+        
+        const containerHeight = column.offsetHeight;
+        const scrollTop = column.scrollTop;
+        const itemHeight = 40;
+        const centerY = containerHeight / 2;
+        const padding = 80;
+        
+        const centerScrollPosition = scrollTop + centerY;
+        const itemIndexAtCenter = Math.round((centerScrollPosition - padding) / itemHeight);
+        
+        const validIndex = Math.max(0, Math.min(itemIndexAtCenter, items.length - 1));
+        const closestItem = items[validIndex];
+        
+        if (closestItem) {
+            const selectedLevel = parseInt(closestItem.dataset.level);
+            
+            items.forEach(item => item.classList.remove('selected'));
+            closestItem.classList.add('selected');
+            
+            syncHallInputToPicker(selectedLevel);
+        }
+    }
+    
+    // Sync hall input to picker value
+    function syncHallInputToPicker(level) {
+        const input = document.getElementById('msHallLevel');
+        if (!input) return;
+        
+        input.value = level;
+        
+        // Update display and trigger calculations
+        updateHallLevelDisplay();
+        updateAllSectionTotals();
+    }
+    
     // Export for external access if needed
     window.marchSizeCalculator = {
         init,
