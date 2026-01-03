@@ -12970,6 +12970,8 @@ button.multiplier-btn {
     gap: 16px;
     margin-bottom: 20px;
     width: 100%;
+    box-sizing: border-box;
+    overflow-x: auto;
 }
 
 .ms-opt-slot {
@@ -12978,6 +12980,9 @@ button.multiplier-btn {
     border-radius: 12px;
     padding: 16px;
     transition: all 0.2s ease;
+    box-sizing: border-box;
+    max-width: 100%;
+    min-width: 0;
 }
 
 .ms-opt-slot:hover {
@@ -13049,6 +13054,9 @@ button.multiplier-btn {
     align-items: stretch;
     gap: 12px;
     margin-bottom: 16px;
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .ms-opt-vs {
@@ -13073,14 +13081,31 @@ button.multiplier-btn {
     text-align: center;
 }
 
-/* Move label to top in current gear display */
+/* Current gear display - label at top */
 .ms-opt-gear--current {
     border: 1px solid rgba(255, 255, 255, 0.1);
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
 }
 
 .ms-opt-gear--current .ms-opt-gear__label {
-    order: -1; /* Move label to top */
+    order: -1;
     margin-bottom: 8px;
+    width: 100%;
+}
+
+.ms-opt-gear--current .ms-opt-gear__image {
+    order: 0;
+    margin-bottom: 8px;
+}
+
+.ms-opt-gear--current .ms-opt-gear__info {
+    order: 1;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .ms-opt-gear__label {
@@ -13103,21 +13128,19 @@ button.multiplier-btn {
     flex-shrink: 0;
 }
 
-/* Recommended gear - label at top, image shifted to the right (similar to ms-gear-slot-visual) */
+/* Recommended gear - label at top */
 .ms-opt-gear--recommended {
     border: 1px dashed rgba(255, 193, 7, 0.4);
-    flex-direction: row;
-    align-items: flex-start;
-    text-align: left;
-    position: relative;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
 }
 
 .ms-opt-gear--recommended .ms-opt-gear__label {
-    position: absolute;
-    top: 12px;
-    left: 12px;
-    order: 0;
-    margin-bottom: 0;
+    position: static;
+    order: -1;
+    margin-bottom: 8px;
+    width: 100%;
     font-size: 0.65rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -13125,15 +13148,19 @@ button.multiplier-btn {
 }
 
 .ms-opt-gear--recommended .ms-opt-gear__image {
-    margin-left: auto; /* Push image to the right */
-    order: 2;
+    margin-left: 0;
+    order: 0;
+    margin-bottom: 8px;
 }
 
 .ms-opt-gear--recommended .ms-opt-gear__info {
-    flex: 1;
     order: 1;
-    padding-right: 12px;
+    width: 100%;
+    padding-right: 0;
     min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .ms-opt-gear__image img {
@@ -13630,6 +13657,11 @@ button.multiplier-btn {
         min-width: 0;
     }
     
+    .ms-opt-gear__label {
+        margin-bottom: 6px;
+        font-size: 0.6rem;
+    }
+    
     .ms-opt-gear__info {
         width: 100%;
     }
@@ -13637,11 +13669,13 @@ button.multiplier-btn {
     .ms-opt-gear__image {
         width: 70px;
         height: 70px;
+        margin-bottom: 8px;
     }
     
     .ms-opt-gear--recommended .ms-opt-gear__image {
         width: 70px;
         height: 70px;
+        margin-bottom: 8px;
     }
     
     .ms-opt-title-card {
@@ -13697,29 +13731,41 @@ button.multiplier-btn {
     
     .ms-opt-comparison {
         flex-direction: column;
-        gap: 6px;
+        gap: 8px;
     }
     
     .ms-opt-gear {
-        flex-direction: row;
-        text-align: left;
-        padding: 8px;
+        flex-direction: column;
+        text-align: center;
+        padding: 10px;
     }
     
     .ms-opt-gear--current {
-        flex-direction: column; /* Keep vertical layout on mobile for label on top */
+        flex-direction: column;
         text-align: center;
     }
     
     .ms-opt-gear--current .ms-opt-gear__label {
         order: -1;
         margin-bottom: 6px;
+        width: 100%;
+    }
+    
+    .ms-opt-gear--current .ms-opt-gear__image {
+        order: 0;
+        margin-bottom: 8px;
+    }
+    
+    .ms-opt-gear--current .ms-opt-gear__info {
+        order: 1;
+        width: 100%;
     }
     
     .ms-opt-gear__image {
         width: 60px;
         height: 60px;
         flex-shrink: 0;
+        margin-bottom: 8px;
     }
     
     .ms-opt-gear--recommended {
@@ -13731,8 +13777,7 @@ button.multiplier-btn {
         position: static;
         order: -1;
         margin-bottom: 8px;
-        left: auto;
-        top: auto;
+        width: 100%;
     }
     
     .ms-opt-gear--recommended .ms-opt-gear__image {
@@ -13740,11 +13785,13 @@ button.multiplier-btn {
         order: 0;
         width: 60px;
         height: 60px;
+        margin-bottom: 8px;
     }
     
     .ms-opt-gear--recommended .ms-opt-gear__info {
         order: 1;
         padding-right: 0;
+        width: 100%;
     }
     
     .ms-opt-gear__name {
@@ -13841,37 +13888,59 @@ button.multiplier-btn {
 
 @media (max-width: 400px) {
     .ms-opt-slot {
-        padding: 8px;
+        padding: 10px;
     }
     
     .ms-opt-header {
-        font-size: 0.65rem;
+        font-size: 0.7rem;
+        gap: 4px;
     }
     
     .ms-opt-badge {
-        font-size: 0.55rem;
-        padding: 2px 5px;
+        font-size: 0.6rem;
+        padding: 3px 6px;
+    }
+    
+    .ms-opt-gear__label {
+        font-size: 0.6rem;
+        margin-bottom: 6px;
     }
     
     .ms-opt-gear__image {
-        width: 50px;
-        height: 50px;
+        width: 55px;
+        height: 55px;
+        margin-bottom: 6px;
     }
     
     .ms-opt-gear--recommended .ms-opt-gear__image {
-        width: 50px;
-        height: 50px;
+        width: 55px;
+        height: 55px;
+        margin-bottom: 6px;
     }
     
     .ms-opt-gear__name {
-        font-size: 0.65rem;
+        font-size: 0.7rem;
+        line-height: 1.3;
     }
     
-    .ms-opt-gear-select,
+    .ms-opt-gear-select {
+        font-size: 0.7rem;
+        padding: 6px 8px;
+        margin-bottom: 6px;
+    }
+    
     .ms-opt-level-select,
     .ms-opt-quality-select {
         font-size: 0.65rem;
-        padding: 4px 6px;
+        padding: 5px 6px;
+    }
+    
+    .ms-opt-gear__effective {
+        font-size: 0.7rem;
+    }
+    
+    .ms-opt-comparison {
+        gap: 8px;
     }
 }
 
