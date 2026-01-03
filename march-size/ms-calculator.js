@@ -2050,6 +2050,60 @@
             return allGear[0]; // Already sorted by effectiveness
         }
         
+        // Find the minimal option (gear + level + quality) that beats the current gear
+        function findMinimalOptionThatBeatsCurrent(slotKey, currentEffectiveValue) {
+            const allGear = getAllGearForSlot(slotKey);
+            if (allGear.length === 0) return null;
+            
+            const levels = [35, 40, 45, 50];
+            const qualities = ['poor', 'common', 'fine', 'exquisite', 'epic', 'legendary'];
+            const qualityOrder = { poor: 0, common: 1, fine: 2, exquisite: 3, epic: 4, legendary: 5 };
+            
+            let bestOption = null;
+            let bestScore = Infinity; // Lower score is better (level priority, then quality)
+            
+            // Try each gear
+            for (const gear of allGear) {
+                let gearMinOption = null;
+                let gearMinScore = Infinity;
+                
+                // For each gear, find the minimal level/quality combination that beats current
+                for (const level of levels) {
+                    for (const quality of qualities) {
+                        const effective = calculateEffectiveMS(baseMarchSize, gear.stats, level, quality);
+                        if (effective > currentEffectiveValue) {
+                            // Calculate score: lower level and quality = better (lower score)
+                            // Score = level * 10 + qualityOrder (prioritizes lower level first, then quality)
+                            const score = level * 10 + qualityOrder[quality];
+                            if (score < gearMinScore) {
+                                gearMinScore = score;
+                                gearMinOption = {
+                                    gear: gear.name,
+                                    level: level,
+                                    quality: quality,
+                                    effective: effective
+                                };
+                            }
+                            // Found minimum quality for this level, break to try next level
+                            break;
+                        }
+                    }
+                    // Found minimum for this gear, stop checking higher levels
+                    if (gearMinOption) {
+                        break;
+                    }
+                }
+                
+                // Compare this gear's minimal option with the best so far
+                if (gearMinOption && gearMinScore < bestScore) {
+                    bestScore = gearMinScore;
+                    bestOption = gearMinOption;
+                }
+            }
+            
+            return bestOption;
+        }
+        
         // Render a single slot optimization card with interactive elements
         function renderOptimizationSlot(slotKey, slotState) {
             const current = getCurrentGearData(slotKey);
@@ -2058,11 +2112,31 @@
             
             // Initialize slot state if not exists
             if (!recommendationState.slots[slotKey]) {
-                recommendationState.slots[slotKey] = {
-                    selectedGear: bestGear?.name || '',
-                    selectedLevel: 45,
-                    selectedQuality: 'legendary'
-                };
+                if (current) {
+                    // Find minimal option that beats current
+                    const minimalOption = findMinimalOptionThatBeatsCurrent(slotKey, current.effectiveValue);
+                    if (minimalOption) {
+                        recommendationState.slots[slotKey] = {
+                            selectedGear: minimalOption.gear,
+                            selectedLevel: minimalOption.level,
+                            selectedQuality: minimalOption.quality
+                        };
+                    } else {
+                        // No gear can beat current, use best gear as fallback
+                        recommendationState.slots[slotKey] = {
+                            selectedGear: bestGear?.name || '',
+                            selectedLevel: 45,
+                            selectedQuality: 'legendary'
+                        };
+                    }
+                } else {
+                    // No current gear, use best gear
+                    recommendationState.slots[slotKey] = {
+                        selectedGear: bestGear?.name || '',
+                        selectedLevel: 45,
+                        selectedQuality: 'legendary'
+                    };
+                }
             }
             const state = recommendationState.slots[slotKey];
             
@@ -2175,37 +2249,37 @@
                     </div>
                     <div class="ms-opt-comparison">
                         <div class="ms-opt-gear ms-opt-gear--current">
-                            <div class="ms-opt-gear__label">Current</div>
-                            <div class="ms-opt-gear__image" style="border-color: ${currentQualityColor}">
-                                <img src="${currentImgSrc}" alt="${current.name}" onerror="this.style.display='none'">
-                    </div>
-                            <div class="ms-opt-gear__info">
-                                <span class="ms-opt-gear__name">${current.name}</span>
-                                <span class="ms-opt-gear__quality" style="color: ${currentQualityColor}">${capitalizeFirst(current.quality)} Lv.${current.level}</span>
-                                <span class="ms-opt-gear__effective">+${formatNumber(current.effectiveValue)}</span>
-                            </div>
-                        </div>
+    <div class="ms-opt-gear__label">Current</div>
+    <div class="ms-opt-gear__image" style="border-color: ${currentQualityColor}">
+        <img src="${currentImgSrc}" alt="${current.name}" onerror="this.style.display='none'">
+    </div>
+    <div class="ms-opt-gear__info">
+        <span class="ms-opt-gear__name">${current.name}</span>
+        <span class="ms-opt-gear__quality" style="color: ${currentQualityColor}">${capitalizeFirst(current.quality)} Lv.${current.level}</span>
+        <span class="ms-opt-gear__effective">+${formatNumber(current.effectiveValue)}</span>
+    </div>
+</div>
                         <div class="ms-opt-vs">→</div>
                         <div class="ms-opt-gear ms-opt-gear--recommended">
-                            <div class="ms-opt-gear__label">Recommended</div>
-                            <div class="ms-opt-gear__image" style="border-color: ${recQualityColor}" id="msOptImg-${slotKey}">
-                                <img src="${recImgSrc}" alt="${selectedGearData?.name || ''}" onerror="this.style.display='none'">
-                            </div>
-                            <div class="ms-opt-gear__info">
-                                <select class="ms-opt-gear-select" id="msOptGear-${slotKey}" data-slot="${slotKey}" title="${selectedGearData?.name || ''}">
-                                    ${gearOptionsHtml}
-                                </select>
-                                <div class="ms-opt-gear__selectors">
-                                    <select class="ms-opt-level-select" id="msOptLevel-${slotKey}" data-slot="${slotKey}">
-                                        ${levelOptionsHtml}
-                                    </select>
-                                    <select class="ms-opt-quality-select" id="msOptQuality-${slotKey}" data-slot="${slotKey}">
-                                        ${qualityOptionsHtml}
-                                    </select>
-                                </div>
-                                <span class="ms-opt-gear__effective" id="msOptEffective-${slotKey}">+${formatNumber(recEffective)}</span>
-                            </div>
-                        </div>
+    <div class="ms-opt-gear__label">Recommended</div>
+    <div class="ms-opt-gear__image" style="border-color: ${recQualityColor}" id="msOptImg-${slotKey}">
+        <img src="${recImgSrc}" alt="${selectedGearData?.name || ''}" onerror="this.style.display='none'">
+    </div>
+    <div class="ms-opt-gear__info">
+        <select class="ms-opt-gear-select" id="msOptGear-${slotKey}" data-slot="${slotKey}" title="${selectedGearData?.name || ''}">
+            ${gearOptionsHtml}
+        </select>
+        <div class="ms-opt-gear__selectors">
+            <select class="ms-opt-level-select" id="msOptLevel-${slotKey}" data-slot="${slotKey}">
+                ${levelOptionsHtml}
+            </select>
+            <select class="ms-opt-quality-select" id="msOptQuality-${slotKey}" data-slot="${slotKey}">
+                ${qualityOptionsHtml}
+            </select>
+        </div>
+        <span class="ms-opt-gear__effective" id="msOptEffective-${slotKey}">+${formatNumber(recEffective)}</span>
+    </div>
+</div>
                     </div>
                     ${minReqsHtml ? `
                     <div class="ms-opt-minreqs" id="msOptMinReqs-${slotKey}">
