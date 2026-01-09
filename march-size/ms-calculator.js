@@ -2450,9 +2450,6 @@
                             <span class="ms-opt-title-bonus__value" id="msOptTitleBonus">+${formatNumber(recommendationState.titleBonus)}</span>
                         </div>
                     </div>
-                    <div class="ms-opt-base-info">
-                        <span>Base March Size: <strong id="msOptBaseMarch">${formatNumber(baseMarchSize)}</strong></span>
-                    </div>
                 </div>
                 
                 <div class="ms-opt-slots">
@@ -2757,12 +2754,6 @@
         // Recalculate base march size with new title
         const results = calculateMarchSizeResults();
         recommendationState.baseMarchSize = results.baseMarchSize || recommendationState.baseMarchSize;
-        
-        // Update base march size display
-        const baseMarchEl = document.getElementById('msOptBaseMarch');
-        if (baseMarchEl) {
-            baseMarchEl.textContent = formatNumber(recommendationState.baseMarchSize);
-        }
         
         // Update all slots
         const slots = ['helmet', 'weapon', 'chest', 'ring', 'pants', 'boots', 'dragonTrinket', 'trinket'];
