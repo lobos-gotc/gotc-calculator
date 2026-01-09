@@ -1887,8 +1887,10 @@
             elements.recommendationScenario.textContent = SCENARIO_DISPLAY_NAMES[currentScenario] || capitalizeFirst(currentScenario);
         }
 
-        // Store current total for projected calculations
+        // Store current total and bonus percentages for projected calculations
         recommendationState.currentTotalMarchSize = results.total;
+        recommendationState.bonusPct = results.bonusPct;
+        recommendationState.gearPct = results.breakdown?.gear?.pct || 0;
 
         // Generate recommendations with base march size (without gear) for accurate percentage gear calculations
         generateRecommendations(results.base);
@@ -2022,10 +2024,20 @@
     let recommendationState = {
         baseMarchSize: 0,
         currentTotalMarchSize: 0,
+        bonusPct: 0,      // Total bonus percentage (research, heroes, gear pct, keep enh)
+        gearPct: 0,       // Gear percentage bonus only (doesn't apply to flat gear changes)
         titleBonus: 0,
         selectedTitle: 'none',
         slots: {}
     };
+
+    // Calculate projected total including percentage bonuses on gear gain
+    function calculateProjectedTotal(potentialGain) {
+        // Bonus percentage that applies to flat gear changes (excludes gear.pct)
+        const bonusPctForGear = recommendationState.bonusPct - recommendationState.gearPct;
+        const gainWithBonuses = potentialGain + Math.floor(potentialGain * bonusPctForGear / 100);
+        return recommendationState.currentTotalMarchSize + gainWithBonuses;
+    }
 
     function generateRecommendations(baseMarchSize) {
         if (!elements.recommendationsGrid) return;
@@ -2480,7 +2492,7 @@
                         </div>`}
                     <div class="ms-opt-summary__row ms-opt-summary__row--total">
                         <span>Projected Total March Size:</span>
-                        <span class="ms-opt-summary__value ms-opt-summary__value--total" id="msOptProjectedTotal">${formatNumber(recommendationState.currentTotalMarchSize + potentialGain)}</span>
+                        <span class="ms-opt-summary__value ms-opt-summary__value--total" id="msOptProjectedTotal">${formatNumber(calculateProjectedTotal(potentialGain))}</span>
                     </div>
                 </div>
             </div>
@@ -2757,10 +2769,9 @@
             }
         }
         
-        // Update projected total
+        // Update projected total (including percentage bonuses on gear gain)
         if (projectedTotalEl) {
-            const projectedTotal = recommendationState.currentTotalMarchSize + potentialGain;
-            projectedTotalEl.textContent = formatNumber(projectedTotal);
+            projectedTotalEl.textContent = formatNumber(calculateProjectedTotal(potentialGain));
         }
     }
     
