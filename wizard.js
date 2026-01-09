@@ -2010,6 +2010,21 @@
         const input = document.getElementById(`templateAmount${level}`);
         const templateCount = parseInt(input?.value) || recommendedValues[level] || 0;
         
+        // If template count is 0, clear the container and hide piece-cards
+        if (templateCount === 0) {
+            piecesContainer.innerHTML = '';
+            // Update label to not show count
+            const labelEl = document.querySelector(`.template-card-wrapper[data-level="${level}"] .template-card__label`);
+            if (labelEl) {
+                labelEl.textContent = `Level ${level}`;
+            }
+            // Clear carousel state
+            if (carouselState[level]) {
+                carouselState[level].pieces = [];
+            }
+            return;
+        }
+        
         // Get crafting plan pieces if available (keys are strings)
         const craftingPlan = window.currentTemplatePlan?.craftingPlan;
         let pieces = craftingPlan?.[String(level)] || craftingPlan?.[level] || [];
@@ -2035,13 +2050,6 @@
         } else if (templateCount > 0) {
             // No crafting plan pieces for early levels - use defaults
             pieces = getDefaultPiecesForLevel(level, templateCount);
-        } else {
-            // No templates, show placeholder
-            pieces = [{
-                name: `Level ${level} Template`,
-                img: levelIcons[level],
-                count: 0
-            }];
         }
         
         // Initialize carousel state if needed
@@ -2077,9 +2085,13 @@
         let html = `<div class="pieces-strip" data-level="${level}">`;
         
         state.pieces.forEach((piece, index) => {
+            const count = piece.count || 0;
+            
+            // Skip rendering pieces with 0 count
+            if (count === 0) return;
+            
             const imgSrc = piece.img || levelIcons[level];
             const name = piece.name || `Piece ${index + 1}`;
-            const count = piece.count || 0;
             
             html += `
                 <div class="piece-card" data-index="${index}">
