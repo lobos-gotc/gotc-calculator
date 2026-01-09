@@ -50,6 +50,9 @@
         
         // Initialize all section totals
         updateAllSectionTotals();
+        
+        // Ensure we start at step 1 (scenario selection)
+        goToStep(1);
 
         console.log('March Size Calculator initialized');
     }
