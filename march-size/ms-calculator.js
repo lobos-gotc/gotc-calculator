@@ -1887,8 +1887,8 @@
             elements.recommendationScenario.textContent = SCENARIO_DISPLAY_NAMES[currentScenario] || capitalizeFirst(currentScenario);
         }
 
-        // Generate recommendations with base march size for optimization analysis
-        generateRecommendations(results.total);
+        // Generate recommendations with base march size (without gear) for accurate percentage gear calculations
+        generateRecommendations(results.base);
 
         // Generate breakdown chart
         generateBreakdownChart(results);
