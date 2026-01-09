@@ -623,21 +623,42 @@
                                 <button class="info-btn info-btn--small" aria-label="Template plan info">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="14" height="14"><path d="M256 48a208 208 0 1 1 0 416 208 208 0 1 1 0-416zm0 464A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM216 336c-13.3 0-24 10.7-24 24s10.7 24 24 24l80 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-8 0 0-88c0-13.3-10.7-24-24-24l-48 0c-13.3 0-24 10.7-24 24s10.7 24 24 24l24 0 0 64-24 0zm40-144a32 32 0 1 0 0-64 32 32 0 1 0 0 64z"/></svg>
                                 </button>
-                                <div class="info-popover info-popover--compact">
-                                    <b>📊 Template Plan Overview</b><br><br>
-                                    Plan your crafting journey from L1 to L45. The system calculates how many templates survive at each level based on quality and cascade mechanics.<br><br>
-                                    <b>How it works:</b><br>
-                                    • <b>L1-L10:</b> Legendary quality = 100% success (no loss)<br>
-                                    • <b>L15+:</b> Lower qualities have survival rates:<br>
-                                    &nbsp;&nbsp;- Exquisite: ~46.5% survive<br>
-                                    &nbsp;&nbsp;- Fine: ~20% survive<br>
-                                    &nbsp;&nbsp;- Common: ~10% survive<br><br>
-                                    <b>Combining:</b> 4 failed templates → 1 next-tier template<br><br>
-                                    <b>Editing:</b><br>
-                                    • Change template counts in the input boxes<br>
-                                    • Select quality per level using the dropdown<br>
-                                    • Scroll the carousel to preview gear pieces<br><br>
-                                    <i>💡 Tip: Start with Legendary at L1-L10 for guaranteed success, then use lower qualities at higher levels to save materials!</i>
+                                <div class="info-popover info-popover--wide">
+                                    <b>📊 Template Plan - How It Works</b><br><br>
+                                    
+                                    <b>🧮 Projection Calculation:</b><br>
+                                    The system calculates how many templates you can make based on:<br>
+                                    • Your available materials (Step 1)<br>
+                                    • Usage % slider setting<br>
+                                    • Quality selections (affects material efficiency)<br>
+                                    • How far you want to cascade (cutoff level)<br><br>
+                                    
+                                    <b>📉 Cascade Survival Rates:</b><br>
+                                    • <b>L1-L10:</b> Legendary = 100% success<br>
+                                    • <b>L15+:</b> Survival depends on quality:<br>
+                                    &nbsp;&nbsp;- Legendary: ~100%<br>
+                                    &nbsp;&nbsp;- Exquisite: ~46.5%<br>
+                                    &nbsp;&nbsp;- Fine: ~20%<br>
+                                    &nbsp;&nbsp;- Common: ~10%<br>
+                                    • Failed templates: 4 → 1 next-tier template<br><br>
+                                    
+                                    <b>✋ Setting a Cutoff (Level = 0):</b><br>
+                                    Set any level to <b>0</b> to create a cutoff:<br>
+                                    • Example: Setting L25 = 0 means "only make L1-L20"<br>
+                                    • Materials redistribute to lower levels<br>
+                                    • You'll get MORE templates at L20 since no materials used for L25+<br>
+                                    • Quality changes above cutoff won't affect projection<br><br>
+                                    
+                                    <b>🔒 Locking Levels:</b><br>
+                                    • Edit any input to "lock" that level<br>
+                                    • Locked values won't change when slider/quality changes<br>
+                                    • Double-click to unlock and reset to auto<br><br>
+                                    
+                                    <b>💡 Tips:</b><br>
+                                    • Use Legendary at L1-L10 (guaranteed success)<br>
+                                    • Lower qualities = fewer materials but more loss<br>
+                                    • Set a cutoff if you only need templates up to a certain level<br>
+                                    • Changing quality at lower levels recalculates projection
                                 </div>
                             </span>
                         </h3>
