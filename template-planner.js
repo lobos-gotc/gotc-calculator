@@ -128,12 +128,14 @@
      * @param {Object} qualitySettings - Quality for each level (e.g., { 1: 'legendary', 15: 'exquisite' })
      * @returns {Object} - { totalUsage, breakdown: { level: { templates, cost } } }
      */
-    function estimateMaterialUsage(startingCount, qualitySettings = {}) {
+    function estimateMaterialUsage(startingCount, qualitySettings = {}, maxLevel = 45) {
         const breakdown = {};
         let totalUsage = 0;
         let templates = startingCount;
         
-        const levels = [1, 5, 10, 15, 20, 25, 30, 35, 40, 45];
+        const allLevels = [1, 5, 10, 15, 20, 25, 30, 35, 40, 45];
+        // Filter levels up to maxLevel (cutoff)
+        const levels = allLevels.filter(l => l < maxLevel);
         
         for (const level of levels) {
             // Get quality for this level (use default if not specified)
@@ -180,9 +182,10 @@
      * @param {number|Object} materialsInput - Total materials (number) OR individual materials object
      * @param {number} usagePercent - Target usage percentage (0.0 to 1.0)
      * @param {Object} qualitySettings - Quality for each level
+     * @param {number} maxLevel - Maximum level to calculate (cutoff level, exclusive). If 25, calculates L1-L20.
      * @returns {Object} - { startingTemplates, estimatedUsage, breakdown, bottleneck }
      */
-    function estimateStartingTemplates(materialsInput, usagePercent = 0.6, qualitySettings = {}) {
+    function estimateStartingTemplates(materialsInput, usagePercent = 0.6, qualitySettings = {}, maxLevel = 45) {
         let totalMaterials = 0;
         let individualMaterials = null;
         let bottleneck = null;
@@ -206,13 +209,14 @@
             const bottleneckLimit = Math.floor(bottleneck.limitedTemplates * usagePercent);
             
             if (bottleneckLimit > 0) {
-                const estimate = estimateMaterialUsage(bottleneckLimit, qualitySettings);
+                const estimate = estimateMaterialUsage(bottleneckLimit, qualitySettings, maxLevel);
                 return {
                     startingTemplates: bottleneckLimit,
                     estimatedUsage: estimate.totalUsage,
                     usagePercent: totalMaterials > 0 ? estimate.totalUsage / totalMaterials : 0,
                     breakdown: estimate.breakdown,
-                    bottleneck: bottleneck
+                    bottleneck: bottleneck,
+                    maxLevel: maxLevel
                 };
             }
         }
@@ -223,7 +227,7 @@
         let bestEstimate = null;
         
         // Quick sanity check - if even 1 template exceeds target, return 0
-        const singleTemplateUsage = estimateMaterialUsage(1, qualitySettings);
+        const singleTemplateUsage = estimateMaterialUsage(1, qualitySettings, maxLevel);
         if (singleTemplateUsage.totalUsage > targetUsage) {
             return {
                 startingTemplates: 0,
@@ -231,6 +235,7 @@
                 usagePercent: 0,
                 breakdown: {},
                 bottleneck: bottleneck,
+                maxLevel: maxLevel,
                 message: 'Insufficient materials for even 1 template'
             };
         }
@@ -241,7 +246,7 @@
         while (high - low > 1 && iterations < maxIterations) {
             iterations++;
             const mid = Math.floor((low + high) / 2);
-            const estimate = estimateMaterialUsage(mid, qualitySettings);
+            const estimate = estimateMaterialUsage(mid, qualitySettings, maxLevel);
             
             if (estimate.totalUsage <= targetUsage) {
                 low = mid;
@@ -253,7 +258,7 @@
         
         // Final check at low value
         if (!bestEstimate) {
-            const finalEstimate = estimateMaterialUsage(low, qualitySettings);
+            const finalEstimate = estimateMaterialUsage(low, qualitySettings, maxLevel);
             bestEstimate = { count: low, ...finalEstimate };
         }
         
