@@ -280,7 +280,15 @@
         'myrish lace': 'my-myrish-lace',
         'myrishlace': 'my-myrish-lace',
         'scorched horsehair tassel': 'my-scorched-horsehair-tassel',
-        'scorchedhorsehair': 'my-scorched-horsehair-tassel'
+        'scorchedhorsehair': 'my-scorched-horsehair-tassel',
+        
+        // Season 13 Materials
+        'silver ore': 'my-silver-ore',
+        'silverore': 'my-silver-ore',
+        'silver 0re': 'my-silver-ore',    // OCR o->0
+        'si1ver ore': 'my-silver-ore',    // OCR l->1
+        'siiver ore': 'my-silver-ore',    // OCR l->i
+        'sil ver ore': 'my-silver-ore'    // OCR space insertion
     };
 
     // Material display info - dynamically built from materials.js if available

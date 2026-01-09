@@ -115,6 +115,7 @@ const seasonsMap = {
   10: season10,
   11: season11,
   12: season12,
+  13: season13,
 };
 
 const extraProducts = [];

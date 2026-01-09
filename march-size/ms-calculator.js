@@ -50,6 +50,9 @@
         
         // Initialize all section totals
         updateAllSectionTotals();
+        
+        // Ensure we start at step 1 (scenario selection)
+        goToStep(1);
 
         console.log('March Size Calculator initialized');
     }
@@ -259,8 +262,8 @@
                 updateGearBonusDisplay(slot);
             });
             
-            // Recalculate march size after gear is set
-            calculateMarchSize();
+            // Recalculate march size after gear is set (don't navigate to results during init)
+            calculateMarchSize(false);
         }, 100);
     }
     
@@ -1293,7 +1296,7 @@
     // CALCULATION ENGINE
     // ============================================
 
-    function calculateMarchSize() {
+    function calculateMarchSize(navigateToResults = true) {
         const results = {
             base: 0,
             gear: 0,
@@ -1367,8 +1370,10 @@
         // Display results
         displayResults(results);
         
-        // Go to results step
-        goToStep(3);
+        // Go to results step (only if navigateToResults is true - not during init)
+        if (navigateToResults) {
+            goToStep(3);
+        }
     }
 
     function calculateBuildingMS() {

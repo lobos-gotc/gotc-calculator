@@ -1087,7 +1087,7 @@
             ...createBasicMaterials(20000000),             // 20M basic
             ...createSeasonalMaterials(5000000)            // 5M seasonal
         },
-        'mixed-endgame': {
+        'tourney-addict': {
             ...createBasicMaterials(50000000),             // 50M basic
             ...createSeasonalMaterials(20000000)           // 20M seasonal
         },
@@ -1478,13 +1478,21 @@
         let cascade = [];
         let craftingPlan = {};
         
+        // Find the cutoff level (first level locked at 0)
+        // This determines how many levels will use materials
+        const cutoffLevel = findCutoffLevel();
+        const maxLevel = cutoffLevel || 46; // 46 means include L45, cutoff of 25 means only L1-L20
+        
+        console.log(`[TemplatePlan] Cutoff level: ${cutoffLevel || 'none'}, maxLevel for estimation: ${maxLevel}`);
+        
         // Always calculate from materials - this ensures slider changes affect non-locked levels
         if (typeof TemplatePlanner !== 'undefined' && TemplatePlanner.estimateStartingTemplates) {
-            // Use the new estimation system that accounts for L1-L45 material costs
+            // Use the new estimation system that accounts for material costs up to cutoff
             const estimate = TemplatePlanner.estimateStartingTemplates(
                 totalBasicMats, 
                 usagePercent, 
-                qualitySettings
+                qualitySettings,
+                maxLevel
             );
             
             startingTemplates = estimate.startingTemplates;
@@ -2008,7 +2016,24 @@
         if (!piecesContainer) return;
         
         const input = document.getElementById(`templateAmount${level}`);
-        const templateCount = parseInt(input?.value) || recommendedValues[level] || 0;
+        // Handle empty string properly - don't fall back to recommendedValues if input is explicitly empty
+        const inputValue = input?.value?.trim();
+        const templateCount = (inputValue === '' || inputValue === '0') ? 0 : (parseInt(inputValue) || recommendedValues[level] || 0);
+        
+        // If template count is 0, clear the container and hide piece-cards
+        if (templateCount === 0) {
+            piecesContainer.innerHTML = '';
+            // Update label to not show count
+            const labelEl = document.querySelector(`.template-card-wrapper[data-level="${level}"] .template-card__label`);
+            if (labelEl) {
+                labelEl.textContent = `Level ${level}`;
+            }
+            // Clear carousel state
+            if (carouselState[level]) {
+                carouselState[level].pieces = [];
+            }
+            return;
+        }
         
         // Get crafting plan pieces if available (keys are strings)
         const craftingPlan = window.currentTemplatePlan?.craftingPlan;
@@ -2035,13 +2060,6 @@
         } else if (templateCount > 0) {
             // No crafting plan pieces for early levels - use defaults
             pieces = getDefaultPiecesForLevel(level, templateCount);
-        } else {
-            // No templates, show placeholder
-            pieces = [{
-                name: `Level ${level} Template`,
-                img: levelIcons[level],
-                count: 0
-            }];
         }
         
         // Initialize carousel state if needed
@@ -2077,9 +2095,13 @@
         let html = `<div class="pieces-strip" data-level="${level}">`;
         
         state.pieces.forEach((piece, index) => {
+            const count = piece.count || 0;
+            
+            // Skip rendering pieces with 0 count
+            if (count === 0) return;
+            
             const imgSrc = piece.img || levelIcons[level];
             const name = piece.name || `Piece ${index + 1}`;
-            const count = piece.count || 0;
             
             html += `
                 <div class="piece-card" data-index="${index}">
@@ -2298,7 +2320,8 @@
             // Update the UI with calculated value
             const levelInput = document.getElementById(`templateAmount${level}`);
             if (levelInput) {
-                levelInput.value = calculatedCount > 0 ? calculatedCount.toString() : '';
+                // Set '0' explicitly instead of empty string to properly indicate zero count
+                levelInput.value = calculatedCount > 0 ? calculatedCount.toString() : '0';
                 levelInput.placeholder = calculatedCount > 0 ? calculatedCount.toString() : '0';
                 recommendedValues[level] = calculatedCount;
                 updatePiecesCarousel(level);
@@ -2359,11 +2382,30 @@
     }
     
     /**
+     * Find the first level that's locked at 0 (the "cutoff" level)
+     * Returns null if no cutoff is set
+     */
+    function findCutoffLevel() {
+        const sortedLevels = TEMPLATE_LEVELS.slice().sort((a, b) => a - b);
+        for (const level of sortedLevels) {
+            if (isLevelLocked(level) && lockedLevels[level] === 0) {
+                return level;
+            }
+        }
+        return null;
+    }
+    
+    /**
      * Handle quality change
      * Quality affects:
      * - Material cost multiplier for that level
      * - Survival rate for cascade calculations (L15+)
      * - Starting template estimate (since different qualities use different materials)
+     * 
+     * IMPORTANT: Only recalculate if:
+     * - The quality change is for a level BELOW the cutoff (first level locked at 0)
+     * - OR there is no cutoff level
+     * This ensures changing quality at L25+ doesn't affect projection when L25 is set to 0
      */
     function onQualityChange(level, quality) {
         const card = document.querySelector(`.template-card[data-level="${level}"]`);
@@ -2371,18 +2413,26 @@
             card.setAttribute('data-quality', quality);
         }
         
-        // Quality change affects material usage and cascade rates
-        // Always recalculate the full recommended plan to get accurate estimates
+        // Find the cutoff level (first level locked at 0)
+        const cutoffLevel = findCutoffLevel();
+        
+        // Only recalculate if:
+        // 1. There's no cutoff (all levels are active), OR
+        // 2. The quality change is for a level BELOW the cutoff (those levels still use materials)
+        const shouldRecalculate = (cutoffLevel === null) || (level < cutoffLevel);
+        
         const materials = gatherMaterialsFromInputs();
-        if (materials && Object.values(materials).some(v => v > 0)) {
+        if (shouldRecalculate && materials && Object.values(materials).some(v => v > 0)) {
+            console.log(`[Quality] L${level} changed to ${quality}, cutoff at L${cutoffLevel || 'none'} - RECALCULATING`);
             // Recalculate recommended plan with new quality settings
             calculateRecommendedPlan(materials);
             
             // Update the UI with new values
             updateTemplatePlanUI();
-        } else {
-            // No materials - just propagate cascade if L15+
-            if (level >= 15) {
+        } else if (!shouldRecalculate) {
+            console.log(`[Quality] L${level} changed to ${quality}, but L${cutoffLevel} is cutoff - NOT recalculating`);
+            // Only propagate cascade for levels below cutoff if needed
+            if (level >= 15 && level < (cutoffLevel || 999)) {
                 const input = document.getElementById(`templateAmount${level}`);
                 const count = parseInt(input?.value) || 0;
                 if (count > 0) {
