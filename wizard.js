@@ -1087,7 +1087,7 @@
             ...createBasicMaterials(20000000),             // 20M basic
             ...createSeasonalMaterials(5000000)            // 5M seasonal
         },
-        'mixed-endgame': {
+        'tourney-addict': {
             ...createBasicMaterials(50000000),             // 50M basic
             ...createSeasonalMaterials(20000000)           // 20M seasonal
         },
