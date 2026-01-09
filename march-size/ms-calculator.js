@@ -2191,18 +2191,31 @@
                     // Find minimal option that beats current
                     const minimalOption = findMinimalOptionThatBeatsCurrent(slotKey, current.effectiveValue);
                     if (minimalOption) {
+                        // Found an upgrade - use it
                         recommendationState.slots[slotKey] = {
                             selectedGear: minimalOption.gear,
                             selectedLevel: minimalOption.level,
                             selectedQuality: minimalOption.quality
                         };
                     } else {
-                        // No gear can beat current, use best gear as fallback
-                        recommendationState.slots[slotKey] = {
-                            selectedGear: bestGear?.name || '',
-                            selectedLevel: 45,
-                            selectedQuality: 'legendary'
-                        };
+                        // No gear can beat current - check if best gear at max is better
+                        const bestGearAtMax = bestGear ? calculateEffectiveMS(baseMarchSize, bestGear.stats, 50, 'legendary') : 0;
+                        if (bestGear && bestGearAtMax > current.effectiveValue) {
+                            // Best gear at L50 Legendary IS an upgrade
+                            recommendationState.slots[slotKey] = {
+                                selectedGear: bestGear.name,
+                                selectedLevel: 50,
+                                selectedQuality: 'legendary'
+                            };
+                        } else {
+                            // Current gear is optimal - keep current as recommendation
+                            recommendationState.slots[slotKey] = {
+                                selectedGear: current.name,
+                                selectedLevel: current.level,
+                                selectedQuality: current.quality,
+                                isCurrentOptimal: true
+                            };
+                        }
                     }
                 } else {
                     // No current gear, use best gear
@@ -2246,17 +2259,21 @@
             // Determine badge status - shortened text for mobile
             let badgeHtml = '';
             let slotClass = '';
-            if (isSameAsCurrent) {
-                badgeHtml = '<span class="ms-opt-badge ms-opt-badge--same">= Same</span>';
-                slotClass = 'ms-opt-slot--same';
+            const isCurrentOptimal = state.isCurrentOptimal === true;
+            
+            if (isCurrentOptimal || isSameAsCurrent) {
+                badgeHtml = '<span class="ms-opt-badge ms-opt-badge--optimal">★ Optimal</span>';
+                slotClass = 'ms-opt-slot--optimal';
             } else if (recEffective > current.effectiveValue) {
                 badgeHtml = '<span class="ms-opt-badge ms-opt-badge--upgrade">⬆ Upgrade</span>';
                 slotClass = 'ms-opt-slot--upgrade';
             } else if (recEffective < current.effectiveValue) {
+                // This shouldn't happen with the new logic, but keep as safety
                 badgeHtml = '<span class="ms-opt-badge ms-opt-badge--downgrade">⬇ Downgrade</span>';
                 slotClass = 'ms-opt-slot--downgrade';
             } else {
-                badgeHtml = '<span class="ms-opt-badge ms-opt-badge--current">No Change</span>';
+                badgeHtml = '<span class="ms-opt-badge ms-opt-badge--optimal">★ Optimal</span>';
+                slotClass = 'ms-opt-slot--optimal';
             }
             
             // Calculate min requirements for the recommended gear to beat current
@@ -2563,7 +2580,7 @@
         const slotEl = document.querySelector(`.ms-opt-slot[data-slot="${slotKey}"]`);
         if (slotEl) {
             // Remove old classes
-            slotEl.classList.remove('ms-opt-slot--upgrade', 'ms-opt-slot--downgrade', 'ms-opt-slot--same');
+            slotEl.classList.remove('ms-opt-slot--upgrade', 'ms-opt-slot--downgrade', 'ms-opt-slot--same', 'ms-opt-slot--optimal');
             
             // Find and update badge
             const header = slotEl.querySelector('.ms-opt-header');
@@ -2573,8 +2590,8 @@
                 
                 let badgeHtml = '';
                 if (isSameAsCurrent) {
-                    badgeHtml = '<span class="ms-opt-badge ms-opt-badge--same">= Same</span>';
-                    slotEl.classList.add('ms-opt-slot--same');
+                    badgeHtml = '<span class="ms-opt-badge ms-opt-badge--optimal">★ Optimal</span>';
+                    slotEl.classList.add('ms-opt-slot--optimal');
                 } else if (recEffective > currentEffective) {
                     badgeHtml = '<span class="ms-opt-badge ms-opt-badge--upgrade">⬆ Upgrade</span>';
                     slotEl.classList.add('ms-opt-slot--upgrade');
@@ -2582,7 +2599,8 @@
                     badgeHtml = '<span class="ms-opt-badge ms-opt-badge--downgrade">⬇ Downgrade</span>';
                     slotEl.classList.add('ms-opt-slot--downgrade');
                 } else {
-                    badgeHtml = '<span class="ms-opt-badge ms-opt-badge--current">No Change</span>';
+                    badgeHtml = '<span class="ms-opt-badge ms-opt-badge--optimal">★ Optimal</span>';
+                    slotEl.classList.add('ms-opt-slot--optimal');
                 }
                 header.insertAdjacentHTML('beforeend', badgeHtml);
                 
