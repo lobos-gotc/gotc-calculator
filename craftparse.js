@@ -1918,23 +1918,34 @@ function renderResults(templateCounts, materialCounts) {
  * @returns {Object} - Material combinations grouped by quality tier
  */
 function calculateMaterialCombinations(templateCounts) {
-    // Quality tier definitions by level
-    const QUALITY_TIERS = {
-        legendary: { levels: [1, 5, 10], label: 'Legendary', order: 0 },
-        exquisite: { levels: [15, 20, 25], label: 'Exquisite', order: 1 },
-        fine: { levels: [30, 35], label: 'Fine', order: 2 },
-        common: { levels: [40, 45], label: 'Common', order: 3 }
-    };
-    
-    // Helper to get quality tier for a level
-    const getQualityTierForLevel = (level) => {
+    // Helper to get the ACTUAL quality selected by user for a level
+    // Reads from the quality select dropdown in the UI
+    const getSelectedQualityForLevel = (level) => {
         const lvl = parseInt(level, 10);
-        for (const [tierName, tierData] of Object.entries(QUALITY_TIERS)) {
-            if (tierData.levels.includes(lvl)) {
-                return tierName;
+        
+        // Levels 1-10 are always legendary (no quality selection)
+        if (lvl <= 10) {
+            return 'legendary';
+        }
+        
+        // For levels 15+, read the actual selection from the UI
+        const qualitySelect = document.getElementById(`temp${lvl}`);
+        if (qualitySelect && qualitySelect.value) {
+            // Map quality values to tier names
+            const qualityValue = qualitySelect.value.toLowerCase();
+            // Handle epic/exquisite as the same tier for display purposes
+            if (qualityValue === 'epic') return 'exquisite';
+            if (['legendary', 'exquisite', 'fine', 'common', 'poor'].includes(qualityValue)) {
+                // Map poor to common tier for grouping
+                if (qualityValue === 'poor') return 'common';
+                return qualityValue;
             }
         }
-        return 'common'; // Default fallback
+        
+        // Default fallback based on level (for backward compatibility)
+        if (lvl <= 25) return 'exquisite';
+        if (lvl <= 35) return 'fine';
+        return 'common';
     };
     
     // Result structure: { materialName: { legendary: { count, poorEquivalent }, ... } }
@@ -1942,7 +1953,7 @@ function calculateMaterialCombinations(templateCounts) {
     
     // Process each level
     Object.entries(templateCounts).forEach(([level, templates]) => {
-        const qualityTier = getQualityTierForLevel(level);
+        const qualityTier = getSelectedQualityForLevel(level);
         
         templates.forEach(template => {
             const itemCount = template.amount || 0;
