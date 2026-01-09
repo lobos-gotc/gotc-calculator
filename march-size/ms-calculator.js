@@ -1887,6 +1887,9 @@
             elements.recommendationScenario.textContent = SCENARIO_DISPLAY_NAMES[currentScenario] || capitalizeFirst(currentScenario);
         }
 
+        // Store current total for projected calculations
+        recommendationState.currentTotalMarchSize = results.total;
+
         // Generate recommendations with base march size (without gear) for accurate percentage gear calculations
         generateRecommendations(results.base);
 
@@ -2018,6 +2021,7 @@
     // State for interactive recommendations
     let recommendationState = {
         baseMarchSize: 0,
+        currentTotalMarchSize: 0,
         titleBonus: 0,
         selectedTitle: 'none',
         slots: {}
@@ -2474,6 +2478,10 @@
                             <span>Potential Gain:</span>
                             <span class="ms-opt-summary__value ms-opt-summary__value--gain" id="msOptGainValue">+0</span>
                         </div>`}
+                    <div class="ms-opt-summary__row ms-opt-summary__row--total">
+                        <span>Projected Total March Size:</span>
+                        <span class="ms-opt-summary__value ms-opt-summary__value--total" id="msOptProjectedTotal">${formatNumber(recommendationState.currentTotalMarchSize + potentialGain)}</span>
+                    </div>
                 </div>
             </div>
         `;
@@ -2723,6 +2731,7 @@
         const recTotalEl = document.getElementById('msOptRecTotal');
         const gainRowEl = document.getElementById('msOptGainRow');
         const gainValueEl = document.getElementById('msOptGainValue');
+        const projectedTotalEl = document.getElementById('msOptProjectedTotal');
         
         if (currentTotalEl) currentTotalEl.textContent = '+' + formatNumber(totalCurrent);
         if (recTotalEl) recTotalEl.textContent = '+' + formatNumber(totalRecommended);
@@ -2746,6 +2755,12 @@
             } else {
                 gainRowEl.style.display = 'none';
             }
+        }
+        
+        // Update projected total
+        if (projectedTotalEl) {
+            const projectedTotal = recommendationState.currentTotalMarchSize + potentialGain;
+            projectedTotalEl.textContent = formatNumber(projectedTotal);
         }
     }
     
