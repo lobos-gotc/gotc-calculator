@@ -2854,10 +2854,14 @@
             chartData.push({ label: 'Research', value: breakdown.research.flat });
         }
 
-
-        // Gear
-        if (breakdown.gear?.flat > 0) {
-            chartData.push({ label: 'Gear', value: breakdown.gear.flat });
+        // Gear - calculate effective value including percentage gear
+        const gearFlat = breakdown.gear?.flat || 0;
+        const gearPct = breakdown.gear?.pct || 0;
+        // Calculate the effective value of percentage gear against the base (without gear)
+        const gearPctValue = gearPct > 0 ? Math.floor(results.base * (gearPct / 100)) : 0;
+        const totalGearValue = gearFlat + gearPctValue;
+        if (totalGearValue > 0) {
+            chartData.push({ label: 'Gear', value: totalGearValue });
         }
 
         // Heroes (show separately with absolute value)
@@ -2872,8 +2876,8 @@
             }
         }
 
-        // Other Bonuses (percentage-based excluding heroes)
-        const otherBonusPct = results.bonusPct - (breakdown.heroes?.pct || 0);
+        // Other Bonuses (percentage-based excluding heroes AND gear)
+        const otherBonusPct = results.bonusPct - (breakdown.heroes?.pct || 0) - gearPct;
         if (otherBonusPct > 0) {
             const baseForBonus = results.base + results.gear;
             const otherBonus = Math.floor(baseForBonus * (otherBonusPct / 100));
