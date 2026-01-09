@@ -2040,10 +2040,11 @@
         // Interleaved for 2-column grid: left column (helmet,chest,pants,dragonTrinket), right column (weapon,ring,boots,trinket)
         const slots = ['helmet', 'weapon', 'chest', 'ring', 'pants', 'boots', 'dragonTrinket', 'trinket'];
         
-        // Initialize recommendation state
+        // Reset and initialize recommendation state
         recommendationState.baseMarchSize = baseMarchSize;
         recommendationState.selectedTitle = document.getElementById('msTitleSelect')?.value || 'none';
         recommendationState.titleBonus = MARCH_SIZE_DATA.sopTitles[recommendationState.selectedTitle]?.marchSize || 0;
+        recommendationState.slots = {}; // Reset slots to force re-initialization with new logic
         
         // Get current equipped gear data for a slot
         function getCurrentGearData(slot) {
