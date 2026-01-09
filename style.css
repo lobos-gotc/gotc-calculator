@@ -14020,6 +14020,25 @@ button.multiplier-btn {
     color: #f44336;
 }
 
+/* Projected total row */
+.ms-opt-summary__row--total {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 2px solid rgba(var(--accent-rgb), 0.4);
+    background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.08), rgba(var(--accent-rgb), 0.02));
+    padding: 12px;
+    border-radius: 8px;
+    margin-left: -12px;
+    margin-right: -12px;
+    margin-bottom: -12px;
+}
+
+.ms-opt-summary__value--total {
+    color: var(--accent-color);
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
 /* Same as equipped state */
 .ms-opt-slot--same {
     border-color: rgba(158, 158, 158, 0.4);
