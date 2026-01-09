@@ -2008,7 +2008,9 @@
         if (!piecesContainer) return;
         
         const input = document.getElementById(`templateAmount${level}`);
-        const templateCount = parseInt(input?.value) || recommendedValues[level] || 0;
+        // Handle empty string properly - don't fall back to recommendedValues if input is explicitly empty
+        const inputValue = input?.value?.trim();
+        const templateCount = (inputValue === '' || inputValue === '0') ? 0 : (parseInt(inputValue) || recommendedValues[level] || 0);
         
         // If template count is 0, clear the container and hide piece-cards
         if (templateCount === 0) {
@@ -2310,7 +2312,8 @@
             // Update the UI with calculated value
             const levelInput = document.getElementById(`templateAmount${level}`);
             if (levelInput) {
-                levelInput.value = calculatedCount > 0 ? calculatedCount.toString() : '';
+                // Set '0' explicitly instead of empty string to properly indicate zero count
+                levelInput.value = calculatedCount > 0 ? calculatedCount.toString() : '0';
                 levelInput.placeholder = calculatedCount > 0 ? calculatedCount.toString() : '0';
                 recommendedValues[level] = calculatedCount;
                 updatePiecesCarousel(level);
