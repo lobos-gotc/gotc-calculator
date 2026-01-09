@@ -11134,13 +11134,50 @@ button.multiplier-btn {
     font-size: var(--font-size-base);
     font-weight: var(--font-weight-semibold);
     color: var(--header-color);
-    margin-bottom: 16px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid var(--glass-border);
+    margin: 0;
     display: flex;
     align-items: center;
     gap: 10px;
     flex-wrap: wrap;
+}
+
+/* Collapsible Armory Category */
+.ms-armory-category--collapsible .ms-armory-category__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    padding: 12px 16px;
+    margin: -16px -16px 0 -16px;
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 8px 8px 0 0;
+    border-bottom: 1px solid var(--glass-border);
+    transition: background 0.2s ease;
+}
+
+.ms-armory-category--collapsible .ms-armory-category__header:hover {
+    background: rgba(0, 0, 0, 0.25);
+}
+
+.ms-armory-category__arrow {
+    width: 16px;
+    height: 16px;
+    fill: var(--text-secondary);
+    transition: transform 0.3s ease;
+    flex-shrink: 0;
+}
+
+.ms-armory-category--collapsible.ms-armory-category--expanded .ms-armory-category__arrow {
+    transform: rotate(180deg);
+}
+
+.ms-armory-category__content {
+    margin-top: 16px;
+}
+
+/* When collapsed, hide the section description too */
+.ms-armory-category--collapsible:not(.ms-armory-category--expanded) > .ms-section-description {
+    display: none;
 }
 
 .ms-armory-grid {

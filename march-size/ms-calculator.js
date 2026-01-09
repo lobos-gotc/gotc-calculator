@@ -30,6 +30,7 @@
         setupEventListeners();
         populateGearSlots();
         setupGearEventListeners(); // Ensure gear listeners are set up
+        setupDragonGearEventListeners(); // Setup dragon gear listeners
         populateHeroes();
         updateNavigationState();
         
@@ -46,15 +47,711 @@
         const loaded = loadFromLocalStorage();
         if (loaded) {
             console.log('Loaded saved configuration from localStorage');
+        } else {
+            // Only hide dragon elements if we didn't load a saved state
+            // (loadFromLocalStorage -> applyState -> selectScenario handles it otherwise)
+            toggleDragonElements(false);
         }
         
         // Initialize all section totals
         updateAllSectionTotals();
         
+        // Initialize dragon research picker wheels
+        initializeDragonResearchPickers();
+        
+        // Initialize dragon hero hall picker
+        initializeDragonHeroHallPicker();
+        
+        // Initialize shrine picker
+        initializeShrinePicker();
+        
+        // Initialize dragon talents pickers
+        initializeDragonTalentsPickers();
+        
+        // Initialize collapsible armory categories
+        initializeCollapsibleArmoryCategories();
+        
         // Ensure we start at step 1 (scenario selection)
         goToStep(1);
 
         console.log('March Size Calculator initialized');
+    }
+    
+    /**
+     * Setup event listeners for dragon gear selects
+     */
+    function setupDragonGearEventListeners() {
+        const dragonSlots = ['saddle', 'chanfron', 'peytral'];
+        
+        dragonSlots.forEach(slot => {
+            const select = document.getElementById(`msGearSelect-${slot}`);
+            const levelSelect = document.getElementById(`msGearLevelSelect-${slot}`);
+            const qualitySelect = document.getElementById(`msGearQuality-${slot}`);
+            
+            if (select) {
+                select.addEventListener('change', () => updateDragonGearBonus(slot));
+            }
+            if (levelSelect) {
+                levelSelect.addEventListener('change', () => updateDragonGearBonus(slot));
+            }
+            if (qualitySelect) {
+                qualitySelect.addEventListener('change', () => updateDragonGearBonus(slot));
+            }
+        });
+    }
+    
+    /**
+     * Update dragon gear bonus display for a specific slot
+     */
+    function updateDragonGearBonus(slot) {
+        const select = document.getElementById(`msGearSelect-${slot}`);
+        const levelSelect = document.getElementById(`msGearLevelSelect-${slot}`);
+        const qualitySelect = document.getElementById(`msGearQuality-${slot}`);
+        const bonusEl = document.getElementById(`msGearBonus-${slot}`);
+        
+        if (!select || !bonusEl) return;
+        
+        if (!select.value) {
+            bonusEl.textContent = '+0';
+            return;
+        }
+        
+        const setId = select.value;
+        const level = parseInt(levelSelect?.value) || 40;
+        const quality = qualitySelect?.value || 'legendary';
+        const levelKey = `L${level}`;
+        
+        if (typeof GEAR_DATABASE === 'undefined' || !GEAR_DATABASE.dragon_gear) {
+            bonusEl.textContent = '+0';
+            return;
+        }
+        
+        const setData = GEAR_DATABASE.dragon_gear[setId];
+        if (setData && setData.slots && setData.slots[slot]) {
+            const slotStats = setData.slots[slot].stats;
+            
+            if (slotStats && slotStats.dragonmaxmarchsize) {
+                const levelData = slotStats.dragonmaxmarchsize[levelKey];
+                if (levelData && levelData[quality] !== undefined) {
+                    const marchSize = Math.round(levelData[quality]);
+                    bonusEl.textContent = `+${formatNumber(marchSize)}`;
+                    return;
+                }
+            }
+        }
+        
+        bonusEl.textContent = '+0';
+    }
+    
+    /**
+     * Initialize dragon research picker wheels
+     * Note: Only includes Dragon March Size research (vs SoP/Player), NOT vs Creatures (NPC)
+     */
+    function initializeDragonResearchPickers() {
+        const dragonResearchConfigs = [
+            { id: 'msDragonMarchSize1', maxLevel: 10, perLevel: 200, name: 'Dragon March Size I', category: 'adolescent' },
+            { id: 'msDragonMarchSize2', maxLevel: 10, perLevel: 210, name: 'Dragon March Size II', category: 'adult' }
+        ];
+        
+        dragonResearchConfigs.forEach(config => {
+            const input = document.getElementById(config.id);
+            const picker = document.getElementById(`${config.id}Picker`);
+            const valueDisplay = document.getElementById(`${config.id}Value`);
+            const sliderItem = document.querySelector(`[data-research-id="${config.id}"]`);
+            
+            if (!picker || !sliderItem) return;
+            
+            // Populate picker wheel (matching other pickers format)
+            picker.innerHTML = '';
+            for (let level = 0; level <= config.maxLevel; level++) {
+                const value = level * config.perLevel;
+                const item = document.createElement('div');
+                item.className = 'ms-picker-wheel__item';
+                item.dataset.level = level;
+                
+                // Create level text
+                const levelText = document.createTextNode(`Level ${level} (`);
+                item.appendChild(levelText);
+                
+                // Create value span with green color
+                const valueSpan = document.createElement('span');
+                valueSpan.style.color = 'var(--success-color)';
+                valueSpan.textContent = `+${formatNumber(value)}`;
+                item.appendChild(valueSpan);
+                
+                // Create closing parenthesis
+                const closeText = document.createTextNode(')');
+                item.appendChild(closeText);
+                
+                picker.appendChild(item);
+            }
+            
+            // Setup click handler for the slider item
+            sliderItem.addEventListener('click', (e) => {
+                if (e.target.closest('.ms-research-slider-item__picker-container')) return;
+                
+                const container = sliderItem.querySelector('.ms-research-slider-item__picker-container');
+                if (container) {
+                    const isVisible = container.style.display !== 'none';
+                    
+                    if (isVisible) {
+                        sliderItem.classList.remove('ms-research-slider-item--expanded');
+                        container.style.display = 'none';
+                    } else {
+                        // Close all other pickers first
+                        closeAllPickers(sliderItem);
+                        sliderItem.classList.add('ms-research-slider-item--expanded');
+                        container.style.display = 'flex';
+                        
+                        // Scroll to current value
+                        const currentLevel = parseInt(input?.value) || 0;
+                        const currentItem = picker.querySelector(`[data-level="${currentLevel}"]`);
+                        if (currentItem) {
+                            currentItem.scrollIntoView({ block: 'center' });
+                        }
+                    }
+                }
+            });
+            
+            // Setup picker item click handlers
+            picker.querySelectorAll('.ms-picker-wheel__item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const level = parseInt(item.dataset.level);
+                    if (input) input.value = level;
+                    
+                    // Update display
+                    const value = level * config.perLevel;
+                    const maxValue = config.maxLevel * config.perLevel;
+                    if (valueDisplay) {
+                        valueDisplay.textContent = `${formatNumber(value)} / ${formatNumber(maxValue)}`;
+                    }
+                    
+                    // Close picker
+                    sliderItem.classList.remove('ms-research-slider-item--expanded');
+                    const container = sliderItem.querySelector('.ms-research-slider-item__picker-container');
+                    if (container) container.style.display = 'none';
+                    
+                    // Update category totals
+                    updateDragonCareTotals();
+                });
+            });
+        });
+    }
+    
+    /**
+     * Update dragon care research category totals
+     * Note: Only Dragon March Size (vs SoP/Player) research, NOT vs Creatures (NPC)
+     */
+    function updateDragonCareTotals() {
+        // Adolescent Dragon Care (MS I)
+        const ms1Level = parseInt(document.getElementById('msDragonMarchSize1')?.value) || 0;
+        const adolescentTotal = ms1Level * 200;
+        const adolescentDisplay = document.getElementById('msAdolescentDragonCareTotal');
+        if (adolescentDisplay) {
+            adolescentDisplay.textContent = `(+${formatNumber(adolescentTotal)} / 2,000)`;
+        }
+        
+        // Adult Dragon Care (MS II)
+        const ms2Level = parseInt(document.getElementById('msDragonMarchSize2')?.value) || 0;
+        const adultTotal = ms2Level * 210;
+        const adultDisplay = document.getElementById('msAdultDragonCareTotal');
+        if (adultDisplay) {
+            adultDisplay.textContent = `(+${formatNumber(adultTotal)} / 2,100)`;
+        }
+    }
+    
+    /**
+     * Initialize dragon hero hall picker
+     */
+    function initializeDragonHeroHallPicker() {
+        const input = document.getElementById('msDragonHeroLevel');
+        const picker = document.getElementById('msDragonHeroLevelPicker');
+        const display = document.getElementById('msDragonHeroLevelDisplay');
+        const bonusDisplay = document.getElementById('msDragonHeroBonus');
+        const sliderGroup = document.querySelector('[data-hall-id="msDragonHeroLevel"]');
+        
+        if (!picker || !sliderGroup) return;
+        
+        // Dragon hero progression (simplified - levels 0-20, max 2000 MS)
+        const maxLevel = 20;
+        const maxMS = 2000;
+        
+        // Populate picker wheel (matching other pickers format)
+        picker.innerHTML = '';
+        for (let level = 0; level <= maxLevel; level++) {
+            const value = Math.round((level / maxLevel) * maxMS);
+            const item = document.createElement('div');
+            item.className = 'ms-picker-wheel__item';
+            item.dataset.level = level;
+            
+            // Create level text
+            const levelText = document.createTextNode(`Level ${level} (`);
+            item.appendChild(levelText);
+            
+            // Create value span with green color
+            const valueSpan = document.createElement('span');
+            valueSpan.style.color = 'var(--success-color)';
+            valueSpan.textContent = `+${formatNumber(value)}`;
+            item.appendChild(valueSpan);
+            
+            // Create closing parenthesis
+            const closeText = document.createTextNode(')');
+            item.appendChild(closeText);
+            
+            picker.appendChild(item);
+        }
+        
+        // Setup click handler for the slider group
+        sliderGroup.addEventListener('click', (e) => {
+            if (e.target.closest('.ms-hall-slider-group__picker-container')) return;
+            
+            const container = sliderGroup.querySelector('.ms-hall-slider-group__picker-container');
+            if (container) {
+                const isVisible = container.style.display !== 'none';
+                
+                if (isVisible) {
+                    sliderGroup.classList.remove('ms-hall-slider-group--expanded');
+                    container.style.display = 'none';
+                } else {
+                    // Close all other pickers first
+                    closeAllPickers(sliderGroup);
+                    sliderGroup.classList.add('ms-hall-slider-group--expanded');
+                    container.style.display = 'flex';
+                    
+                    // Scroll to current value
+                    const currentLevel = parseInt(input?.value) || 0;
+                    const currentItem = picker.querySelector(`[data-level="${currentLevel}"]`);
+                    if (currentItem) {
+                        currentItem.scrollIntoView({ block: 'center' });
+                    }
+                }
+            }
+        });
+        
+        // Setup picker item click handlers
+        picker.querySelectorAll('.ms-picker-wheel__item').forEach(item => {
+            item.addEventListener('click', () => {
+                const level = parseInt(item.dataset.level);
+                if (input) input.value = level;
+                
+                // Update displays
+                const value = Math.round((level / maxLevel) * maxMS);
+                if (display) {
+                    display.textContent = `Lv ${level} | (${formatNumber(value)} / ${formatNumber(maxMS)})`;
+                }
+                if (bonusDisplay) {
+                    bonusDisplay.textContent = `+${formatNumber(value)}`;
+                }
+                
+                // Close picker
+                sliderGroup.classList.remove('ms-hall-slider-group--expanded');
+                const container = sliderGroup.querySelector('.ms-hall-slider-group__picker-container');
+                if (container) container.style.display = 'none';
+            });
+        });
+    }
+    
+    /**
+     * Initialize shrine picker wheel
+     * Note: Dragon March Size unlocks at level 25, max 8000 at level 39
+     * Data extracted from: prog_Shrine_Enhancement_4_stat_5
+     */
+    function initializeShrinePicker() {
+        const input = document.getElementById('msShrineLevel');
+        const picker = document.getElementById('msShrineLevelPicker');
+        const display = document.getElementById('msShrineLevelDisplay');
+        const buildingCard = document.querySelector('[data-building="shrine"]');
+        
+        if (!picker || !buildingCard) return;
+        
+        // Shrine progression from extracted game data
+        const shrineData = MARCH_SIZE_DATA.buildings?.shrine;
+        const minLevel = 0;
+        const maxLevel = shrineData?.maxLevel || 40;
+        const maxMS = shrineData?.maxMS || 8000;
+        
+        // Get march size from data or fallback
+        const getMarchSize = (level) => {
+            if (shrineData?.levels?.[level]) {
+                return shrineData.levels[level].marchSize || 0;
+            }
+            return 0;
+        };
+        
+        // Populate picker wheel (following same pattern as other building pickers)
+        picker.innerHTML = '';
+        for (let level = minLevel; level <= maxLevel; level++) {
+            const value = getMarchSize(level);
+            const item = document.createElement('div');
+            item.className = 'ms-picker-wheel__item';
+            item.dataset.level = level;
+            
+            // Create level text
+            const levelText = document.createTextNode(`Level ${level} (`);
+            item.appendChild(levelText);
+            
+            // Create value span with green color (matching other pickers)
+            const valueSpan = document.createElement('span');
+            valueSpan.style.color = 'var(--success-color)';
+            valueSpan.textContent = `+${formatNumber(value)}`;
+            item.appendChild(valueSpan);
+            
+            // Create closing parenthesis
+            const closeText = document.createTextNode(')');
+            item.appendChild(closeText);
+            
+            // Add click handler
+            item.addEventListener('click', () => {
+                selectShrinePickerItem(picker, level, input, display, buildingCard, getMarchSize, maxMS);
+            });
+            
+            picker.appendChild(item);
+        }
+        
+        // Setup click handler for the building card
+        buildingCard.addEventListener('click', (e) => {
+            if (e.target.closest('.ms-building-card__picker-container')) return;
+            toggleShrinePicker(buildingCard, input, picker);
+        });
+        
+        // Setup scroll handler
+        let scrollTimeout = null;
+        picker.addEventListener('scroll', () => {
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(() => {
+                handleShrinePickerScroll(picker, input, display, getMarchSize, maxMS);
+            }, 150);
+        }, { passive: true });
+        
+        // Set initial display value
+        const initialLevel = parseInt(input?.value) || 0;
+        const initialMS = getMarchSize(initialLevel);
+        if (display) {
+            display.textContent = `Lv ${initialLevel} | (${initialMS.toLocaleString()} / ${maxMS.toLocaleString()})`;
+        }
+    }
+    
+    // Toggle shrine picker open/closed
+    function toggleShrinePicker(buildingCard, input, picker) {
+        const pickerContainer = buildingCard.querySelector('.ms-building-card__picker-container');
+        if (!pickerContainer) return;
+        
+        const isExpanded = buildingCard.classList.contains('ms-building-card--expanded');
+        
+        if (isExpanded) {
+            // Close picker
+            buildingCard.classList.remove('ms-building-card--expanded');
+            pickerContainer.style.display = 'none';
+        } else {
+            // Close all other pickers first
+            closeAllPickers(buildingCard);
+            // Open picker
+            buildingCard.classList.add('ms-building-card--expanded');
+            pickerContainer.style.display = 'block';
+            
+            // Scroll to current value
+            const currentLevel = parseInt(input?.value) || 0;
+            syncShrinePickerToValue(picker, currentLevel);
+        }
+    }
+    
+    // Select a shrine picker item
+    function selectShrinePickerItem(picker, level, input, display, buildingCard, getMarchSize, maxMS) {
+        const items = picker.querySelectorAll('.ms-picker-wheel__item');
+        const itemHeight = 40;
+        const padding = 80;
+        
+        items.forEach((item, index) => {
+            if (parseInt(item.dataset.level) === level) {
+                const containerHeight = picker.offsetHeight;
+                const scrollPosition = padding + (index * itemHeight) + (itemHeight / 2) - (containerHeight / 2);
+                picker.scrollTop = Math.max(0, scrollPosition);
+                
+                items.forEach(i => i.classList.remove('selected'));
+                item.classList.add('selected');
+                
+                // Update input value
+                if (input) input.value = level;
+                
+                // Update display
+                const currentMS = getMarchSize(level);
+                if (display) {
+                    display.textContent = `Lv ${level} | (${currentMS.toLocaleString()} / ${maxMS.toLocaleString()})`;
+                }
+                
+                // Close picker
+                buildingCard.classList.remove('ms-building-card--expanded');
+                const container = buildingCard.querySelector('.ms-building-card__picker-container');
+                if (container) container.style.display = 'none';
+                
+                // Update totals
+                updateAllSectionTotals();
+            }
+        });
+    }
+    
+    // Sync shrine picker scroll position to a value
+    function syncShrinePickerToValue(picker, level) {
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                const items = picker.querySelectorAll('.ms-picker-wheel__item');
+                const itemHeight = 40;
+                const padding = 80;
+                
+                items.forEach((item, index) => {
+                    if (parseInt(item.dataset.level) === level) {
+                        const containerHeight = picker.offsetHeight;
+                        const scrollPosition = padding + (index * itemHeight) + (itemHeight / 2) - (containerHeight / 2);
+                        picker.scrollTop = Math.max(0, scrollPosition);
+                        
+                        items.forEach(i => i.classList.remove('selected'));
+                        item.classList.add('selected');
+                    }
+                });
+            }, 100);
+        });
+    }
+    
+    // Handle shrine picker scroll
+    function handleShrinePickerScroll(picker, input, display, getMarchSize, maxMS) {
+        const items = picker.querySelectorAll('.ms-picker-wheel__item');
+        if (items.length === 0) return;
+        
+        const containerHeight = picker.offsetHeight;
+        const scrollTop = picker.scrollTop;
+        const itemHeight = 40;
+        const centerY = containerHeight / 2;
+        const padding = 80;
+        
+        const centerScrollPosition = scrollTop + centerY;
+        const itemIndexAtCenter = Math.round((centerScrollPosition - padding) / itemHeight);
+        const validIndex = Math.max(0, Math.min(itemIndexAtCenter, items.length - 1));
+        const closestItem = items[validIndex];
+        
+        if (closestItem) {
+            const selectedLevel = parseInt(closestItem.dataset.level);
+            
+            items.forEach(item => item.classList.remove('selected'));
+            closestItem.classList.add('selected');
+            
+            // Update input value
+            if (input) input.value = selectedLevel;
+            
+            // Update display
+            const currentMS = getMarchSize(selectedLevel);
+            if (display) {
+                display.textContent = `Lv ${selectedLevel} | (${currentMS.toLocaleString()} / ${maxMS.toLocaleString()})`;
+            }
+            
+            // Update totals
+            updateAllSectionTotals();
+        }
+    }
+    
+    /**
+     * Initialize dragon talents picker wheels and event handlers
+     * Simplified: Only Dragon March Size talents (no NPC/Creature talents)
+     */
+    function initializeDragonTalentsPickers() {
+        // Dragon March Size Talents (research-style pickers)
+        const dragonMsTalents = [
+            { id: 'msDragonMarchSizeTalent1', maxLevel: 5, values: [0, 200, 350, 500, 650, 800], name: 'Dragon MS I', maxValue: 800 },
+            { id: 'msDragonMarchSizeTalent2', maxLevel: 10, values: [0, 200, 350, 500, 650, 800, 950, 1100, 1250, 1400, 1550], name: 'Dragon MS II', maxValue: 1550 }
+        ];
+        
+        // Initialize Dragon MS talents with research-style pickers
+        dragonMsTalents.forEach(config => {
+            initializeDragonMsTalentPicker(config);
+        });
+        
+        // Setup adult talent toggleable items
+        setupAdultTalentItems();
+        
+        // Update dragon talents total on any change
+        updateDragonTalentsTotal();
+    }
+    
+    /**
+     * Initialize a Dragon MS talent picker (research-style)
+     */
+    function initializeDragonMsTalentPicker(config) {
+        const input = document.getElementById(config.id);
+        const picker = document.getElementById(`${config.id}Picker`);
+        const display = document.getElementById(`${config.id}Display`);
+        const sliderItem = document.querySelector(`[data-research-id="${config.id}"]`);
+        
+        if (!picker || !sliderItem) return;
+        
+        // Populate picker wheel
+        picker.innerHTML = '';
+        for (let level = 0; level <= config.maxLevel; level++) {
+            const value = config.values[level] || 0;
+            const item = document.createElement('div');
+            item.className = 'ms-picker-wheel__item';
+            item.dataset.level = level;
+            
+            // Create level text
+            const levelText = document.createTextNode(`Level ${level} (`);
+            item.appendChild(levelText);
+            
+            // Create value span with green color
+            const valueSpan = document.createElement('span');
+            valueSpan.style.color = 'var(--success-color)';
+            valueSpan.textContent = `+${formatNumber(value)}`;
+            item.appendChild(valueSpan);
+            
+            // Create closing parenthesis
+            const closeText = document.createTextNode(')');
+            item.appendChild(closeText);
+            
+            picker.appendChild(item);
+        }
+        
+        // Setup click handler for the item
+        sliderItem.addEventListener('click', (e) => {
+            if (e.target.closest('.ms-research-slider-item__picker-container')) return;
+            
+            const container = sliderItem.querySelector('.ms-research-slider-item__picker-container');
+            if (container) {
+                const isVisible = container.style.display !== 'none';
+                
+                if (isVisible) {
+                    sliderItem.classList.remove('ms-research-slider-item--expanded');
+                    container.style.display = 'none';
+                } else {
+                    // Close all other pickers first
+                    closeAllPickers(sliderItem);
+                    sliderItem.classList.add('ms-research-slider-item--expanded');
+                    container.style.display = 'block';
+                    
+                    const currentLevel = parseInt(input?.value) || 0;
+                    const currentItem = picker.querySelector(`[data-level="${currentLevel}"]`);
+                    if (currentItem) {
+                        currentItem.scrollIntoView({ block: 'center' });
+                    }
+                }
+            }
+        });
+        
+        // Setup picker item click handlers
+        picker.querySelectorAll('.ms-picker-wheel__item').forEach(item => {
+            item.addEventListener('click', () => {
+                const level = parseInt(item.dataset.level);
+                if (input) input.value = level;
+                
+                // Update display
+                const currentValue = config.values[level] || 0;
+                if (display) {
+                    display.textContent = `Lv ${level} | (${formatNumber(currentValue)} / ${formatNumber(config.maxValue)})`;
+                }
+                
+                // Close picker
+                sliderItem.classList.remove('ms-research-slider-item--expanded');
+                const container = sliderItem.querySelector('.ms-research-slider-item__picker-container');
+                if (container) container.style.display = 'none';
+                
+                updateDragonTalentsTotal();
+            });
+        });
+    }
+    
+    /**
+     * Setup adult talent toggleable items (click anywhere on row to toggle)
+     */
+    function setupAdultTalentItems() {
+        const talentItems = document.querySelectorAll('.ms-adult-talent-item');
+        
+        talentItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                const checkbox = item.querySelector('.ms-adult-talent-input');
+                if (checkbox) {
+                    checkbox.checked = !checkbox.checked;
+                    updateDragonTalentsTotal();
+                }
+            });
+        });
+    }
+    
+    /**
+     * Calculate and update dragon talents total
+     * Only Dragon March Size talents (no NPC/Creature talents)
+     */
+    function updateDragonTalentsTotal() {
+        let adolescentTotal = 0;
+        let adultTotal = 0;
+        
+        // Dragon MS talents (adolescent tree)
+        const adolescentConfigs = [
+            { id: 'msDragonMarchSizeTalent1', values: [0, 200, 350, 500, 650, 800] },
+            { id: 'msDragonMarchSizeTalent2', values: [0, 200, 350, 500, 650, 800, 950, 1100, 1250, 1400, 1550] }
+        ];
+        adolescentConfigs.forEach(config => {
+            const input = document.getElementById(config.id);
+            const level = parseInt(input?.value) || 0;
+            const value = config.values[level] || 0;
+            adolescentTotal += value;
+        });
+        
+        // Adult talents (toggleable items)
+        const adultCheckboxes = document.querySelectorAll('.ms-adult-talent-input:checked');
+        adultCheckboxes.forEach(checkbox => {
+            const bonus = parseInt(checkbox.dataset.bonus) || 200;
+            adultTotal += bonus;
+        });
+        
+        const total = adolescentTotal + adultTotal;
+        
+        // Update totals display
+        const totalDisplay = document.getElementById('msDragonTalentsTotal');
+        if (totalDisplay) {
+            totalDisplay.textContent = `(+${formatNumber(total)} / 4,350)`;
+        }
+        
+        const adolescentDisplay = document.getElementById('msAdolescentTalentsTotal');
+        if (adolescentDisplay) {
+            adolescentDisplay.textContent = `(+${formatNumber(adolescentTotal)} / 2,350)`;
+        }
+        
+        const adultDisplay = document.getElementById('msAdultTalentsTotal');
+        if (adultDisplay) {
+            adultDisplay.textContent = `(+${formatNumber(adultTotal)} / 2,000)`;
+        }
+    }
+    
+    /**
+     * Calculate dragon talents march size contribution
+     * Only Dragon March Size talents (no NPC/Creature talents)
+     */
+    function calculateDragonTalentsMS() {
+        const result = { total: 0, vsSoP: 0, items: [] };
+        
+        // Dragon MS talents (general dragon MS - applies to SoP)
+        const adolescentConfigs = [
+            { id: 'msDragonMarchSizeTalent1', name: 'Dragon MS I', values: [0, 200, 350, 500, 650, 800] },
+            { id: 'msDragonMarchSizeTalent2', name: 'Dragon MS II', values: [0, 200, 350, 500, 650, 800, 950, 1100, 1250, 1400, 1550] }
+        ];
+        adolescentConfigs.forEach(config => {
+            const input = document.getElementById(config.id);
+            const level = parseInt(input?.value) || 0;
+            const value = config.values[level] || 0;
+            if (value > 0) {
+                result.vsSoP += value;
+                result.items.push({ name: config.name, level, value, type: 'vsSoP' });
+            }
+        });
+        
+        // Adult talents (toggleable items - general dragon MS)
+        const adultCheckboxes = document.querySelectorAll('.ms-adult-talent-input:checked');
+        adultCheckboxes.forEach(checkbox => {
+            const bonus = parseInt(checkbox.dataset.bonus) || 200;
+            const talent = checkbox.dataset.talent;
+            result.vsSoP += bonus;
+            result.items.push({ name: `Fire Breath (${talent})`, value: bonus, type: 'vsSoP' });
+        });
+        
+        result.total = result.vsSoP;
+        
+        return result;
     }
     
     // Set recommended default values for all inputs
@@ -274,6 +971,43 @@
                 updateArmorySliderDisplay(input);
             });
         }
+    }
+    
+    /**
+     * Initialize collapsible armory categories
+     * Each category header toggles the visibility of its content
+     */
+    function initializeCollapsibleArmoryCategories() {
+        const collapsibleCategories = document.querySelectorAll('.ms-armory-category--collapsible');
+        
+        collapsibleCategories.forEach(category => {
+            const header = category.querySelector('.ms-armory-category__header');
+            const content = category.querySelector('.ms-armory-category__content');
+            
+            if (header && content) {
+                header.addEventListener('click', () => {
+                    const isExpanded = category.classList.contains('ms-armory-category--expanded');
+                    
+                    if (isExpanded) {
+                        // Collapse
+                        category.classList.remove('ms-armory-category--expanded');
+                        content.style.display = 'none';
+                    } else {
+                        // Expand
+                        category.classList.add('ms-armory-category--expanded');
+                        content.style.display = 'grid';
+                    }
+                });
+                
+                // Handle keyboard accessibility
+                header.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        header.click();
+                    }
+                });
+            }
+        });
     }
 
     function cacheElements() {
@@ -665,6 +1399,78 @@
         // Refresh gear dropdowns based on new scenario
         const filter = SCENARIO_TO_GEAR_FILTER[scenario] || 'sop';
         populateGearSlots(filter);
+        
+        // Handle dragon scenario visibility using data-dragon-only attribute
+        const isDragonScenario = scenario === 'dragon-vs-sop' || scenario === 'dragon-vs-keep';
+        toggleDragonElements(isDragonScenario);
+        
+        // Populate dragon gear dropdowns if dragon scenario
+        if (isDragonScenario) {
+            populateDragonGearSlots();
+        }
+        
+        // Recalculate section totals
+        recalculateSectionTotals();
+    }
+    
+    /**
+     * Toggle visibility of dragon-only elements
+     * @param {boolean} visible - Whether to show dragon elements
+     */
+    function toggleDragonElements(visible) {
+        const dragonElements = document.querySelectorAll('[data-dragon-only]');
+        dragonElements.forEach(el => {
+            el.style.display = visible ? '' : 'none';
+        });
+        
+        // Add/remove class for CSS targeting
+        document.body.classList.toggle('dragon-scenario-active', visible);
+    }
+    
+    /**
+     * Recalculate section totals after toggling dragon elements
+     */
+    function recalculateSectionTotals() {
+        // Use the existing updateAllSectionTotals function
+        updateAllSectionTotals();
+        
+        // Also update dragon care totals if visible
+        updateDragonCareTotals();
+        updateDragonTalentsTotal();
+    }
+    
+    /**
+     * Populate dragon gear dropdowns with dragon gear sets
+     */
+    function populateDragonGearSlots() {
+        if (typeof GEAR_DATABASE === 'undefined' || !GEAR_DATABASE.dragon_gear) {
+            console.warn('GEAR_DATABASE.dragon_gear not available');
+            return;
+        }
+        
+        const dragonSlots = ['saddle', 'chanfron', 'peytral'];
+        
+        dragonSlots.forEach(slot => {
+            const select = document.getElementById(`msGearSelect-${slot}`);
+            if (!select) return;
+            
+            // Clear existing options except first
+            select.innerHTML = '<option value="">-- None --</option>';
+            
+            // Find dragon gear sets that have this slot with dragonmaxmarchsize stat
+            Object.entries(GEAR_DATABASE.dragon_gear).forEach(([setId, setData]) => {
+                if (setData.slots && setData.slots[slot]) {
+                    const slotData = setData.slots[slot];
+                    // Check if this slot has dragonmaxmarchsize stat
+                    if (slotData.stats && slotData.stats.dragonmaxmarchsize) {
+                        const option = document.createElement('option');
+                        option.value = setId;
+                        option.textContent = setData.display_name || setId;
+                        select.appendChild(option);
+                    }
+                }
+            });
+        });
     }
 
     // ============================================
@@ -1359,6 +2165,40 @@
         if (keepEnhLevel >= 40) {
             results.bonusPct += 8.0;
         }
+        
+        // Add dragon bonuses if dragon scenario is active
+        const isDragonScenario = currentScenario === 'dragon-vs-sop' || currentScenario === 'dragon-vs-keep';
+        if (isDragonScenario) {
+            // Calculate dragon talents
+            const dragonTalentsResult = calculateDragonTalentsMS();
+            results.breakdown.dragonTalents = dragonTalentsResult;
+            results.base += dragonTalentsResult.vsSoP; // Only SoP talents apply to march size
+            
+            // Calculate dragon armories
+            const dragonArmoryResult = calculateDragonArmoryMS();
+            results.breakdown.dragonArmories = dragonArmoryResult;
+            results.base += dragonArmoryResult.total;
+            
+            // Calculate dragon research
+            const dragonResearchResult = calculateDragonResearchMS();
+            results.breakdown.dragonResearch = dragonResearchResult;
+            results.base += dragonResearchResult.total;
+            
+            // Calculate dragon gear (saddle, chanfron, peytral)
+            const dragonGearResult = calculateDragonGearMS();
+            results.breakdown.dragonGear = dragonGearResult;
+            results.gear += dragonGearResult.total;
+            
+            // Calculate dragon hero hall
+            const dragonHeroResult = calculateDragonHeroMS();
+            results.breakdown.dragonHeroes = dragonHeroResult;
+            results.base += dragonHeroResult.total;
+            
+            // Calculate shrine enhancement
+            const shrineResult = calculateShrineMS();
+            results.breakdown.shrine = shrineResult;
+            results.base += shrineResult.total;
+        }
 
         // Calculate bonus amount from percentage
         const baseForBonus = results.base + results.gear;
@@ -1863,6 +2703,201 @@
             result.name = titleData.name;
         }
 
+        return result;
+    }
+
+    // ============================================
+    // DRAGON-SPECIFIC CALCULATIONS
+    // ============================================
+    
+    /**
+     * Calculate dragon armory march size contribution
+     */
+    function calculateDragonArmoryMS() {
+        const result = { total: 0, items: [] };
+        
+        // Get all dragon armory inputs
+        const dragonArmoryInputs = document.querySelectorAll('[data-armory-type="dragon"] input[data-armory]');
+        
+        dragonArmoryInputs.forEach(input => {
+            const level = parseInt(input.value) || 0;
+            if (level > 0) {
+                const armoryKey = input.dataset.armory;
+                const armoryData = MARCH_SIZE_DATA.armories?.dragon?.[armoryKey];
+                
+                if (armoryData) {
+                    // Find the march size at the given level
+                    let marchSize = 0;
+                    
+                    if (armoryData.levels) {
+                        // Find the level entry
+                        const levelEntry = armoryData.levels.find(l => l.level === level);
+                        if (levelEntry) {
+                            marchSize = levelEntry.marchSize || 0;
+                        }
+                    } else if (armoryData.maxMS) {
+                        // Calculate based on max (linear progression)
+                        const maxLevel = armoryData.maxLevel || 126;
+                        marchSize = Math.round((level / maxLevel) * armoryData.maxMS);
+                    }
+                    
+                    result.total += marchSize;
+                    result.items.push({
+                        name: armoryData.name || armoryKey,
+                        level,
+                        value: marchSize
+                    });
+                }
+            }
+        });
+        
+        return result;
+    }
+    
+    /**
+     * Calculate dragon research march size contribution
+     */
+    function calculateDragonResearchMS() {
+        const result = { total: 0, items: [] };
+        
+        // Dragon research sliders
+        const dragonResearchKeys = {
+            'dragonMarchSizeNpc1': { name: 'Dragon MS vs NPC I', maxLevel: 10, perLevel: 20 },
+            'dragonMarchSizeNpc2': { name: 'Dragon MS vs NPC II', maxLevel: 10, perLevel: 20 },
+            'dragonMarchSize1': { name: 'Dragon March Size I', maxLevel: 10, perLevel: 200 },
+            'dragonMarchSize2': { name: 'Dragon March Size II', maxLevel: 10, perLevel: 210 }
+        };
+        
+        Object.entries(dragonResearchKeys).forEach(([key, data]) => {
+            const input = document.getElementById(`ms${key.charAt(0).toUpperCase() + key.slice(1)}`);
+            if (input) {
+                const level = parseInt(input.value) || 0;
+                if (level > 0) {
+                    const marchSize = level * data.perLevel;
+                    result.total += marchSize;
+                    result.items.push({
+                        name: `${data.name} Lv${level}`,
+                        value: marchSize
+                    });
+                }
+            }
+        });
+        
+        return result;
+    }
+    
+    /**
+     * Calculate dragon gear (saddle, chanfron, peytral) march size contribution
+     */
+    function calculateDragonGearMS() {
+        const result = { total: 0, items: [] };
+        const dragonSlots = ['saddle', 'chanfron', 'peytral'];
+        
+        if (typeof GEAR_DATABASE === 'undefined' || !GEAR_DATABASE.dragon_gear) {
+            return result;
+        }
+        
+        dragonSlots.forEach(slot => {
+            const select = document.getElementById(`msGearSelect-${slot}`);
+            const levelSelect = document.getElementById(`msGearLevelSelect-${slot}`);
+            const qualitySelect = document.getElementById(`msGearQuality-${slot}`);
+            const bonusEl = document.getElementById(`msGearBonus-${slot}`);
+            
+            if (!select || !select.value) {
+                if (bonusEl) bonusEl.textContent = '+0';
+                return;
+            }
+            
+            const setId = select.value;
+            const level = parseInt(levelSelect?.value) || 40;
+            const quality = qualitySelect?.value || 'legendary';
+            const levelKey = `L${level}`;
+            
+            const setData = GEAR_DATABASE.dragon_gear[setId];
+            if (setData && setData.slots && setData.slots[slot]) {
+                const slotStats = setData.slots[slot].stats;
+                
+                if (slotStats && slotStats.dragonmaxmarchsize) {
+                    const levelData = slotStats.dragonmaxmarchsize[levelKey];
+                    if (levelData && levelData[quality] !== undefined) {
+                        const marchSize = Math.round(levelData[quality]);
+                        result.total += marchSize;
+                        result.items.push({
+                            slot,
+                            set: setData.display_name || setId,
+                            level,
+                            quality,
+                            value: marchSize
+                        });
+                        
+                        if (bonusEl) bonusEl.textContent = `+${formatNumber(marchSize)}`;
+                    }
+                }
+            }
+        });
+        
+        return result;
+    }
+    
+    /**
+     * Calculate dragon hero hall march size contribution
+     */
+    function calculateDragonHeroMS() {
+        const result = { total: 0, items: [] };
+        
+        const input = document.getElementById('msDragonHeroLevel');
+        const bonusEl = document.getElementById('msDragonHeroBonus');
+        
+        if (input) {
+            const level = parseInt(input.value) || 0;
+            if (level > 0) {
+                // Dragon hero progression (simplified - will be updated with actual data)
+                const marchSize = Math.min(level * 100, 2000);
+                result.total += marchSize;
+                result.items.push({
+                    name: 'Dragon Heroes',
+                    level,
+                    value: marchSize
+                });
+                
+                if (bonusEl) bonusEl.textContent = `+${formatNumber(marchSize)}`;
+            } else {
+                if (bonusEl) bonusEl.textContent = '+0';
+            }
+        }
+        
+        return result;
+    }
+    
+    /**
+     * Calculate shrine building march size contribution
+     */
+    function calculateShrineMS() {
+        const result = { total: 0, items: [] };
+        
+        const input = document.getElementById('msShrineLevel');
+        
+        if (input) {
+            const level = parseInt(input.value) || 0;
+            if (level > 0 && MARCH_SIZE_DATA.buildings?.shrine) {
+                const shrineData = MARCH_SIZE_DATA.buildings.shrine;
+                // Get march size from level data
+                let marchSize = 0;
+                if (shrineData.levels?.[level]) {
+                    marchSize = shrineData.levels[level].marchSize || 0;
+                }
+                
+                if (marchSize > 0) {
+                    result.total += marchSize;
+                    result.items.push({
+                        name: 'Shrine',
+                        level,
+                        value: marchSize
+                    });
+                }
+            }
+        }
+        
         return result;
     }
 
@@ -2854,20 +3889,22 @@
 
         const breakdown = results.breakdown || {};
         const chartData = [];
+        const isDragonScenario = currentScenario === 'dragon-vs-sop' || currentScenario === 'dragon-vs-keep';
 
+        // ============ BASE CATEGORIES ============
         // Buildings
         if (breakdown.buildings?.total > 0) {
-            chartData.push({ label: 'Buildings', value: breakdown.buildings.total });
+            chartData.push({ label: 'Buildings', value: breakdown.buildings.total, category: 'base' });
         }
 
-        // Armories
+        // Armories (excluding dragon armories - they have separate category)
         if (breakdown.armories?.total > 0) {
-            chartData.push({ label: 'Armories', value: breakdown.armories.total });
+            chartData.push({ label: 'Armories', value: breakdown.armories.total, category: 'base' });
         }
 
-        // Research
+        // Research (excluding dragon research)
         if (breakdown.research?.flat > 0) {
-            chartData.push({ label: 'Research', value: breakdown.research.flat });
+            chartData.push({ label: 'Research', value: breakdown.research.flat, category: 'base' });
         }
 
         // Gear - calculate effective value including percentage gear
@@ -2877,7 +3914,7 @@
         const gearPctValue = gearPct > 0 ? Math.floor(results.base * (gearPct / 100)) : 0;
         const totalGearValue = gearFlat + gearPctValue;
         if (totalGearValue > 0) {
-            chartData.push({ label: 'Gear', value: totalGearValue });
+            chartData.push({ label: 'Gear', value: totalGearValue, category: 'base' });
         }
 
         // Heroes (show separately with absolute value)
@@ -2887,7 +3924,65 @@
             if (heroBonus > 0) {
                 chartData.push({ 
                     label: `Heroes (+${breakdown.heroes.pct.toFixed(2)}%)`, 
-                    value: heroBonus 
+                    value: heroBonus,
+                    category: 'base'
+                });
+            }
+        }
+
+        // ============ DRAGON-SPECIFIC CATEGORIES ============
+        if (isDragonScenario) {
+            // Dragon Talents
+            if (breakdown.dragonTalents?.vsSoP > 0) {
+                chartData.push({ 
+                    label: '🐉 Dragon Talents', 
+                    value: breakdown.dragonTalents.vsSoP, 
+                    category: 'dragon' 
+                });
+            }
+            
+            // Dragon Armories
+            if (breakdown.dragonArmories?.total > 0) {
+                chartData.push({ 
+                    label: '🐉 Dragon Armories', 
+                    value: breakdown.dragonArmories.total, 
+                    category: 'dragon' 
+                });
+            }
+            
+            // Dragon Research
+            if (breakdown.dragonResearch?.total > 0) {
+                chartData.push({ 
+                    label: '🐉 Dragon Research', 
+                    value: breakdown.dragonResearch.total, 
+                    category: 'dragon' 
+                });
+            }
+            
+            // Dragon Gear (Saddle, Chanfron, Peytral)
+            if (breakdown.dragonGear?.total > 0) {
+                chartData.push({ 
+                    label: '🐉 Dragon Gear', 
+                    value: breakdown.dragonGear.total, 
+                    category: 'dragon' 
+                });
+            }
+            
+            // Dragon Heroes
+            if (breakdown.dragonHeroes?.total > 0) {
+                chartData.push({ 
+                    label: '🐉 Dragon Heroes', 
+                    value: breakdown.dragonHeroes.total, 
+                    category: 'dragon' 
+                });
+            }
+            
+            // Shrine
+            if (breakdown.shrine?.total > 0) {
+                chartData.push({ 
+                    label: '🐉 Shrine', 
+                    value: breakdown.shrine.total, 
+                    category: 'dragon' 
                 });
             }
         }
@@ -2898,7 +3993,7 @@
             const baseForBonus = results.base + results.gear;
             const otherBonus = Math.floor(baseForBonus * (otherBonusPct / 100));
             if (otherBonus > 0) {
-                chartData.push({ label: 'Other Bonuses', value: otherBonus });
+                chartData.push({ label: 'Other Bonuses', value: otherBonus, category: 'bonus' });
             }
         }
 
@@ -2907,8 +4002,9 @@
 
         elements.breakdownChart.innerHTML = chartData.map(item => {
             const percentage = (item.value / maxValue) * 100;
+            const categoryClass = item.category === 'dragon' ? 'ms-chart-bar--dragon' : '';
             return `
-                <div class="ms-chart-bar">
+                <div class="ms-chart-bar ${categoryClass}">
                     <span class="ms-chart-bar__label">${item.label}</span>
                     <div class="ms-chart-bar__track">
                         <div class="ms-chart-bar__fill" style="width: ${percentage}%"></div>
@@ -3025,6 +4121,43 @@
 
         // Reset manual total
         if (elements.manualTotal) elements.manualTotal.value = '';
+        
+        // Reset dragon gear slots
+        const dragonSlots = ['saddle', 'chanfron', 'peytral'];
+        dragonSlots.forEach(slot => {
+            const select = document.getElementById(`msGearSelect-${slot}`);
+            const qualitySelect = document.getElementById(`msGearQuality-${slot}`);
+            const levelSelect = document.getElementById(`msGearLevelSelect-${slot}`);
+            const bonusEl = document.getElementById(`msGearBonus-${slot}`);
+            
+            if (select) select.value = '';
+            if (qualitySelect) qualitySelect.value = 'legendary';
+            if (levelSelect) levelSelect.value = '40';
+            if (bonusEl) bonusEl.textContent = '+0';
+        });
+        
+        // Reset dragon research
+        const dragonResearchIds = ['msDragonMarchSizeNpc1', 'msDragonMarchSizeNpc2', 'msDragonMarchSize1', 'msDragonMarchSize2'];
+        dragonResearchIds.forEach(id => {
+            const input = document.getElementById(id);
+            const valueDisplay = document.getElementById(`${id}Value`);
+            if (input) input.value = '0';
+            if (valueDisplay) valueDisplay.textContent = '0 / ';
+        });
+        
+        // Reset dragon hero hall
+        const dragonHeroInput = document.getElementById('msDragonHeroLevel');
+        const dragonHeroDisplay = document.getElementById('msDragonHeroLevelDisplay');
+        const dragonHeroBonus = document.getElementById('msDragonHeroBonus');
+        if (dragonHeroInput) dragonHeroInput.value = '0';
+        if (dragonHeroDisplay) dragonHeroDisplay.textContent = 'Lv 0 | (0 / 2,000)';
+        if (dragonHeroBonus) dragonHeroBonus.textContent = '+0';
+        
+        // Reset shrine
+        const shrineInput = document.getElementById('msShrineLevel');
+        const shrineDisplay = document.getElementById('msShrineLevelDisplay');
+        if (shrineInput) shrineInput.value = '0';
+        if (shrineDisplay) shrineDisplay.textContent = 'Lv 0 | (0 / 8,000)';
     }
 
     // ============================================
@@ -3085,6 +4218,9 @@
         let maxFlat = SECTION_MAXES.enhancements.greatHall + SECTION_MAXES.enhancements.watchtower;
         let maxPct = 8.0; // Keep Enhancement at level 40 provides 8%
         
+        // Check if dragon scenario is active
+        const isDragonScenario = currentScenario === 'dragon-vs-sop' || currentScenario === 'dragon-vs-keep';
+        
         // Great Hall
         if (elements.greatHallLevel) {
             const level = parseInt(elements.greatHallLevel.value) || 0;
@@ -3107,6 +4243,20 @@
             }
         }
         
+        // Shrine (Dragon MS) - only include if dragon scenario is active
+        if (isDragonScenario) {
+            const shrineInput = document.getElementById('msShrineLevel');
+            if (shrineInput) {
+                const level = parseInt(shrineInput.value) || 0;
+                const shrineData = MARCH_SIZE_DATA.buildings?.shrine;
+                if (shrineData?.levels?.[level]) {
+                    currentFlat += shrineData.levels[level].marchSize || 0;
+                }
+            }
+            // Add Shrine max to total max
+            maxFlat += MARCH_SIZE_DATA.buildings?.shrine?.maxMS || 8000;
+        }
+        
         return { 
             current: currentFlat, 
             max: maxFlat,
@@ -3115,47 +4265,70 @@
         };
     }
 
-    // Calculate armory category totals (standard, trinket, dragon)
+    // Calculate armory category totals (standard, trinket, dragon, standardDragonMs)
     function calculateArmoryCategoryTotals() {
+        const isDragonScenario = currentScenario === 'dragon-vs-sop' || currentScenario === 'dragon-vs-keep';
+        
         const totals = {
             standard: { current: 0, max: SECTION_MAXES.armories.standard * ARMORY_COUNTS.standard },
             trinket: { current: 0, max: SECTION_MAXES.armories.trinket * ARMORY_COUNTS.trinket },
-            dragon: { current: 0, max: SECTION_MAXES.armories.dragon * ARMORY_COUNTS.dragon }
+            dragon: { current: 0, max: SECTION_MAXES.armories.dragon * ARMORY_COUNTS.dragon },
+            standardDragonMs: { current: 0, max: 0 }
         };
         
         if (elements.armoryInputs) {
             elements.armoryInputs.forEach(input => {
                 const level = parseInt(input.value) || 0;
                 const armoryId = input.dataset.armory;
+                const armoryType = input.closest('.ms-armory-item')?.dataset.armoryType;
                 
                 // Determine category
                 let category = 'standard';
-                if (MARCH_SIZE_DATA.armories.trinket[armoryId]) {
+                if (armoryType === 'standardDragonMs') {
+                    category = 'standardDragonMs';
+                } else if (MARCH_SIZE_DATA.armories.trinket[armoryId]) {
                     category = 'trinket';
                 } else if (MARCH_SIZE_DATA.armories.dragon[armoryId]) {
                     category = 'dragon';
                 }
                 
-                const data = getArmoryMarchSize(category, armoryId, level);
+                const data = getArmoryMarchSize(category === 'standardDragonMs' ? 'standard' : category, armoryId, level);
                 totals[category].current += data.marchSize || 0;
             });
         }
+        
+        // Calculate max for standardDragonMs category (count items with that type)
+        const standardDragonMsItems = document.querySelectorAll('[data-armory-type="standardDragonMs"]');
+        totals.standardDragonMs.max = standardDragonMsItems.length * (SECTION_MAXES.armories.standard || 2167);
         
         return totals;
     }
 
     // Calculate armories section total (sum of all categories)
     function calculateArmoriesTotalAggregate() {
+        const isDragonScenario = currentScenario === 'dragon-vs-sop' || currentScenario === 'dragon-vs-keep';
         const categories = calculateArmoryCategoryTotals();
+        
+        let total = categories.standard.current + categories.trinket.current;
+        let max = categories.standard.max + categories.trinket.max;
+        
+        // Include dragon categories only if dragon scenario is active
+        if (isDragonScenario) {
+            total += categories.dragon.current + categories.standardDragonMs.current;
+            max += categories.dragon.max + categories.standardDragonMs.max;
+        }
+        
         return {
-            current: categories.standard.current + categories.trinket.current + categories.dragon.current,
-            max: categories.standard.max + categories.trinket.max + categories.dragon.max,
+            current: total,
+            max: max,
             categories: categories
         };
     }
 
     // Calculate research section total with category breakdown
     function calculateResearchTotal() {
+        const isDragonScenario = currentScenario === 'dragon-vs-sop' || currentScenario === 'dragon-vs-keep';
+        
         // Define which research belongs to which category
         const categories = {
             military1: ['command', 'command2', 'command3'],
@@ -3166,13 +4339,15 @@
         const categoryTotals = {
             military1: { current: 0, max: 30000 },      // 6000 + 10000 + 14000
             military2: { current: 0, max: 22500 },     // 10000 + 10000 + 1250 + 1250
-            advancedMilitary: { current: 0, max: 5750 } // 750 + 2500 + 2500
+            advancedMilitary: { current: 0, max: 5750 }, // 750 + 2500 + 2500
+            adolescentDragonCare: { current: 0, max: 2000 }, // Dragon MS I: 10 * 200
+            adultDragonCare: { current: 0, max: 2100 }       // Dragon MS II: 10 * 210
         };
         
         let totalCurrent = 0;
         let totalMax = 0;
         
-        // Calculate category totals
+        // Calculate standard category totals
         Object.entries(categories).forEach(([category, researchKeys]) => {
             researchKeys.forEach(key => {
                 const slider = elements.researchSliders[key];
@@ -3188,6 +4363,26 @@
             totalCurrent += categoryTotals[category].current;
             totalMax += categoryTotals[category].max;
         });
+        
+        // Add dragon research if dragon scenario is active
+        if (isDragonScenario) {
+            // Adolescent Dragon Care (Dragon MS I)
+            const adolescentInput = document.getElementById('msDragonMarchSize1');
+            if (adolescentInput) {
+                const level = parseInt(adolescentInput.value) || 0;
+                categoryTotals.adolescentDragonCare.current = level * 200; // 200 per level
+            }
+            
+            // Adult Dragon Care (Dragon MS II)
+            const adultInput = document.getElementById('msDragonMarchSize2');
+            if (adultInput) {
+                const level = parseInt(adultInput.value) || 0;
+                categoryTotals.adultDragonCare.current = level * 210; // 210 per level
+            }
+            
+            totalCurrent += categoryTotals.adolescentDragonCare.current + categoryTotals.adultDragonCare.current;
+            totalMax += categoryTotals.adolescentDragonCare.max + categoryTotals.adultDragonCare.max;
+        }
         
         return { 
             current: totalCurrent, 
@@ -3254,9 +4449,23 @@
             hallFlat = getHallMS(level);
         }
         
+        // Dragon Hero Hall calculation (only if dragon scenario is active)
+        const isDragonScenario = currentScenario === 'dragon-vs-sop' || currentScenario === 'dragon-vs-keep';
+        let dragonHallFlat = 0;
+        let dragonHallMaxFlat = 2000; // Max at level 20
+        
+        if (isDragonScenario) {
+            const dragonHeroInput = document.getElementById('msDragonHeroLevel');
+            if (dragonHeroInput) {
+                const level = parseInt(dragonHeroInput.value) || 0;
+                // Dragon hero progression: level 0-20 maps to 0-2000
+                dragonHallFlat = Math.round((level / 20) * 2000);
+            }
+        }
+        
         return { 
             // Totals across all hero sections
-            current: councilFlat + marchingFlat + hallFlat,
+            current: councilFlat + marchingFlat + hallFlat + (isDragonScenario ? dragonHallFlat : 0),
             currentPct: councilPct + marchingPct,
             // Council breakdown
             council: {
@@ -3276,6 +4485,11 @@
             hall: {
                 flat: hallFlat,
                 maxFlat: hallMaxFlat
+            },
+            // Dragon Hero Hall breakdown (only relevant in dragon scenarios)
+            dragonHall: {
+                flat: dragonHallFlat,
+                maxFlat: dragonHallMaxFlat
             }
         };
     }
@@ -3324,6 +4538,12 @@
             dragonTotalEl.textContent = `(+${armoriesTotal.categories.dragon.current.toLocaleString()} / ${armoriesTotal.categories.dragon.max.toLocaleString()})`;
         }
         
+        // Standard armories with Dragon MS category
+        const standardDragonMsTotalEl = document.getElementById('msStandardDragonMsTotal');
+        if (standardDragonMsTotalEl && armoriesTotal.categories.standardDragonMs) {
+            standardDragonMsTotalEl.textContent = `(+${armoriesTotal.categories.standardDragonMs.current.toLocaleString()} / ${armoriesTotal.categories.standardDragonMs.max.toLocaleString()})`;
+        }
+        
         // Research (aggregate and categories)
         const researchTotal = calculateResearchTotal();
         
@@ -3349,6 +4569,18 @@
         const advMilitaryTotalEl = document.getElementById('msAdvancedMilitaryTotal');
         if (advMilitaryTotalEl) {
             advMilitaryTotalEl.textContent = `(+${researchTotal.categories.advancedMilitary.current.toLocaleString()} / ${researchTotal.categories.advancedMilitary.max.toLocaleString()})`;
+        }
+        
+        // Adolescent Dragon Care Research category
+        const adolescentDragonCareTotalEl = document.getElementById('msAdolescentDragonCareTotal');
+        if (adolescentDragonCareTotalEl && researchTotal.categories.adolescentDragonCare) {
+            adolescentDragonCareTotalEl.textContent = `(+${researchTotal.categories.adolescentDragonCare.current.toLocaleString()} / ${researchTotal.categories.adolescentDragonCare.max.toLocaleString()})`;
+        }
+        
+        // Adult Dragon Care Research category
+        const adultDragonCareTotalEl = document.getElementById('msAdultDragonCareTotal');
+        if (adultDragonCareTotalEl && researchTotal.categories.adultDragonCare) {
+            adultDragonCareTotalEl.textContent = `(+${researchTotal.categories.adultDragonCare.current.toLocaleString()} / ${researchTotal.categories.adultDragonCare.max.toLocaleString()})`;
         }
         
         // Heroes (flat + percentage with category breakdown)
@@ -3394,6 +4626,12 @@
         const hallTotalEl = document.getElementById('msHallHeroesTotal');
         if (hallTotalEl) {
             hallTotalEl.textContent = `(+${heroesTotal.hall.flat.toLocaleString()} / ${heroesTotal.hall.maxFlat.toLocaleString()})`;
+        }
+        
+        // Dragon Hero Hall category total (only visible in dragon scenarios)
+        const dragonHallTotalEl = document.getElementById('msDragonHallHeroesTotal');
+        if (dragonHallTotalEl && heroesTotal.dragonHall) {
+            dragonHallTotalEl.textContent = `(+${heroesTotal.dragonHall.flat.toLocaleString()} / ${heroesTotal.dragonHall.maxFlat.toLocaleString()})`;
         }
         
         // Update base march size total
@@ -3552,6 +4790,11 @@
             }
         });
         
+        // Gather dragon state if module is active
+        if (typeof DragonMarchSizeModule !== 'undefined') {
+            state.dragon = DragonMarchSizeModule.gatherState();
+        }
+        
         return state;
     }
     
@@ -3563,14 +4806,9 @@
         }
         
         try {
-            // Apply scenario
+            // Apply scenario using selectScenario to properly toggle dragon elements
             if (state.scenario) {
-                currentScenario = state.scenario;
-                const scenarioCard = document.querySelector(`.ms-scenario-card[data-scenario="${state.scenario}"]`);
-                if (scenarioCard) {
-                    document.querySelectorAll('.ms-scenario-card').forEach(c => c.classList.remove('active'));
-                    scenarioCard.classList.add('active');
-                }
+                selectScenario(state.scenario);
             }
             
             // Apply buildings
@@ -3703,6 +4941,21 @@
                 if (titleSelect) {
                     titleSelect.value = state.title;
                     updateTitleDisplay();
+                }
+            }
+            
+            // Apply dragon state if available
+            if (state.dragon && typeof DragonMarchSizeModule !== 'undefined') {
+                // Ensure dragon container is visible if dragon scenario
+                const isDragonScenario = state.scenario === 'dragon-vs-sop' || state.scenario === 'dragon-vs-keep';
+                const dragonContainer = document.getElementById('dragonSectionsContainer');
+                if (dragonContainer && isDragonScenario) {
+                    dragonContainer.classList.add('active');
+                    // Initialize and apply state
+                    if (!DragonMarchSizeModule.isActive()) {
+                        DragonMarchSizeModule.init();
+                    }
+                    DragonMarchSizeModule.applyState(state.dragon);
                 }
             }
             
@@ -4041,6 +5294,24 @@
             if (group !== exceptElement) {
                 group.classList.remove('ms-hall-slider-group--expanded');
                 const picker = group.querySelector('.ms-hall-slider-group__picker-container');
+                if (picker) picker.style.display = 'none';
+            }
+        });
+        
+        // Close dragon level picker
+        document.querySelectorAll('.ms-dragon-level-section--expanded').forEach(section => {
+            if (section !== exceptElement) {
+                section.classList.remove('ms-dragon-level-section--expanded');
+                const picker = section.querySelector('.ms-dragon-level-picker-container');
+                if (picker) picker.style.display = 'none';
+            }
+        });
+        
+        // Close dragon talent pickers
+        document.querySelectorAll('.ms-talent-slider-item--expanded').forEach(item => {
+            if (item !== exceptElement) {
+                item.classList.remove('ms-talent-slider-item--expanded');
+                const picker = item.querySelector('.ms-talent-slider-item__picker-container');
                 if (picker) picker.style.display = 'none';
             }
         });

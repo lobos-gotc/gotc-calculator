@@ -653,11 +653,91 @@ const MARCH_SIZE_DATA = {
             ancientOrders: { name: "Ancient Order's", type: "trinket", minLevel: 0, maxLevel: 150, minMS: 0, maxMS: 854 }
         },
         // Dragon Armories (0-150 level range, max 895 march size)
-        // Ordered by game season (newest first)
+        // Full list extracted from game data - ordered by game season (newest first)
         dragon: {
+            // Season 10
+            icedread: { name: "Ice Dread", type: "dragon", minLevel: 0, maxLevel: 150, minMS: 0, maxMS: 895 },
+            serpentoftheseven: { name: "Serpent of the Seven", type: "dragon", minLevel: 0, maxLevel: 150, minMS: 0, maxMS: 895 },
+            // Season 9
             tarnishedSeafarer: { name: "Tarnished Seafarer", type: "dragon", minLevel: 0, maxLevel: 150, minMS: 0, maxMS: 895 },
+            duskrider: { name: "Dusk Rider", type: "dragon", minLevel: 0, maxLevel: 150, minMS: 0, maxMS: 895 },
+            emeraldsentinel: { name: "Emerald Sentinel", type: "dragon", minLevel: 0, maxLevel: 150, minMS: 0, maxMS: 895 },
+            // Season 8
+            pearlescentprotector: { name: "Pearlescent Protector", type: "dragon", minLevel: 0, maxLevel: 150, minMS: 0, maxMS: 895 },
+            scarletrogue: { name: "Scarlet Rogue", type: "dragon", minLevel: 0, maxLevel: 150, minMS: 0, maxMS: 895 },
+            skyreaver: { name: "Sky Reaver", type: "dragon", minLevel: 0, maxLevel: 150, minMS: 0, maxMS: 895 },
+            // Season 7
+            verdantguardian: { name: "Verdant Guardian", type: "dragon", minLevel: 0, maxLevel: 150, minMS: 0, maxMS: 895 },
             tideBreaker: { name: "Tide Breaker", type: "dragon", minLevel: 0, maxLevel: 150, minMS: 0, maxMS: 895 },
-            regalSerpent: { name: "Regal Serpent", type: "dragon", minLevel: 0, maxLevel: 150, minMS: 0, maxMS: 895 }
+            artstub: { name: "Gilded Barding", type: "dragon", minLevel: 0, maxLevel: 150, minMS: 0, maxMS: 895 }
+        }
+    },
+
+    // ============================================
+    // DRAGON HERO HALL - Dragon March Size bonus from heroes
+    // ============================================
+    dragonHeroHall: {
+        name: "Dragon Hero Hall",
+        description: "Heroes with Dragon March Size bonuses",
+        maxLevel: 20,
+        maxMS: 2000,
+        // Progression: levels 1-20, max bonus 2000 at level 20
+        levels: {
+            0: { marchSize: 0 },
+            1: { marchSize: 100 },
+            2: { marchSize: 200 },
+            3: { marchSize: 300 },
+            4: { marchSize: 400 },
+            5: { marchSize: 500 },
+            6: { marchSize: 600 },
+            7: { marchSize: 700 },
+            8: { marchSize: 800 },
+            9: { marchSize: 900 },
+            10: { marchSize: 1000 },
+            11: { marchSize: 1100 },
+            12: { marchSize: 1200 },
+            13: { marchSize: 1300 },
+            14: { marchSize: 1400 },
+            15: { marchSize: 1500 },
+            16: { marchSize: 1600 },
+            17: { marchSize: 1700 },
+            18: { marchSize: 1800 },
+            19: { marchSize: 1900 },
+            20: { marchSize: 2000 }
+        }
+    },
+
+    // ============================================
+    // DRAGON RESEARCH - Dragon March Size research bonuses
+    // ============================================
+    dragonResearch: {
+        dragonMarchSizeNpc1: {
+            name: "Dragon March Size vs NPC I",
+            category: "whelp",
+            maxLevel: 10,
+            perLevel: 20,
+            maxMS: 200
+        },
+        dragonMarchSizeNpc2: {
+            name: "Dragon March Size vs NPC II",
+            category: "whelp",
+            maxLevel: 10,
+            perLevel: 20,
+            maxMS: 200
+        },
+        dragonMarchSize1: {
+            name: "Dragon March Size I",
+            category: "adolescent",
+            maxLevel: 10,
+            perLevel: 200,
+            maxMS: 2000
+        },
+        dragonMarchSize2: {
+            name: "Dragon March Size II",
+            category: "adult",
+            maxLevel: 10,
+            perLevel: 210,
+            maxMS: 2100
         }
     },
 
@@ -696,6 +776,31 @@ const MARCH_SIZE_DATA = {
                 29: { marchSize: 35500 }, 30: { marchSize: 36700 }, 31: { marchSize: 38100 }, 32: { marchSize: 39500 },
                 33: { marchSize: 41250 }, 34: { marchSize: 42650 }, 35: { marchSize: 45100 }, 36: { marchSize: 46500 },
                 37: { marchSize: 47900 }, 38: { marchSize: 49650 }, 39: { marchSize: 51050 }, 40: { marchSize: 53500 }
+            }
+        },
+        // Dragon-only: Shrine Enhancement 4 with Dragon March Size
+        // Data extracted from: prog_Shrine_Enhancement_4_stat_5 (property_DragonMaxMarchSize_city)
+        // Note: Dragon March Size stat unlocks at level 25, max 8000 at level 39
+        shrine: {
+            name: "Shrine",
+            description: "Shrine Enhancement 4 - Dragon March Size bonus (unlocks at Lv 25)",
+            dragonOnly: true,
+            minLevel: 25,  // Dragon MS starts at level 25
+            maxLevel: 40,  // Building max level is 40
+            maxMS: 8000,   // Max Dragon MS at level 39+
+            levels: {
+                // Levels 1-24: No Dragon March Size
+                1: { marchSize: 0 }, 2: { marchSize: 0 }, 3: { marchSize: 0 }, 4: { marchSize: 0 },
+                5: { marchSize: 0 }, 6: { marchSize: 0 }, 7: { marchSize: 0 }, 8: { marchSize: 0 },
+                9: { marchSize: 0 }, 10: { marchSize: 0 }, 11: { marchSize: 0 }, 12: { marchSize: 0 },
+                13: { marchSize: 0 }, 14: { marchSize: 0 }, 15: { marchSize: 0 }, 16: { marchSize: 0 },
+                17: { marchSize: 0 }, 18: { marchSize: 0 }, 19: { marchSize: 0 }, 20: { marchSize: 0 },
+                21: { marchSize: 0 }, 22: { marchSize: 0 }, 23: { marchSize: 0 }, 24: { marchSize: 0 },
+                // Dragon March Size unlocks at level 25 (extracted from game data)
+                25: { marchSize: 171 }, 26: { marchSize: 343 }, 27: { marchSize: 571 }, 28: { marchSize: 800 },
+                29: { marchSize: 1029 }, 30: { marchSize: 1314 }, 31: { marchSize: 1600 }, 32: { marchSize: 1943 },
+                33: { marchSize: 2343 }, 34: { marchSize: 2857 }, 35: { marchSize: 3486 }, 36: { marchSize: 4229 },
+                37: { marchSize: 5200 }, 38: { marchSize: 6400 }, 39: { marchSize: 8000 }, 40: { marchSize: 8000 }
             }
         }
     },

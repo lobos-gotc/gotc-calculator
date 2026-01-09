@@ -59,7 +59,10 @@
     <script defer src="history.js?v=1.0"></script>
     <script defer src="gear-database.js?v=1.0"></script>
     <script defer src="march-size/ms-data.js?v=4.7"></script>
-    <script defer src="march-size/ms-calculator.js?v=7.0"></script>
+    <script defer src="march-size/ms-dragon-data.js?v=1.0"></script>
+    <script defer src="march-size/ms-dragon-calculator.js?v=1.0"></script>
+    <script defer src="march-size/ms-calculator.js?v=7.1"></script>
+    <link rel="stylesheet" href="march-size/ms-dragon.css?v=1.0">
 </head>
 <body>
     <div class="wrapper">
@@ -1124,15 +1127,15 @@
                         </h3>
                         <div class="ms-scenario-grid ms-scenario-grid--section">
 
-                        <button type="button" class="ms-scenario-card glass-card ms-scenario-card--disabled" data-scenario="dragon-vs-sop" disabled>
+                        <button type="button" class="ms-scenario-card glass-card" data-scenario="dragon-vs-sop">
                             <div class="ms-scenario-card__icon">
                                 <img src="resources/research/icon_dragon_care_research_march_size_vs_pvp_sop.png" alt="Dragon March vs SOP">
                             </div>
                             <div class="ms-scenario-card__content">
                                 <h3>Dragon March vs Seat of Power</h3>
                             </div>
-                            <div class="ms-scenario-card__overlay">
-                                <span>🚧 Coming Soon</span>
+                            <div class="ms-scenario-card__check">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="24" height="24"><path fill="currentColor" d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM369 209L241 337c-9.4 9.4-24.6 9.4-33.9 0l-64-64c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l47 47L335 175c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9z"/></svg>
                             </div>
                         </button>
 
@@ -1364,6 +1367,193 @@
                                             <div class="ms-picker-wheel__selection"></div>
                                         </div>
                                     </div>
+                                    <!-- Dragon-only: Shrine -->
+                                    <div class="ms-building-card ms-building-card--expandable" data-building="shrine" data-building-id="msShrineLevel" data-dragon-only="true">
+                                        <div class="ms-building-card__image">
+                                            <img src="resources/buildings/structures_shrine_icon_01.png" alt="Shrine" onerror="this.src='resources/buildings/placeholder.png'">
+                                        </div>
+                                        <div class="ms-building-card__content">
+                                            <label for="msShrineLevel" class="ms-building-card__title">Shrine (Dragon MS)</label>
+                                            <div class="ms-building-card__slider">
+                                                <input type="hidden" id="msShrineLevel" value="0">
+                                                <span class="ms-armory-value" id="msShrineLevelDisplay">Lv 0 | (0 / 8,000)</span>
+                                            </div>
+                                        </div>
+                                        <div class="ms-building-card__picker-container" style="display: none;">
+                                            <div class="ms-building-card__picker-background">
+                                                <img src="resources/buildings/structures_shrine_icon_01.png" alt="Shrine" onerror="this.src='resources/buildings/placeholder.png'">
+                                            </div>
+                                            <div class="ms-picker-wheel">
+                                                <div class="ms-picker-wheel__column" id="msShrineLevelPicker">
+                                                    <!-- Level and value combined will be populated by JavaScript -->
+                                                </div>
+                                            </div>
+                                            <div class="ms-picker-wheel__selection"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dragon Talents Section (conditionally visible) -->
+                    <div class="glass-card ms-input-card" data-dragon-only="true">
+                        <div class="accordion-toggle" role="button" tabindex="0" aria-expanded="false" data-target="ms-dragon-talents">
+                            <span class="accordion-toggle__label">
+                                <span>🐉 Dragon Talents</span>
+                                <span class="info-btn-wrapper ms-accordion-info">
+                                    <button type="button" class="info-btn info-btn--small" aria-label="Dragon Talents info">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M256 48a208 208 0 1 1 0 416 208 208 0 1 1 0-416zm0 464A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM216 336c-13.3 0-24 10.7-24 24s10.7 24 24 24l80 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-8 0 0-88c0-13.3-10.7-24-24-24l-48 0c-13.3 0-24 10.7-24 24s10.7 24 24 24l24 0 0 64-24 0zm40-144a32 32 0 1 0 0-64 32 32 0 1 0 0 64z"/></svg>
+                                    </button>
+                                    <div class="info-popover info-popover--compact">
+                                        <b>🐉 Dragon Talents</b><br><br>
+                                        Dragon talent trees provide Dragon March Size bonuses for PvP combat.<br><br>
+                                        <b>Dragon MS I/II:</b> General Dragon March Size<br>
+                                        <b>Fire Breath:</b> Each unlocked talent adds +200 MS<br><br>
+                                        Click talents to set levels or toggle them on/off.
+                                    </div>
+                                </span>
+                            </span>
+                            <span class="ms-section-total" id="msDragonTalentsTotal">(+0 / 4,350)</span>
+                            <svg class="accordion-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"/></svg>
+                        </div>
+                        <div id="ms-dragon-talents" class="accordion-content ms-dragon-talents-content" style="display:none;">
+                            <!-- Hidden inputs for state management (Dragon Level kept for compatibility) -->
+                            <input type="hidden" id="msDragonLevel" value="31">
+                            
+                            <!-- Dragon Talents Grid (similar to research categories) -->
+                            <div class="ms-dragon-talents-grid">
+                                <!-- Adolescent Talents - Dragon March Size -->
+                                <div class="ms-talent-category" data-category="adolescent">
+                                    <div class="ms-talent-category__header">
+                                        <img src="resources/dragons/icon_dragon.png" alt="Adolescent" class="ms-talent-icon" onerror="this.src='resources/research/marchSize.png'">
+                                        <h4>Dragon March Size <span class="ms-category-total" id="msAdolescentTalentsTotal">(+0 / 2,350)</span></h4>
+                                    </div>
+                                    <p class="ms-section-description">General Dragon March Size talents</p>
+                                    <div class="ms-talent-items">
+                                        <!-- Dragon March Size I -->
+                                        <div class="ms-research-slider-item ms-research-slider-item--expandable" data-research-id="msDragonMarchSizeTalent1">
+                                            <img src="resources/research/marchSize.png" alt="Dragon MS I" class="ms-research-slider-icon">
+                                            <div class="ms-research-slider-content">
+                                                <div class="ms-research-slider-header">
+                                                    <span class="ms-research-slider-name">Dragon March Size I</span>
+                                                    <span class="ms-research-slider-value" id="msDragonMarchSizeTalent1Display">Lv 0 | (0 / 800)</span>
+                                                </div>
+                                                <input type="hidden" id="msDragonMarchSizeTalent1" value="0" data-talent="marchSize1" data-tree="adolescent">
+                                            </div>
+                                            <div class="ms-research-slider-item__picker-container" style="display: none;">
+                                                <div class="ms-research-slider-item__picker-background">
+                                                    <img src="resources/dragons/icon_dragon.png" alt="Dragon MS I">
+                                                </div>
+                                                <div class="ms-picker-wheel">
+                                                    <div class="ms-picker-wheel__column" id="msDragonMarchSizeTalent1Picker"></div>
+                                                </div>
+                                                <div class="ms-picker-wheel__selection"></div>
+                                            </div>
+                                        </div>
+                                        <!-- Dragon March Size II -->
+                                        <div class="ms-research-slider-item ms-research-slider-item--expandable" data-research-id="msDragonMarchSizeTalent2">
+                                            <img src="resources/research/advMarchSize.png" alt="Dragon MS II" class="ms-research-slider-icon">
+                                            <div class="ms-research-slider-content">
+                                                <div class="ms-research-slider-header">
+                                                    <span class="ms-research-slider-name">Dragon March Size II</span>
+                                                    <span class="ms-research-slider-value" id="msDragonMarchSizeTalent2Display">Lv 0 | (0 / 1,550)</span>
+                                                </div>
+                                                <input type="hidden" id="msDragonMarchSizeTalent2" value="0" data-talent="marchSize2" data-tree="adolescent">
+                                            </div>
+                                            <div class="ms-research-slider-item__picker-container" style="display: none;">
+                                                <div class="ms-research-slider-item__picker-background">
+                                                    <img src="resources/dragons/icon_dragon.png" alt="Dragon MS II">
+                                                </div>
+                                                <div class="ms-picker-wheel">
+                                                    <div class="ms-picker-wheel__column" id="msDragonMarchSizeTalent2Picker"></div>
+                                                </div>
+                                                <div class="ms-picker-wheel__selection"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Adult Talents - Fire Breath with March Size -->
+                                <div class="ms-talent-category" data-category="adult">
+                                    <div class="ms-talent-category__header">
+                                        <img src="resources/dragons/icon_dragon.png" alt="Adult" class="ms-talent-icon" onerror="this.src='resources/research/eliteMarchSize.png'">
+                                        <h4>Fire Breath Talents <span class="ms-category-total" id="msAdultTalentsTotal">(+0 / 2,000)</span></h4>
+                                    </div>
+                                    <p class="ms-section-description">Each talent provides +200 Dragon March Size</p>
+                                    <div class="ms-talent-items ms-adult-talent-items">
+                                        <!-- Fire Breath talents as toggleable research-style items -->
+                                        <div class="ms-adult-talent-item" data-talent-id="msFireBreathMini1" data-bonus="200">
+                                            <input type="checkbox" id="msFireBreathMini1" data-talent="fireBreathMini1" data-tree="adult" data-bonus="200" class="ms-adult-talent-input">
+                                            <div class="ms-adult-talent-content">
+                                                <span class="ms-adult-talent-name">🔥 Fire Breath (Cavalry)</span>
+                                                <span class="ms-adult-talent-value">+200</span>
+                                            </div>
+                                        </div>
+                                        <div class="ms-adult-talent-item" data-talent-id="msFireBreathMini2" data-bonus="200">
+                                            <input type="checkbox" id="msFireBreathMini2" data-talent="fireBreathMini2" data-tree="adult" data-bonus="200" class="ms-adult-talent-input">
+                                            <div class="ms-adult-talent-content">
+                                                <span class="ms-adult-talent-name">🔥 Fire Breath (Ranged)</span>
+                                                <span class="ms-adult-talent-value">+200</span>
+                                            </div>
+                                        </div>
+                                        <div class="ms-adult-talent-item" data-talent-id="msFireBreathMini3" data-bonus="200">
+                                            <input type="checkbox" id="msFireBreathMini3" data-talent="fireBreathMini3" data-tree="adult" data-bonus="200" class="ms-adult-talent-input">
+                                            <div class="ms-adult-talent-content">
+                                                <span class="ms-adult-talent-name">🔥 Fire Breath (Infantry)</span>
+                                                <span class="ms-adult-talent-value">+200</span>
+                                            </div>
+                                        </div>
+                                        <div class="ms-adult-talent-item" data-talent-id="msFireBreathMini4" data-bonus="200">
+                                            <input type="checkbox" id="msFireBreathMini4" data-talent="fireBreathMini4" data-tree="adult" data-bonus="200" class="ms-adult-talent-input">
+                                            <div class="ms-adult-talent-content">
+                                                <span class="ms-adult-talent-name">🔥 Fire Breath (Siege)</span>
+                                                <span class="ms-adult-talent-value">+200</span>
+                                            </div>
+                                        </div>
+                                        <div class="ms-adult-talent-item" data-talent-id="msFireBreathCombo3" data-bonus="200">
+                                            <input type="checkbox" id="msFireBreathCombo3" data-talent="fireBreathCombo3" data-tree="adult" data-bonus="200" class="ms-adult-talent-input">
+                                            <div class="ms-adult-talent-content">
+                                                <span class="ms-adult-talent-name">🔥 Fire Breath Combo I</span>
+                                                <span class="ms-adult-talent-value">+200</span>
+                                            </div>
+                                        </div>
+                                        <div class="ms-adult-talent-item" data-talent-id="msFireBreathMini5" data-bonus="200">
+                                            <input type="checkbox" id="msFireBreathMini5" data-talent="fireBreathMini5" data-tree="adult" data-bonus="200" class="ms-adult-talent-input">
+                                            <div class="ms-adult-talent-content">
+                                                <span class="ms-adult-talent-name">🔥 Fire Breath II (Cav)</span>
+                                                <span class="ms-adult-talent-value">+200</span>
+                                            </div>
+                                        </div>
+                                        <div class="ms-adult-talent-item" data-talent-id="msFireBreathMini6" data-bonus="200">
+                                            <input type="checkbox" id="msFireBreathMini6" data-talent="fireBreathMini6" data-tree="adult" data-bonus="200" class="ms-adult-talent-input">
+                                            <div class="ms-adult-talent-content">
+                                                <span class="ms-adult-talent-name">🔥 Fire Breath II (Ranged)</span>
+                                                <span class="ms-adult-talent-value">+200</span>
+                                            </div>
+                                        </div>
+                                        <div class="ms-adult-talent-item" data-talent-id="msFireBreathMini7" data-bonus="200">
+                                            <input type="checkbox" id="msFireBreathMini7" data-talent="fireBreathMini7" data-tree="adult" data-bonus="200" class="ms-adult-talent-input">
+                                            <div class="ms-adult-talent-content">
+                                                <span class="ms-adult-talent-name">🔥 Fire Breath II (Inf)</span>
+                                                <span class="ms-adult-talent-value">+200</span>
+                                            </div>
+                                        </div>
+                                        <div class="ms-adult-talent-item" data-talent-id="msFireBreathMini8" data-bonus="200">
+                                            <input type="checkbox" id="msFireBreathMini8" data-talent="fireBreathMini8" data-tree="adult" data-bonus="200" class="ms-adult-talent-input">
+                                            <div class="ms-adult-talent-content">
+                                                <span class="ms-adult-talent-name">🔥 Fire Breath II (Siege)</span>
+                                                <span class="ms-adult-talent-value">+200</span>
+                                            </div>
+                                        </div>
+                                        <div class="ms-adult-talent-item" data-talent-id="msFireBreathCombo7" data-bonus="200">
+                                            <input type="checkbox" id="msFireBreathCombo7" data-talent="fireBreathCombo7" data-tree="adult" data-bonus="200" class="ms-adult-talent-input">
+                                            <div class="ms-adult-talent-content">
+                                                <span class="ms-adult-talent-name">🔥 Fire Breath Combo II</span>
+                                                <span class="ms-adult-talent-value">+200</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1392,9 +1582,12 @@
                         </div>
                         <div id="ms-armories" class="accordion-content ms-armories-content" style="display:none;">
                             <!-- Standard Armories -->
-                            <div class="ms-armory-category" data-category="standard">
-                                <h4 class="ms-armory-category__title">Standard Armories <span class="ms-category-total" id="msStandardArmoriesTotal">(+0 / 36,839)</span></h4>
-                                <div class="ms-armory-grid ms-armory-grid--vertical">
+                            <div class="ms-armory-category ms-armory-category--collapsible" data-category="standard">
+                                <div class="ms-armory-category__header" role="button" tabindex="0">
+                                    <h4 class="ms-armory-category__title">Standard Armories <span class="ms-category-total" id="msStandardArmoriesTotal">(+0 / 36,839)</span></h4>
+                                    <svg class="ms-armory-category__arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"/></svg>
+                                </div>
+                                <div class="ms-armory-grid ms-armory-grid--vertical ms-armory-category__content" style="display: none;">
                                     <!-- Ordered by game season (newest first) -->
                                     <div class="ms-armory-item ms-armory-item--vertical ms-armory-item--expandable" data-armory-id="msArmoryOneEyedPrince" data-armory-key="oneEyedPrince">
                                         <label for="msArmoryOneEyedPrince">One Eyed Prince</label>
@@ -1693,9 +1886,12 @@
                             </div>
 
                             <!-- Trinket Armories -->
-                            <div class="ms-armory-category" data-category="trinket">
-                                <h4 class="ms-armory-category__title">Trinket Armories <span class="ms-category-total" id="msTrinketArmoriesTotal">(+0 / 5,124)</span></h4>
-                                <div class="ms-armory-grid ms-armory-grid--vertical">
+                            <div class="ms-armory-category ms-armory-category--collapsible" data-category="trinket">
+                                <div class="ms-armory-category__header" role="button" tabindex="0">
+                                    <h4 class="ms-armory-category__title">Trinket Armories <span class="ms-category-total" id="msTrinketArmoriesTotal">(+0 / 5,124)</span></h4>
+                                    <svg class="ms-armory-category__arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"/></svg>
+                                </div>
+                                <div class="ms-armory-grid ms-armory-grid--vertical ms-armory-category__content" style="display: none;">
                                     <!-- Ordered by season (newest first) -->
                                     <div class="ms-armory-item ms-armory-item--vertical ms-armory-item--expandable" data-armory-id="msArmoryAncientOrders" data-armory-key="ancientOrders">
                                         <label for="msArmoryAncientOrders">Ancient Order's</label>
@@ -1827,14 +2023,53 @@
                             </div>
 
                             <!-- Dragon Armories -->
-                            <div class="ms-armory-category" data-category="dragon">
-                                <h4 class="ms-armory-category__title">Dragon Armories <span class="ms-category-total" id="msDragonArmoriesTotal">(+0 / 2,685)</span></h4>
-                                <div class="ms-armory-grid ms-armory-grid--vertical">
-                                    <div class="ms-armory-item ms-armory-item--vertical ms-armory-item--expandable" data-armory-id="msArmoryTarnishedSeafarer" data-armory-key="tarnishedSeafarer">
-                                        <label for="msArmoryTarnishedSeafarer">Tarnished Seafarer</label>
-                                        <img src="resources/armories/tarnishedSeafarer.png" alt="TarnishedSeafarer" class="ms-armory-icon">
+                            <div class="ms-armory-category ms-armory-category--collapsible" data-category="dragon" data-dragon-only="true">
+                                <div class="ms-armory-category__header" role="button" tabindex="0">
+                                    <h4 class="ms-armory-category__title">🐉 Dragon Armories <span class="ms-category-total" id="msDragonArmoriesTotal">(+0 / 9,845)</span></h4>
+                                    <svg class="ms-armory-category__arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"/></svg>
+                                </div>
+                                <div class="ms-armory-grid ms-armory-grid--vertical ms-armory-category__content" style="display: none;">
+                                    <!-- Season 10 -->
+                                    <div class="ms-armory-item ms-armory-item--vertical ms-armory-item--expandable" data-armory-id="msArmoryIceDread" data-armory-key="icedread" data-armory-type="dragon">
+                                        <label for="msArmoryIceDread">Ice Dread</label>
+                                        <img src="resources/armories/dragon/icedread.png" alt="Ice Dread" class="ms-armory-icon" onerror="this.src='resources/armories/placeholder.png'">
                                         <div class="ms-armory-slider-group">
-                                            <input type="hidden" id="msArmoryTarnishedSeafarer" value="126" data-armory="tarnishedSeafarer">
+                                            <input type="hidden" id="msArmoryIceDread" value="0" data-armory="icedread">
+                                            <span class="ms-armory-value" id="msArmoryIceDreadDisplay">0</span>
+                                        </div>
+                                        <div class="ms-armory-item__picker-container" style="display: none;">
+                                            <div class="ms-armory-item__picker-background">
+                                                <img src="resources/armories/dragon/icedread.png" alt="Ice Dread" onerror="this.src='resources/armories/placeholder.png'">
+                                            </div>
+                                            <div class="ms-picker-wheel">
+                                                <div class="ms-picker-wheel__column" id="msArmoryIceDreadPicker"></div>
+                                            </div>
+                                            <div class="ms-picker-wheel__selection"></div>
+                                        </div>
+                                    </div>
+                                    <div class="ms-armory-item ms-armory-item--vertical ms-armory-item--expandable" data-armory-id="msArmorySerpentOfTheSeven" data-armory-key="serpentoftheseven" data-armory-type="dragon">
+                                        <label for="msArmorySerpentOfTheSeven">Serpent of the Seven</label>
+                                        <img src="resources/armories/dragon/serpentoftheseven.png" alt="Serpent of the Seven" class="ms-armory-icon" onerror="this.src='resources/armories/placeholder.png'">
+                                        <div class="ms-armory-slider-group">
+                                            <input type="hidden" id="msArmorySerpentOfTheSeven" value="0" data-armory="serpentoftheseven">
+                                            <span class="ms-armory-value" id="msArmorySerpentOfTheSevenDisplay">0</span>
+                                        </div>
+                                        <div class="ms-armory-item__picker-container" style="display: none;">
+                                            <div class="ms-armory-item__picker-background">
+                                                <img src="resources/armories/dragon/serpentoftheseven.png" alt="Serpent of the Seven" onerror="this.src='resources/armories/placeholder.png'">
+                                            </div>
+                                            <div class="ms-picker-wheel">
+                                                <div class="ms-picker-wheel__column" id="msArmorySerpentOfTheSevenPicker"></div>
+                                            </div>
+                                            <div class="ms-picker-wheel__selection"></div>
+                                        </div>
+                                    </div>
+                                    <!-- Season 9 -->
+                                    <div class="ms-armory-item ms-armory-item--vertical ms-armory-item--expandable" data-armory-id="msArmoryTarnishedSeafarer" data-armory-key="tarnishedSeafarer" data-armory-type="dragon">
+                                        <label for="msArmoryTarnishedSeafarer">Tarnished Seafarer</label>
+                                        <img src="resources/armories/tarnishedSeafarer.png" alt="Tarnished Seafarer" class="ms-armory-icon">
+                                        <div class="ms-armory-slider-group">
+                                            <input type="hidden" id="msArmoryTarnishedSeafarer" value="0" data-armory="tarnishedSeafarer">
                                             <span class="ms-armory-value" id="msArmoryTarnishedSeafarerDisplay">0</span>
                                         </div>
                                         <div class="ms-armory-item__picker-container" style="display: none;">
@@ -1847,11 +2082,115 @@
                                             <div class="ms-picker-wheel__selection"></div>
                                         </div>
                                     </div>
-                                    <div class="ms-armory-item ms-armory-item--vertical ms-armory-item--expandable" data-armory-id="msArmoryTideBreaker" data-armory-key="tideBreaker">
-                                        <label for="msArmoryTideBreaker">Tide Breaker</label>
-                                        <img src="resources/armories/tideBreaker.png" alt="TideBreaker" class="ms-armory-icon">
+                                    <div class="ms-armory-item ms-armory-item--vertical ms-armory-item--expandable" data-armory-id="msArmoryDuskRider" data-armory-key="duskrider" data-armory-type="dragon">
+                                        <label for="msArmoryDuskRider">Dusk Rider</label>
+                                        <img src="resources/armories/dragon/duskrider.png" alt="Dusk Rider" class="ms-armory-icon" onerror="this.src='resources/armories/placeholder.png'">
                                         <div class="ms-armory-slider-group">
-                                            <input type="hidden" id="msArmoryTideBreaker" value="126" data-armory="tideBreaker">
+                                            <input type="hidden" id="msArmoryDuskRider" value="0" data-armory="duskrider">
+                                            <span class="ms-armory-value" id="msArmoryDuskRiderDisplay">0</span>
+                                        </div>
+                                        <div class="ms-armory-item__picker-container" style="display: none;">
+                                            <div class="ms-armory-item__picker-background">
+                                                <img src="resources/armories/dragon/duskrider.png" alt="Dusk Rider" onerror="this.src='resources/armories/placeholder.png'">
+                                            </div>
+                                            <div class="ms-picker-wheel">
+                                                <div class="ms-picker-wheel__column" id="msArmoryDuskRiderPicker"></div>
+                                            </div>
+                                            <div class="ms-picker-wheel__selection"></div>
+                                        </div>
+                                    </div>
+                                    <div class="ms-armory-item ms-armory-item--vertical ms-armory-item--expandable" data-armory-id="msArmoryEmeraldSentinel" data-armory-key="emeraldsentinel" data-armory-type="dragon">
+                                        <label for="msArmoryEmeraldSentinel">Emerald Sentinel</label>
+                                        <img src="resources/armories/dragon/emeraldsentinel.png" alt="Emerald Sentinel" class="ms-armory-icon" onerror="this.src='resources/armories/placeholder.png'">
+                                        <div class="ms-armory-slider-group">
+                                            <input type="hidden" id="msArmoryEmeraldSentinel" value="0" data-armory="emeraldsentinel">
+                                            <span class="ms-armory-value" id="msArmoryEmeraldSentinelDisplay">0</span>
+                                        </div>
+                                        <div class="ms-armory-item__picker-container" style="display: none;">
+                                            <div class="ms-armory-item__picker-background">
+                                                <img src="resources/armories/dragon/emeraldsentinel.png" alt="Emerald Sentinel" onerror="this.src='resources/armories/placeholder.png'">
+                                            </div>
+                                            <div class="ms-picker-wheel">
+                                                <div class="ms-picker-wheel__column" id="msArmoryEmeraldSentinelPicker"></div>
+                                            </div>
+                                            <div class="ms-picker-wheel__selection"></div>
+                                        </div>
+                                    </div>
+                                    <!-- Season 8 -->
+                                    <div class="ms-armory-item ms-armory-item--vertical ms-armory-item--expandable" data-armory-id="msArmoryPearlescentProtector" data-armory-key="pearlescentprotector" data-armory-type="dragon">
+                                        <label for="msArmoryPearlescentProtector">Pearlescent Protector</label>
+                                        <img src="resources/armories/dragon/pearlescentprotector.png" alt="Pearlescent Protector" class="ms-armory-icon" onerror="this.src='resources/armories/placeholder.png'">
+                                        <div class="ms-armory-slider-group">
+                                            <input type="hidden" id="msArmoryPearlescentProtector" value="0" data-armory="pearlescentprotector">
+                                            <span class="ms-armory-value" id="msArmoryPearlescentProtectorDisplay">0</span>
+                                        </div>
+                                        <div class="ms-armory-item__picker-container" style="display: none;">
+                                            <div class="ms-armory-item__picker-background">
+                                                <img src="resources/armories/dragon/pearlescentprotector.png" alt="Pearlescent Protector" onerror="this.src='resources/armories/placeholder.png'">
+                                            </div>
+                                            <div class="ms-picker-wheel">
+                                                <div class="ms-picker-wheel__column" id="msArmoryPearlescentProtectorPicker"></div>
+                                            </div>
+                                            <div class="ms-picker-wheel__selection"></div>
+                                        </div>
+                                    </div>
+                                    <div class="ms-armory-item ms-armory-item--vertical ms-armory-item--expandable" data-armory-id="msArmoryScarletRogue" data-armory-key="scarletrogue" data-armory-type="dragon">
+                                        <label for="msArmoryScarletRogue">Scarlet Rogue</label>
+                                        <img src="resources/armories/dragon/scarletrogue.png" alt="Scarlet Rogue" class="ms-armory-icon" onerror="this.src='resources/armories/placeholder.png'">
+                                        <div class="ms-armory-slider-group">
+                                            <input type="hidden" id="msArmoryScarletRogue" value="0" data-armory="scarletrogue">
+                                            <span class="ms-armory-value" id="msArmoryScarletRogueDisplay">0</span>
+                                        </div>
+                                        <div class="ms-armory-item__picker-container" style="display: none;">
+                                            <div class="ms-armory-item__picker-background">
+                                                <img src="resources/armories/dragon/scarletrogue.png" alt="Scarlet Rogue" onerror="this.src='resources/armories/placeholder.png'">
+                                            </div>
+                                            <div class="ms-picker-wheel">
+                                                <div class="ms-picker-wheel__column" id="msArmoryScarletRoguePicker"></div>
+                                            </div>
+                                            <div class="ms-picker-wheel__selection"></div>
+                                        </div>
+                                    </div>
+                                    <div class="ms-armory-item ms-armory-item--vertical ms-armory-item--expandable" data-armory-id="msArmorySkyReaver" data-armory-key="skyreaver" data-armory-type="dragon">
+                                        <label for="msArmorySkyReaver">Sky Reaver</label>
+                                        <img src="resources/armories/dragon/skyreaver.png" alt="Sky Reaver" class="ms-armory-icon" onerror="this.src='resources/armories/placeholder.png'">
+                                        <div class="ms-armory-slider-group">
+                                            <input type="hidden" id="msArmorySkyReaver" value="0" data-armory="skyreaver">
+                                            <span class="ms-armory-value" id="msArmorySkyReaverDisplay">0</span>
+                                        </div>
+                                        <div class="ms-armory-item__picker-container" style="display: none;">
+                                            <div class="ms-armory-item__picker-background">
+                                                <img src="resources/armories/dragon/skyreaver.png" alt="Sky Reaver" onerror="this.src='resources/armories/placeholder.png'">
+                                            </div>
+                                            <div class="ms-picker-wheel">
+                                                <div class="ms-picker-wheel__column" id="msArmorySkyReaverPicker"></div>
+                                            </div>
+                                            <div class="ms-picker-wheel__selection"></div>
+                                        </div>
+                                    </div>
+                                    <!-- Season 7 -->
+                                    <div class="ms-armory-item ms-armory-item--vertical ms-armory-item--expandable" data-armory-id="msArmoryVerdantGuardian" data-armory-key="verdantguardian" data-armory-type="dragon">
+                                        <label for="msArmoryVerdantGuardian">Verdant Guardian</label>
+                                        <img src="resources/armories/dragon/verdantguardian.png" alt="Verdant Guardian" class="ms-armory-icon" onerror="this.src='resources/armories/placeholder.png'">
+                                        <div class="ms-armory-slider-group">
+                                            <input type="hidden" id="msArmoryVerdantGuardian" value="0" data-armory="verdantguardian">
+                                            <span class="ms-armory-value" id="msArmoryVerdantGuardianDisplay">0</span>
+                                        </div>
+                                        <div class="ms-armory-item__picker-container" style="display: none;">
+                                            <div class="ms-armory-item__picker-background">
+                                                <img src="resources/armories/dragon/verdantguardian.png" alt="Verdant Guardian" onerror="this.src='resources/armories/placeholder.png'">
+                                            </div>
+                                            <div class="ms-picker-wheel">
+                                                <div class="ms-picker-wheel__column" id="msArmoryVerdantGuardianPicker"></div>
+                                            </div>
+                                            <div class="ms-picker-wheel__selection"></div>
+                                        </div>
+                                    </div>
+                                    <div class="ms-armory-item ms-armory-item--vertical ms-armory-item--expandable" data-armory-id="msArmoryTideBreaker" data-armory-key="tideBreaker" data-armory-type="dragon">
+                                        <label for="msArmoryTideBreaker">Tide Breaker</label>
+                                        <img src="resources/armories/tideBreaker.png" alt="Tide Breaker" class="ms-armory-icon">
+                                        <div class="ms-armory-slider-group">
+                                            <input type="hidden" id="msArmoryTideBreaker" value="0" data-armory="tideBreaker">
                                             <span class="ms-armory-value" id="msArmoryTideBreakerDisplay">0</span>
                                         </div>
                                         <div class="ms-armory-item__picker-container" style="display: none;">
@@ -1864,19 +2203,166 @@
                                             <div class="ms-picker-wheel__selection"></div>
                                         </div>
                                     </div>
-                                    <div class="ms-armory-item ms-armory-item--vertical ms-armory-item--expandable" data-armory-id="msArmoryRegalSerpent" data-armory-key="regalSerpent">
-                                        <label for="msArmoryRegalSerpent">Regal Serpent</label>
-                                        <img src="resources/armories/regalSerpent.png" alt="RegalSerpent" class="ms-armory-icon">
+                                    <div class="ms-armory-item ms-armory-item--vertical ms-armory-item--expandable" data-armory-id="msArmoryGildedBarding" data-armory-key="artstub" data-armory-type="dragon">
+                                        <label for="msArmoryGildedBarding">Gilded Barding</label>
+                                        <img src="resources/armories/dragon/gildedbarding.png" alt="Gilded Barding" class="ms-armory-icon" onerror="this.src='resources/armories/placeholder.png'">
                                         <div class="ms-armory-slider-group">
-                                            <input type="hidden" id="msArmoryRegalSerpent" value="126" data-armory="regalSerpent">
-                                            <span class="ms-armory-value" id="msArmoryRegalSerpentDisplay">0</span>
+                                            <input type="hidden" id="msArmoryGildedBarding" value="0" data-armory="artstub">
+                                            <span class="ms-armory-value" id="msArmoryGildedBardingDisplay">0</span>
                                         </div>
                                         <div class="ms-armory-item__picker-container" style="display: none;">
                                             <div class="ms-armory-item__picker-background">
-                                                <img src="resources/armories/regalSerpent.png" alt="Regal Serpent">
+                                                <img src="resources/armories/dragon/gildedbarding.png" alt="Gilded Barding" onerror="this.src='resources/armories/placeholder.png'">
                                             </div>
                                             <div class="ms-picker-wheel">
-                                                <div class="ms-picker-wheel__column" id="msArmoryRegalSerpentPicker"></div>
+                                                <div class="ms-picker-wheel__column" id="msArmoryGildedBardingPicker"></div>
+                                            </div>
+                                            <div class="ms-picker-wheel__selection"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Standard Armories with Dragon March Size -->
+                            <div class="ms-armory-category ms-armory-category--collapsible" data-category="standardDragonMs" data-dragon-only="true">
+                                <div class="ms-armory-category__header" role="button" tabindex="0">
+                                    <h4 class="ms-armory-category__title">🐉 Standard Armories with Dragon MS <span class="ms-category-total" id="msStandardDragonMsTotal">(+0)</span></h4>
+                                    <svg class="ms-armory-category__arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"/></svg>
+                                </div>
+                                <p class="ms-section-description">Standard gear sets that provide Dragon March Size bonus</p>
+                                <div class="ms-armory-grid ms-armory-grid--vertical ms-armory-category__content" style="display: none;">
+                                    <div class="ms-armory-item ms-armory-item--vertical ms-armory-item--expandable" data-armory-id="msArmoryConqueror" data-armory-key="conqueror" data-armory-type="standardDragonMs">
+                                        <label for="msArmoryConqueror">Conqueror's Regalia</label>
+                                        <img src="resources/armories/conqueror.png" alt="Conqueror's Regalia" class="ms-armory-icon">
+                                        <div class="ms-armory-slider-group">
+                                            <input type="hidden" id="msArmoryConqueror" value="0" data-armory="conqueror" data-armory-type="standardDragonMs">
+                                            <span class="ms-armory-value" id="msArmoryConquerorDisplay">0</span>
+                                        </div>
+                                        <div class="ms-armory-item__picker-container" style="display: none;">
+                                            <div class="ms-armory-item__picker-background">
+                                                <img src="resources/armories/conqueror.png" alt="Conqueror's Regalia">
+                                            </div>
+                                            <div class="ms-picker-wheel">
+                                                <div class="ms-picker-wheel__column" id="msArmoryConquerorPicker"></div>
+                                            </div>
+                                            <div class="ms-picker-wheel__selection"></div>
+                                        </div>
+                                    </div>
+                                    <div class="ms-armory-item ms-armory-item--vertical ms-armory-item--expandable" data-armory-id="msArmoryUsurper" data-armory-key="usurper" data-armory-type="standardDragonMs">
+                                        <label for="msArmoryUsurper">Usurper</label>
+                                        <img src="resources/armories/usurper.png" alt="Usurper" class="ms-armory-icon">
+                                        <div class="ms-armory-slider-group">
+                                            <input type="hidden" id="msArmoryUsurper" value="0" data-armory="usurper" data-armory-type="standardDragonMs">
+                                            <span class="ms-armory-value" id="msArmoryUsurperDisplay">0</span>
+                                        </div>
+                                        <div class="ms-armory-item__picker-container" style="display: none;">
+                                            <div class="ms-armory-item__picker-background">
+                                                <img src="resources/armories/usurper.png" alt="Usurper">
+                                            </div>
+                                            <div class="ms-picker-wheel">
+                                                <div class="ms-picker-wheel__column" id="msArmoryUsurperPicker"></div>
+                                            </div>
+                                            <div class="ms-picker-wheel__selection"></div>
+                                        </div>
+                                    </div>
+                                    <div class="ms-armory-item ms-armory-item--vertical ms-armory-item--expandable" data-armory-id="msArmoryTourneyQueen" data-armory-key="tourneyQueen" data-armory-type="standardDragonMs">
+                                        <label for="msArmoryTourneyQueen">Tourney Queen</label>
+                                        <img src="resources/armories/tourneyQueen.png" alt="Tourney Queen" class="ms-armory-icon">
+                                        <div class="ms-armory-slider-group">
+                                            <input type="hidden" id="msArmoryTourneyQueen" value="0" data-armory="tourneyQueen" data-armory-type="standardDragonMs">
+                                            <span class="ms-armory-value" id="msArmoryTourneyQueenDisplay">0</span>
+                                        </div>
+                                        <div class="ms-armory-item__picker-container" style="display: none;">
+                                            <div class="ms-armory-item__picker-background">
+                                                <img src="resources/armories/tourneyQueen.png" alt="Tourney Queen">
+                                            </div>
+                                            <div class="ms-picker-wheel">
+                                                <div class="ms-picker-wheel__column" id="msArmoryTourneyQueenPicker"></div>
+                                            </div>
+                                            <div class="ms-picker-wheel__selection"></div>
+                                        </div>
+                                    </div>
+                                    <div class="ms-armory-item ms-armory-item--vertical ms-armory-item--expandable" data-armory-id="msArmoryRimedRevenant" data-armory-key="rimedRevenant" data-armory-type="standardDragonMs">
+                                        <label for="msArmoryRimedRevenant">Rimed Revenant</label>
+                                        <img src="resources/armories/rimedRevenant.png" alt="Rimed Revenant" class="ms-armory-icon">
+                                        <div class="ms-armory-slider-group">
+                                            <input type="hidden" id="msArmoryRimedRevenant" value="0" data-armory="rimedRevenant" data-armory-type="standardDragonMs">
+                                            <span class="ms-armory-value" id="msArmoryRimedRevenantDisplay">0</span>
+                                        </div>
+                                        <div class="ms-armory-item__picker-container" style="display: none;">
+                                            <div class="ms-armory-item__picker-background">
+                                                <img src="resources/armories/rimedRevenant.png" alt="Rimed Revenant">
+                                            </div>
+                                            <div class="ms-picker-wheel">
+                                                <div class="ms-picker-wheel__column" id="msArmoryRimedRevenantPicker"></div>
+                                            </div>
+                                            <div class="ms-picker-wheel__selection"></div>
+                                        </div>
+                                    </div>
+                                    <div class="ms-armory-item ms-armory-item--vertical ms-armory-item--expandable" data-armory-id="msArmoryWinterSurvivor" data-armory-key="winterSurvivor" data-armory-type="standardDragonMs">
+                                        <label for="msArmoryWinterSurvivor">Winter Survivor</label>
+                                        <img src="resources/armories/winterSurvivor.png" alt="Winter Survivor" class="ms-armory-icon">
+                                        <div class="ms-armory-slider-group">
+                                            <input type="hidden" id="msArmoryWinterSurvivor" value="0" data-armory="winterSurvivor" data-armory-type="standardDragonMs">
+                                            <span class="ms-armory-value" id="msArmoryWinterSurvivorDisplay">0</span>
+                                        </div>
+                                        <div class="ms-armory-item__picker-container" style="display: none;">
+                                            <div class="ms-armory-item__picker-background">
+                                                <img src="resources/armories/winterSurvivor.png" alt="Winter Survivor">
+                                            </div>
+                                            <div class="ms-picker-wheel">
+                                                <div class="ms-picker-wheel__column" id="msArmoryWinterSurvivorPicker"></div>
+                                            </div>
+                                            <div class="ms-picker-wheel__selection"></div>
+                                        </div>
+                                    </div>
+                                    <div class="ms-armory-item ms-armory-item--vertical ms-armory-item--expandable" data-armory-id="msArmoryNorthernNoble" data-armory-key="northernNoble" data-armory-type="standardDragonMs">
+                                        <label for="msArmoryNorthernNoble">Northern Noble</label>
+                                        <img src="resources/armories/northernNoble.png" alt="Northern Noble" class="ms-armory-icon">
+                                        <div class="ms-armory-slider-group">
+                                            <input type="hidden" id="msArmoryNorthernNoble" value="0" data-armory="northernNoble" data-armory-type="standardDragonMs">
+                                            <span class="ms-armory-value" id="msArmoryNorthernNobleDisplay">0</span>
+                                        </div>
+                                        <div class="ms-armory-item__picker-container" style="display: none;">
+                                            <div class="ms-armory-item__picker-background">
+                                                <img src="resources/armories/northernNoble.png" alt="Northern Noble">
+                                            </div>
+                                            <div class="ms-picker-wheel">
+                                                <div class="ms-picker-wheel__column" id="msArmoryNorthernNoblePicker"></div>
+                                            </div>
+                                            <div class="ms-picker-wheel__selection"></div>
+                                        </div>
+                                    </div>
+                                    <div class="ms-armory-item ms-armory-item--vertical ms-armory-item--expandable" data-armory-id="msArmoryValyrianBloodmage" data-armory-key="valyrianBloodmage" data-armory-type="standardDragonMs">
+                                        <label for="msArmoryValyrianBloodmage">Valyrian Bloodmage</label>
+                                        <img src="resources/armories/valyrianBloodmage.png" alt="Valyrian Bloodmage" class="ms-armory-icon">
+                                        <div class="ms-armory-slider-group">
+                                            <input type="hidden" id="msArmoryValyrianBloodmage" value="0" data-armory="valyrianBloodmage" data-armory-type="standardDragonMs">
+                                            <span class="ms-armory-value" id="msArmoryValyrianBloodmageDisplay">0</span>
+                                        </div>
+                                        <div class="ms-armory-item__picker-container" style="display: none;">
+                                            <div class="ms-armory-item__picker-background">
+                                                <img src="resources/armories/valyrianBloodmage.png" alt="Valyrian Bloodmage">
+                                            </div>
+                                            <div class="ms-picker-wheel">
+                                                <div class="ms-picker-wheel__column" id="msArmoryValyrianBloodmagePicker"></div>
+                                            </div>
+                                            <div class="ms-picker-wheel__selection"></div>
+                                        </div>
+                                    </div>
+                                    <div class="ms-armory-item ms-armory-item--vertical ms-armory-item--expandable" data-armory-id="msArmoryRhoynishVoyager" data-armory-key="rhoynishVoyager" data-armory-type="standardDragonMs">
+                                        <label for="msArmoryRhoynishVoyager">Rhoynish Voyager</label>
+                                        <img src="resources/armories/rhoynishVoyager.png" alt="Rhoynish Voyager" class="ms-armory-icon">
+                                        <div class="ms-armory-slider-group">
+                                            <input type="hidden" id="msArmoryRhoynishVoyager" value="0" data-armory="rhoynishVoyager" data-armory-type="standardDragonMs">
+                                            <span class="ms-armory-value" id="msArmoryRhoynishVoyagerDisplay">0</span>
+                                        </div>
+                                        <div class="ms-armory-item__picker-container" style="display: none;">
+                                            <div class="ms-armory-item__picker-background">
+                                                <img src="resources/armories/rhoynishVoyager.png" alt="Rhoynish Voyager">
+                                            </div>
+                                            <div class="ms-picker-wheel">
+                                                <div class="ms-picker-wheel__column" id="msArmoryRhoynishVoyagerPicker"></div>
                                             </div>
                                             <div class="ms-picker-wheel__selection"></div>
                                         </div>
@@ -2138,6 +2624,65 @@
                                                 <div class="ms-picker-wheel__column" id="msTroopSurge3Picker">
                                                     <!-- Levels will be populated by JavaScript -->
                                                 </div>
+                                            </div>
+                                            <div class="ms-picker-wheel__selection"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Adolescent Dragon Care Research (conditionally visible) -->
+                            <div class="ms-research-category" data-category="adolescentDragonCare" data-dragon-only="true">
+                                <div class="ms-research-category__header">
+                                    <img src="resources/research/icon_dragon_research.png" alt="Adolescent Dragon Care" class="ms-research-icon" onerror="this.src='resources/research/marchSize.png'">
+                                    <h4>🐲 Adolescent Dragon Care <span class="ms-category-total" id="msAdolescentDragonCareTotal">(+0 / 2,000)</span></h4>
+                                </div>
+                                <p class="ms-section-description">General Dragon March Size</p>
+                                <div class="ms-research-sliders">
+                                    <div class="ms-research-slider-item ms-research-slider-item--expandable" data-research-id="msDragonMarchSize1" data-research-key="dragonMarchSize1">
+                                        <img src="resources/research/icon_dragon_march_size.png" alt="Dragon March Size I" class="ms-research-slider-icon" onerror="this.src='resources/research/icon_research_command.png'">
+                                        <div class="ms-research-slider-content">
+                                            <div class="ms-research-slider-header">
+                                                <span class="ms-research-slider-name">Dragon March Size I</span>
+                                                <span class="ms-research-slider-value" id="msDragonMarchSize1Value">0 / 2,000</span>
+                                            </div>
+                                            <input type="hidden" id="msDragonMarchSize1" value="0">
+                                        </div>
+                                        <div class="ms-research-slider-item__picker-container" style="display: none;">
+                                            <div class="ms-research-slider-item__picker-background">
+                                                <img src="resources/research/icon_dragon_march_size.png" alt="Dragon March Size I" onerror="this.src='resources/research/icon_research_command.png'">
+                                            </div>
+                                            <div class="ms-picker-wheel">
+                                                <div class="ms-picker-wheel__column" id="msDragonMarchSize1Picker"></div>
+                                            </div>
+                                            <div class="ms-picker-wheel__selection"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Adult Dragon Care Research (conditionally visible) -->
+                            <div class="ms-research-category" data-category="adultDragonCare" data-dragon-only="true">
+                                <div class="ms-research-category__header">
+                                    <img src="resources/research/icon_dragon_research.png" alt="Adult Dragon Care" class="ms-research-icon" onerror="this.src='resources/research/marchSize.png'">
+                                    <h4>🔥 Adult Dragon Care <span class="ms-category-total" id="msAdultDragonCareTotal">(+0 / 2,100)</span></h4>
+                                </div>
+                                <p class="ms-section-description">Advanced Dragon March Size</p>
+                                <div class="ms-research-sliders">
+                                    <div class="ms-research-slider-item ms-research-slider-item--expandable" data-research-id="msDragonMarchSize2" data-research-key="dragonMarchSize2">
+                                        <img src="resources/research/icon_dragon_march_size.png" alt="Dragon March Size II" class="ms-research-slider-icon" onerror="this.src='resources/research/icon_research_command.png'">
+                                        <div class="ms-research-slider-content">
+                                            <div class="ms-research-slider-header">
+                                                <span class="ms-research-slider-name">Dragon March Size II</span>
+                                                <span class="ms-research-slider-value" id="msDragonMarchSize2Value">0 / 2,100</span>
+                                            </div>
+                                            <input type="hidden" id="msDragonMarchSize2" value="0">
+                                        </div>
+                                        <div class="ms-research-slider-item__picker-container" style="display: none;">
+                                            <div class="ms-research-slider-item__picker-background">
+                                                <img src="resources/research/icon_dragon_march_size.png" alt="Dragon March Size II" onerror="this.src='resources/research/icon_research_command.png'">
+                                            </div>
+                                            <div class="ms-picker-wheel">
+                                                <div class="ms-picker-wheel__column" id="msDragonMarchSize2Picker"></div>
                                             </div>
                                             <div class="ms-picker-wheel__selection"></div>
                                         </div>
@@ -2567,6 +3112,62 @@
                                 </div>
                             </div>
 
+                            <!-- ========== DRAGON HERO HALL SECTION (conditionally visible) ========== -->
+                            <div class="ms-heroes-category" data-category="dragonHall" data-dragon-only="true">
+                                <h4 class="ms-heroes-category__title">
+                                    <img src="resources/heroes/icon_dragon.png" alt="Dragon Heroes" class="ms-heroes-category__icon" onerror="this.src='resources/heroes/icon-hall.png'">
+                                    Dragon Hero Hall
+                                    <span class="ms-category-total" id="msDragonHallHeroesTotal">(+0 / 2,000)</span>
+                                </h4>
+                                <p class="ms-section-description">Heroes with Dragon March Size bonuses</p>
+                                
+                                <div class="ms-hall-heroes-container">
+                                    <!-- Dragon Hero Card Visual -->
+                                    <div class="ms-rising-adventurer-card ms-rising-adventurer-card--dragon">
+                                        <div class="ms-rising-adventurer-header">
+                                            <span class="ms-rising-adventurer-icon">🐉</span>
+                                            <span class="ms-rising-adventurer-title">Dragon March Size Heroes</span>
+                                            <span class="ms-rising-adventurer-bonus" id="msDragonHeroBonus">+0</span>
+                                        </div>
+                                        <div class="ms-hero-deck">
+                                            <!-- Dragon heroes with dragon march size stats -->
+                                            <div class="ms-hero-deck__portrait ms-hero-deck__portrait--mythic" data-slot="1" data-hero="Daenerys">
+                                                <img src="resources/heroes/daenerys.png" alt="Daenerys" onerror="this.src='resources/heroes/placeholder.png'">
+                                            </div>
+                                            <div class="ms-hero-deck__portrait ms-hero-deck__portrait--mythic" data-slot="2" data-hero="Rhaenyra">
+                                                <img src="resources/heroes/rhaenyra.png" alt="Rhaenyra" onerror="this.src='resources/heroes/placeholder.png'">
+                                            </div>
+                                            <div class="ms-hero-deck__portrait ms-hero-deck__portrait--mythic" data-slot="3" data-hero="Aemond">
+                                                <img src="resources/heroes/aemond.png" alt="Aemond" onerror="this.src='resources/heroes/placeholder.png'">
+                                            </div>
+                                            <div class="ms-hero-deck__portrait ms-hero-deck__portrait--mythic" data-slot="4" data-hero="Viserys">
+                                                <img src="resources/heroes/viserys.png" alt="Viserys" onerror="this.src='resources/heroes/placeholder.png'">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Dragon Hero Slider Controls -->
+                                    <div class="ms-hall-controls">
+                                        <label for="msDragonHeroLevel">Dragon Hero Level</label>
+                                        <div class="ms-hall-slider-group ms-hall-slider-group--expandable" data-hall-id="msDragonHeroLevel">
+                                            <input type="hidden" id="msDragonHeroLevel" value="0" data-hall="dragonLevel">
+                                            <span class="ms-hall-value" id="msDragonHeroLevelDisplay">Lv 0 | (0 / 2,000)</span>
+                                            <div class="ms-hall-slider-group__picker-container" style="display: none;">
+                                                <div class="ms-hall-slider-group__picker-background">
+                                                    <img src="resources/heroes/daenerys.png" alt="Dragon Heroes" onerror="this.src='resources/heroes/placeholder.png'">
+                                                </div>
+                                                <div class="ms-picker-wheel">
+                                                    <div class="ms-picker-wheel__column" id="msDragonHeroLevelPicker">
+                                                        <!-- Levels will be populated by JavaScript -->
+                                                    </div>
+                                                </div>
+                                                <div class="ms-picker-wheel__selection"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
 
@@ -2879,6 +3480,123 @@
                                                 <option value="epic">Epic</option>
                                                 <option value="legendary" selected>Legendary</option>
                                             </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Dragon Gear Section (conditionally visible) -->
+                        <div class="ms-dragon-gear-section" data-dragon-only="true">
+                            <div class="ms-input-card__header ms-input-card__header--dragon">
+                                <h4>🐉 Dragon Gear Equipment</h4>
+                                <span class="ms-input-card__subtitle">Saddle, Chanfron, and Peytral with Dragon March Size stats</span>
+                            </div>
+                            <div class="ms-gear-visual ms-gear-visual--dragon" id="msDragonGearVisual">
+                                <div class="ms-gear-column ms-gear-column--dragon">
+                                    <!-- Saddle -->
+                                    <div class="ms-gear-slot-visual ms-gear-slot-visual--dragon" data-slot="saddle" data-dragon-gear="true">
+                                        <span class="ms-gear-slot-visual__bonus" id="msGearBonus-saddle">+0</span>
+                                        <div class="ms-gear-slot-visual__image">
+                                            <img src="resources/item/gear_slot_saddle.png" alt="Saddle" id="msGearImg-saddle" onerror="this.src='resources/item/gear_slot_trinket.png'">
+                                        </div>
+                                        <div class="ms-gear-slot-visual__info">
+                                            <span class="ms-gear-slot-visual__label">Saddle</span>
+                                            <select class="ms-gear-slot-visual__select" id="msGearSelect-saddle" data-slot="saddle" data-dragon-gear="true">
+                                                <option value="">-- None --</option>
+                                            </select>
+                                            <div class="ms-gear-slot-visual__row">
+                                                <select class="ms-gear-slot-visual__level-select" id="msGearLevelSelect-saddle" data-slot="saddle">
+                                                    <option value="5">Lv. 5</option>
+                                                    <option value="10">Lv. 10</option>
+                                                    <option value="15">Lv. 15</option>
+                                                    <option value="20">Lv. 20</option>
+                                                    <option value="25">Lv. 25</option>
+                                                    <option value="30">Lv. 30</option>
+                                                    <option value="35">Lv. 35</option>
+                                                    <option value="40" selected>Lv. 40</option>
+                                                    <option value="45">Lv. 45</option>
+                                                    <option value="50">Lv. 50</option>
+                                                </select>
+                                                <select class="ms-gear-slot-visual__quality" id="msGearQuality-saddle" data-slot="saddle">
+                                                    <option value="poor">Poor</option>
+                                                    <option value="common">Common</option>
+                                                    <option value="fine">Fine</option>
+                                                    <option value="exquisite">Exquisite</option>
+                                                    <option value="epic">Epic</option>
+                                                    <option value="legendary" selected>Legendary</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Chanfron -->
+                                    <div class="ms-gear-slot-visual ms-gear-slot-visual--dragon" data-slot="chanfron" data-dragon-gear="true">
+                                        <span class="ms-gear-slot-visual__bonus" id="msGearBonus-chanfron">+0</span>
+                                        <div class="ms-gear-slot-visual__image">
+                                            <img src="resources/item/gear_slot_chanfron.png" alt="Chanfron" id="msGearImg-chanfron" onerror="this.src='resources/item/gear_slot_helmet.png'">
+                                        </div>
+                                        <div class="ms-gear-slot-visual__info">
+                                            <span class="ms-gear-slot-visual__label">Chanfron</span>
+                                            <select class="ms-gear-slot-visual__select" id="msGearSelect-chanfron" data-slot="chanfron" data-dragon-gear="true">
+                                                <option value="">-- None --</option>
+                                            </select>
+                                            <div class="ms-gear-slot-visual__row">
+                                                <select class="ms-gear-slot-visual__level-select" id="msGearLevelSelect-chanfron" data-slot="chanfron">
+                                                    <option value="5">Lv. 5</option>
+                                                    <option value="10">Lv. 10</option>
+                                                    <option value="15">Lv. 15</option>
+                                                    <option value="20">Lv. 20</option>
+                                                    <option value="25">Lv. 25</option>
+                                                    <option value="30">Lv. 30</option>
+                                                    <option value="35">Lv. 35</option>
+                                                    <option value="40" selected>Lv. 40</option>
+                                                    <option value="45">Lv. 45</option>
+                                                    <option value="50">Lv. 50</option>
+                                                </select>
+                                                <select class="ms-gear-slot-visual__quality" id="msGearQuality-chanfron" data-slot="chanfron">
+                                                    <option value="poor">Poor</option>
+                                                    <option value="common">Common</option>
+                                                    <option value="fine">Fine</option>
+                                                    <option value="exquisite">Exquisite</option>
+                                                    <option value="epic">Epic</option>
+                                                    <option value="legendary" selected>Legendary</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Peytral -->
+                                    <div class="ms-gear-slot-visual ms-gear-slot-visual--dragon" data-slot="peytral" data-dragon-gear="true">
+                                        <span class="ms-gear-slot-visual__bonus" id="msGearBonus-peytral">+0</span>
+                                        <div class="ms-gear-slot-visual__image">
+                                            <img src="resources/item/gear_slot_peytral.png" alt="Peytral" id="msGearImg-peytral" onerror="this.src='resources/item/gear_slot_chest.png'">
+                                        </div>
+                                        <div class="ms-gear-slot-visual__info">
+                                            <span class="ms-gear-slot-visual__label">Peytral</span>
+                                            <select class="ms-gear-slot-visual__select" id="msGearSelect-peytral" data-slot="peytral" data-dragon-gear="true">
+                                                <option value="">-- None --</option>
+                                            </select>
+                                            <div class="ms-gear-slot-visual__row">
+                                                <select class="ms-gear-slot-visual__level-select" id="msGearLevelSelect-peytral" data-slot="peytral">
+                                                    <option value="5">Lv. 5</option>
+                                                    <option value="10">Lv. 10</option>
+                                                    <option value="15">Lv. 15</option>
+                                                    <option value="20">Lv. 20</option>
+                                                    <option value="25">Lv. 25</option>
+                                                    <option value="30">Lv. 30</option>
+                                                    <option value="35">Lv. 35</option>
+                                                    <option value="40" selected>Lv. 40</option>
+                                                    <option value="45">Lv. 45</option>
+                                                    <option value="50">Lv. 50</option>
+                                                </select>
+                                                <select class="ms-gear-slot-visual__quality" id="msGearQuality-peytral" data-slot="peytral">
+                                                    <option value="poor">Poor</option>
+                                                    <option value="common">Common</option>
+                                                    <option value="fine">Fine</option>
+                                                    <option value="exquisite">Exquisite</option>
+                                                    <option value="epic">Epic</option>
+                                                    <option value="legendary" selected>Legendary</option>
+                                                </select>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

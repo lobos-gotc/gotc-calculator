@@ -1,0 +1,434 @@
+/**
+ * Dragon March Size Calculator Styles
+ * 
+ * Styles for dragon-specific UI components integrated into the main calculator.
+ * Uses data-dragon-only attribute for conditional visibility.
+ */
+
+/* ============================================
+   DRAGON ELEMENT VISIBILITY
+   ============================================ */
+
+/* Hide dragon elements by default */
+[data-dragon-only] {
+    display: none;
+}
+
+/* Show when dragon scenario is active (class added by JS) */
+body.dragon-scenario-active [data-dragon-only] {
+    display: block;
+}
+
+/* Specific display types for different elements */
+body.dragon-scenario-active .ms-armory-category[data-dragon-only] {
+    display: block;
+}
+
+body.dragon-scenario-active .ms-building-card[data-dragon-only] {
+    display: flex;
+}
+
+body.dragon-scenario-active .ms-research-category[data-dragon-only] {
+    display: block;
+}
+
+body.dragon-scenario-active .ms-heroes-category[data-dragon-only] {
+    display: block;
+}
+
+body.dragon-scenario-active .ms-dragon-gear-section[data-dragon-only] {
+    display: block;
+}
+
+/* ============================================
+   DRAGON SCENARIO CARD STYLING
+   ============================================ */
+
+.ms-scenario-card[data-scenario="dragon-vs-sop"] {
+    background: linear-gradient(135deg, 
+        rgba(255, 87, 34, 0.1), 
+        rgba(255, 152, 0, 0.15));
+    border-color: rgba(255, 152, 0, 0.3);
+}
+
+.ms-scenario-card[data-scenario="dragon-vs-sop"]:hover {
+    background: linear-gradient(135deg, 
+        rgba(255, 87, 34, 0.15), 
+        rgba(255, 152, 0, 0.2));
+    border-color: rgba(255, 152, 0, 0.5);
+}
+
+.ms-scenario-card[data-scenario="dragon-vs-sop"].active {
+    background: linear-gradient(135deg, 
+        rgba(255, 87, 34, 0.2), 
+        rgba(255, 152, 0, 0.25));
+    border-color: #ff9800;
+    box-shadow: 0 0 20px rgba(255, 152, 0, 0.3);
+}
+
+.ms-scenario-card[data-scenario="dragon-vs-sop"] .ms-scenario-card__icon {
+    color: #ff9800;
+}
+
+/* ============================================
+   DRAGON ARMORY CATEGORY STYLING
+   ============================================ */
+
+.ms-armory-category[data-category="dragon"] {
+    border-top: 2px solid rgba(255, 152, 0, 0.3);
+    padding-top: 16px;
+    margin-top: 16px;
+}
+
+.ms-armory-category[data-category="dragon"] .ms-armory-category__title {
+    color: #ff9800;
+}
+
+.ms-armory-category[data-category="dragon"] .ms-armory-item {
+    border-left: 3px solid rgba(255, 152, 0, 0.4);
+}
+
+/* ============================================
+   DRAGON RESEARCH CATEGORY STYLING
+   ============================================ */
+
+/* Base styling for dragon care categories (Dragon MS vs SoP/Player only) */
+.ms-research-category[data-category="adolescentDragonCare"],
+.ms-research-category[data-category="adultDragonCare"] {
+    border-top: 2px solid rgba(255, 152, 0, 0.3);
+    padding-top: 16px;
+    margin-top: 16px;
+}
+
+.ms-research-category[data-category="adolescentDragonCare"] .ms-research-category__header h4,
+.ms-research-category[data-category="adultDragonCare"] .ms-research-category__header h4 {
+    color: #ff9800;
+}
+
+.ms-research-category[data-category="adolescentDragonCare"] .ms-research-slider-item,
+.ms-research-category[data-category="adultDragonCare"] .ms-research-slider-item {
+    border-left: 3px solid rgba(255, 152, 0, 0.4);
+}
+
+/* Adolescent Dragon Care - Orange tint */
+.ms-research-category[data-category="adolescentDragonCare"] {
+    background: rgba(255, 152, 0, 0.05);
+}
+
+/* Adult Dragon Care - Red/Fire tint */
+.ms-research-category[data-category="adultDragonCare"] {
+    background: rgba(244, 67, 54, 0.05);
+}
+
+.ms-research-category[data-category="adultDragonCare"] .ms-research-category__header h4 {
+    color: #ef5350;
+}
+
+.ms-research-category[data-category="adultDragonCare"] .ms-research-slider-item {
+    border-left: 3px solid rgba(244, 67, 54, 0.4);
+}
+
+/* ============================================
+   DRAGON HERO HALL STYLING
+   ============================================ */
+
+.ms-heroes-category[data-category="dragonHall"] {
+    border-top: 2px solid rgba(255, 152, 0, 0.3);
+    padding-top: 16px;
+    margin-top: 16px;
+}
+
+.ms-heroes-category[data-category="dragonHall"] .ms-heroes-category__title {
+    color: #ff9800;
+}
+
+.ms-rising-adventurer-card--dragon {
+    background: linear-gradient(135deg, 
+        rgba(255, 87, 34, 0.1), 
+        rgba(255, 152, 0, 0.15));
+    border-color: rgba(255, 152, 0, 0.3);
+}
+
+.ms-rising-adventurer-card--dragon .ms-rising-adventurer-header {
+    background: linear-gradient(135deg, 
+        rgba(255, 87, 34, 0.15), 
+        rgba(255, 152, 0, 0.1));
+}
+
+/* ============================================
+   DRAGON GEAR SECTION STYLING
+   ============================================ */
+
+.ms-dragon-gear-section {
+    border-top: 2px solid rgba(255, 152, 0, 0.3);
+    padding-top: 20px;
+    margin-top: 20px;
+}
+
+.ms-input-card__header--dragon {
+    margin-bottom: 16px;
+}
+
+.ms-input-card__header--dragon h4 {
+    color: #ff9800;
+    font-size: var(--font-size-base);
+    margin: 0;
+}
+
+.ms-input-card__header--dragon .ms-input-card__subtitle {
+    color: var(--text-secondary);
+    font-size: var(--font-size-xs);
+    margin-top: 4px;
+}
+
+.ms-gear-visual--dragon {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.ms-gear-column--dragon {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+
+.ms-gear-slot-visual--dragon {
+    background: linear-gradient(135deg, 
+        rgba(255, 87, 34, 0.05), 
+        rgba(255, 152, 0, 0.08));
+    border: 1px solid rgba(255, 152, 0, 0.2);
+}
+
+.ms-gear-slot-visual--dragon .ms-gear-slot-visual__bonus {
+    color: #ff9800;
+}
+
+/* ============================================
+   DRAGON SHRINE BUILDING STYLING
+   ============================================ */
+
+.ms-building-card[data-building="shrine"] {
+    background: linear-gradient(135deg, 
+        rgba(255, 87, 34, 0.05), 
+        rgba(255, 152, 0, 0.08));
+    border: 1px solid rgba(255, 152, 0, 0.2);
+}
+
+.ms-building-card[data-building="shrine"] .ms-building-card__title {
+    color: #ff9800;
+}
+
+/* ============================================
+   DRAGON BREAKDOWN CHART STYLING
+   ============================================ */
+
+.ms-chart-bar--dragon .ms-chart-bar__label {
+    color: #ff9800;
+}
+
+.ms-chart-bar--dragon .ms-chart-bar__fill {
+    background: linear-gradient(135deg, #ff9800, #ff5722);
+}
+
+.ms-chart-bar--dragon .ms-chart-bar__value {
+    color: #ff9800;
+}
+
+/* ============================================
+   DRAGON TALENTS SECTION STYLING
+   ============================================ */
+
+.ms-dragon-talents-content {
+    padding: 16px;
+}
+
+/* Dragon Talents Grid - similar to research categories */
+.ms-dragon-talents-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+/* Talent Categories */
+.ms-talent-category {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+    padding: 16px;
+    border: 1px solid rgba(255, 152, 0, 0.2);
+}
+
+.ms-talent-category__header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.ms-talent-category__header img.ms-talent-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+}
+
+.ms-talent-category__header h4 {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    color: #ff9800;
+    margin: 0;
+}
+
+.ms-talent-category .ms-section-description {
+    font-size: var(--font-size-xs);
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+    padding-left: 4px;
+    border-left: 2px solid rgba(255, 152, 0, 0.3);
+}
+
+/* Talent Items Container */
+.ms-talent-items {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Research-style picker for Dragon MS talents - POSITION FIX */
+.ms-talent-category .ms-research-slider-item {
+    position: relative;
+}
+
+.ms-talent-category .ms-research-slider-item__picker-container {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    margin-top: 4px;
+    background: rgba(30, 30, 40, 0.98);
+    border: 1px solid rgba(255, 152, 0, 0.3);
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+/* Adult Talents - Research-style toggleable items */
+.ms-adult-talent-items {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.ms-adult-talent-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.ms-adult-talent-item:hover {
+    background: rgba(255, 152, 0, 0.1);
+}
+
+/* Hide the actual checkbox */
+.ms-adult-talent-input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.ms-adult-talent-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex: 1;
+}
+
+.ms-adult-talent-name {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--text-color);
+}
+
+.ms-adult-talent-value {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    font-family: 'JetBrains Mono', monospace;
+}
+
+/* Active/Checked state */
+.ms-adult-talent-item:has(.ms-adult-talent-input:checked) {
+    background: rgba(76, 175, 80, 0.15);
+    border-color: rgba(76, 175, 80, 0.4);
+}
+
+.ms-adult-talent-item:has(.ms-adult-talent-input:checked) .ms-adult-talent-name {
+    color: #81c784;
+}
+
+.ms-adult-talent-item:has(.ms-adult-talent-input:checked) .ms-adult-talent-value {
+    color: #4caf50;
+}
+
+/* Inactive state indicator */
+.ms-adult-talent-item:not(:has(.ms-adult-talent-input:checked)) .ms-adult-talent-value {
+    opacity: 0.5;
+}
+
+/* Category total styling */
+.ms-talent-category .ms-category-total {
+    font-size: var(--font-size-xs);
+    color: var(--success-color);
+    font-family: 'JetBrains Mono', monospace;
+    margin-left: 8px;
+}
+
+/* ============================================
+   STANDARD ARMORIES WITH DRAGON MS STYLING
+   ============================================ */
+
+.ms-armory-category[data-category="standardDragonMs"] {
+    border-top: 2px solid rgba(156, 39, 176, 0.3);
+    padding-top: 16px;
+    margin-top: 16px;
+}
+
+.ms-armory-category[data-category="standardDragonMs"] .ms-armory-category__title {
+    color: #ba68c8;
+}
+
+.ms-armory-category[data-category="standardDragonMs"] .ms-armory-item {
+    border-left: 3px solid rgba(156, 39, 176, 0.4);
+}
+
+/* ============================================
+   RESPONSIVE - DRAGON GEAR
+   ============================================ */
+
+@media (max-width: 768px) {
+    .ms-gear-column--dragon {
+        grid-template-columns: 1fr;
+    }
+    
+    .ms-gear-slot-visual--dragon .ms-gear-slot-visual__row {
+        flex-direction: column;
+    }
+    
+    .ms-dragon-talents-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .ms-dragon-gear-section .ms-input-card__header--dragon h4 {
+        font-size: var(--font-size-sm);
+    }
+    
+    .ms-talent-category__header h4 {
+        font-size: var(--font-size-sm);
+    }
+}
