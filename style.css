@@ -10493,6 +10493,210 @@ button.multiplier-btn {
     }
 }
 
+/* ============================================
+   BASE MARCH SIZE VERIFICATION CARD
+   ============================================ */
+.ms-base-verification-card {
+    margin-bottom: 24px;
+}
+
+.ms-base-verification-card .ms-input-card__header {
+    text-align: center;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--glass-border);
+    margin-bottom: 20px;
+}
+
+.ms-base-verification {
+    padding: 0 20px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.ms-base-verification__calculated {
+    text-align: center;
+    padding: 20px;
+    background: linear-gradient(135deg, rgba(13, 92, 122, 0.1), rgba(13, 92, 122, 0.2));
+    border: 1px solid var(--primary-color);
+    border-radius: 12px;
+}
+
+.ms-base-verification__label {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.ms-base-verification__value {
+    font-size: 2rem;
+    font-weight: var(--font-weight-bold);
+    color: var(--primary-color);
+    margin-bottom: 16px;
+}
+
+.ms-base-verification__pct-breakdown {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    margin-bottom: 8px;
+}
+
+.ms-verification__flat {
+    color: var(--text-color);
+}
+
+.ms-verification__plus {
+    color: var(--text-muted);
+}
+
+.ms-verification__pct {
+    color: var(--success-color);
+}
+
+.ms-base-verification__pct-total {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+}
+
+.ms-base-verification__pct-total strong {
+    color: var(--success-color);
+}
+
+.ms-instructions-box {
+    display: flex;
+    gap: 12px;
+    padding: 16px;
+    background: rgba(255, 193, 7, 0.1);
+    border: 1px solid rgba(255, 193, 7, 0.3);
+    border-radius: 10px;
+}
+
+[data-theme="dark"] .ms-instructions-box {
+    background: rgba(255, 193, 7, 0.08);
+    border-color: rgba(255, 193, 7, 0.2);
+}
+
+.ms-instructions-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.ms-instructions-text {
+    font-size: var(--font-size-sm);
+    line-height: 1.5;
+}
+
+.ms-instructions-text strong {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text-color);
+}
+
+.ms-instructions-text ol {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.ms-instructions-text li {
+    margin-bottom: 4px;
+}
+
+.ms-base-verification__override {
+    padding: 16px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+}
+
+.ms-override-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-weight: var(--font-weight-semibold);
+}
+
+.ms-override-toggle input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary-color);
+    cursor: pointer;
+}
+
+.ms-override-input-group {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--glass-border);
+}
+
+.ms-override-input-group label {
+    display: block;
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    margin-bottom: 8px;
+}
+
+.ms-override-input {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    background: var(--input-bg);
+    border: 2px solid var(--glass-border);
+    border-radius: 8px;
+    color: var(--text-color);
+    text-align: center;
+    transition: border-color 0.2s ease;
+}
+
+.ms-override-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.ms-override-input::placeholder {
+    color: var(--text-muted);
+    font-weight: normal;
+}
+
+.ms-override-diff {
+    display: block;
+    margin-top: 8px;
+    font-size: var(--font-size-sm);
+    text-align: center;
+}
+
+.ms-override-diff.positive {
+    color: var(--success-color);
+}
+
+.ms-override-diff.negative {
+    color: var(--danger-color);
+}
+
+@media (max-width: 600px) {
+    .ms-base-verification__value {
+        font-size: 1.5rem;
+    }
+    
+    .ms-base-verification__breakdown {
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+    }
+    
+    .ms-instructions-box {
+        flex-direction: column;
+        text-align: center;
+    }
+}
+
 /* Gear Card Container */
 .ms-gear-card {
     overflow: visible;
@@ -11067,13 +11271,14 @@ button.multiplier-btn {
 .ms-picker-wheel__column {
     width: 100%;
     max-width: 300px;
+    height: 100%;
     overflow-y: scroll;
     overflow-x: hidden;
     scroll-snap-type: y proximity;
-    scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
     position: relative;
     padding: 80px 0;
+    box-sizing: border-box;
 }
 
 .ms-picker-wheel__column::-webkit-scrollbar {
@@ -11087,17 +11292,18 @@ button.multiplier-btn {
 
 .ms-picker-wheel__item {
     height: 40px;
+    min-height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
     scroll-snap-align: center;
-    scroll-snap-stop: always;
     font-size: var(--font-size-base);
     color: var(--text-color);
     transition: all 0.2s ease;
     user-select: none;
     text-align: center;
     white-space: nowrap;
+    cursor: pointer;
 }
 
 .ms-picker-wheel__item.selected {
@@ -11234,10 +11440,10 @@ button.multiplier-btn {
 .ms-armory-item__picker-container {
     position: relative;
     width: 100%;
-    min-height: 200px;
+    height: 220px;
     margin-top: 12px;
     border-radius: 12px;
-    overflow: hidden;
+    overflow: visible;
     background: rgba(0, 0, 0, 0.4);
 }
 
@@ -11567,62 +11773,67 @@ button.multiplier-btn {
     }
 }
 
-@media (max-width: 480px) {
-    .ms-armory-grid.ms-armory-grid--vertical {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 8px;
-    }
-    
-    .ms-armory-item.ms-armory-item--vertical {
-        padding: 10px 6px;
-    }
-}
-
-/* Pixel 7 and similar devices (412px) - Single column for better readability */
-@media (max-width: 450px) {
+/* Single column layout for armories at 600px */
+@media (max-width: 600px) {
     .ms-armory-grid.ms-armory-grid--vertical {
         grid-template-columns: 1fr; /* Single column for better readability */
         gap: 12px;
     }
     
     .ms-armory-item.ms-armory-item--vertical {
-        padding: 0;
-        gap: 6px;
+        padding: 12px;
+        gap: 10px;
         display: flex;
+        flex-direction: column;
         align-items: center;
         text-align: center;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
     }
     
     .ms-armory-item.ms-armory-item--vertical > label {
         font-size: var(--font-size-sm);
+        font-weight: var(--font-weight-bold);
         min-height: auto;
         line-height: 1.2;
         margin-bottom: 0;
         padding-bottom: 0;
+        color: var(--primary-color);
     }
     
-    /* Icon container - 80px by 80px */
+    /* Full width icons for single column layout */
     .ms-armory-item.ms-armory-item--vertical > .ms-armory-icon {
-        width: 80px;
-        height: 80px;
-        min-width: 80px;
-        min-height: 80px;
+        width: 100%;
+        max-width: 100%;
+        height: auto;
+        min-width: 100%;
         padding: 8px;
         object-fit: contain;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
     }
     
     .ms-armory-item.ms-armory-item--vertical > .ms-armory-icons {
-        height: 80px;
-        min-width: 100%;
+        width: 100%;
+        max-width: 100%;
+        height: auto;
         min-height: 80px;
-        padding: 8px;
+        padding: 12px;
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
     }
     
     .ms-armory-item.ms-armory-item--vertical > .ms-armory-icons .ms-armory-icon {
-        width: 60px !important;
-        height: 60px !important;
-        max-width: 60px !important;
-        max-height: 60px !important;
+        width: 70px !important;
+        height: 70px !important;
+        max-width: 70px !important;
+        max-height: 70px !important;
+        padding: 0;
+        background: none;
     }
     
     /* Slider group */
@@ -11631,27 +11842,11 @@ button.multiplier-btn {
         align-items: center;
     }
     
-    /* Larger slider for better visibility on small screens */
-    .ms-armory-slider {
-        height: 8px;
-    }
-    
-    .ms-armory-slider::-webkit-slider-thumb {
-        width: 20px;
-        height: 20px;
-        border-width: 2px;
-    }
-    
-    .ms-armory-slider::-moz-range-thumb {
-        width: 20px;
-        height: 20px;
-        border-width: 2px;
-    }
-    
     .ms-armory-slider-group .ms-armory-value {
         text-align: center !important;
         width: 100%;
         display: block;
+        font-size: var(--font-size-base);
     }
 }
 
@@ -12097,6 +12292,17 @@ button.multiplier-btn {
     width: 100%;
     position: relative;
     overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ms-rising-adventurer-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(79, 195, 247, 0.6);
+    box-shadow: 
+        0 6px 25px rgba(0, 0, 0, 0.6),
+        0 0 40px rgba(79, 195, 247, 0.2),
+        inset 0 1px 0 rgba(79, 195, 247, 0.15);
 }
 
 .ms-rising-adventurer-card::before {
@@ -12334,6 +12540,13 @@ button.multiplier-btn {
     border-radius: 12px;
     max-width: 400px;
     margin: 0 auto;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.ms-marching-hero-container:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-2px);
 }
 
 .ms-marching-hero__visual {
@@ -12680,13 +12893,24 @@ button.multiplier-btn {
     z-index: 2;
     padding: 0;
     justify-content: center;
-    gap: 16px;
+    gap: 4px;
 }
 
 .ms-picker-wheel-dual .ms-picker-wheel {
     flex: 1;
-    max-width: calc(50% - 8px);
+    max-width: calc(50% - 2px);
     position: relative;
+}
+
+/* Make hero picker wider and level picker narrower */
+.ms-picker-wheel-dual .ms-picker-wheel--hero {
+    flex: 3;
+    max-width: calc(75% - 2px);
+}
+
+.ms-picker-wheel-dual .ms-picker-wheel--level {
+    flex: 1;
+    max-width: calc(25% - 2px);
 }
 
 .ms-picker-wheel-dual .ms-picker-wheel__column {
@@ -12708,6 +12932,7 @@ button.multiplier-btn {
 /* Level picker items can stay single line */
 .ms-picker-wheel--level .ms-picker-wheel__item {
     white-space: nowrap;
+    font-size: 0.9em;
 }
 
 .ms-hero-slider {

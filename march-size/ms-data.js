@@ -468,6 +468,7 @@ const MARCH_SIZE_DATA = {
             cristoncole: {
                 name: "Criston Cole",
                 title: "The Kingmaker",
+                shortDisplay: "Criston Cole (TK)",
                 img: "heroes/cristoncole.png",
                 positions: ["hand"],
                 maxLevel: 60,
@@ -478,6 +479,7 @@ const MARCH_SIZE_DATA = {
             tyrion: {
                 name: "Tyrion",
                 title: "Hand of the King",
+                shortDisplay: "Tyrion (HOTK)",
                 img: "heroes/tyrion_b.png",
                 positions: ["hand"],
                 maxLevel: 60,
@@ -490,6 +492,7 @@ const MARCH_SIZE_DATA = {
             leaf: {
                 name: "Leaf",
                 title: "Child of the Forest",
+                shortDisplay: "Leaf (COTF)",
                 img: "heroes/leaf.png",
                 positions: ["war"],
                 maxLevel: 50,
@@ -502,6 +505,7 @@ const MARCH_SIZE_DATA = {
             euron: {
                 name: "Euron Greyjoy",
                 title: "King of Salt and Rock",
+                shortDisplay: "Euron (KOSR)",
                 img: "heroes/euron_b.png",
                 positions: ["coin"],
                 maxLevel: 50,
@@ -514,6 +518,7 @@ const MARCH_SIZE_DATA = {
             waif: {
                 name: "The Waif",
                 title: "Faceless Disciple",
+                shortDisplay: "The Waif (FD)",
                 img: "heroes/waif.png",
                 positions: ["law"],
                 maxLevel: 50,
@@ -524,6 +529,7 @@ const MARCH_SIZE_DATA = {
             alicent: {
                 name: "Alicent Hightower",
                 title: "Dowager Queen",
+                shortDisplay: "Alicent (DQ)",
                 img: "heroes/alicent_b.png",
                 positions: ["law"],
                 maxLevel: 60,
@@ -534,6 +540,7 @@ const MARCH_SIZE_DATA = {
             corlys: {
                 name: "Corlys Velaryon",
                 title: "The Sea Snake",
+                shortDisplay: "Corlys (TSS)",
                 img: "heroes/corlys.png",
                 positions: ["law"],
                 maxLevel: 60,
@@ -546,6 +553,7 @@ const MARCH_SIZE_DATA = {
             jaqen: {
                 name: "Jaqen H'ghar",
                 title: "Servant of Many-Faced God",
+                shortDisplay: "Jaqen (SMFG)",
                 img: "heroes/jaqen_b.png",
                 positions: ["ships"],
                 maxLevel: 50,
@@ -558,6 +566,7 @@ const MARCH_SIZE_DATA = {
             aemond: {
                 name: "Aemond Targaryen",
                 title: "The Kinslayer",
+                shortDisplay: "Aemond (TK)",
                 img: "heroes/aemond.png",
                 positions: ["commander"],
                 maxLevel: 60,
@@ -568,6 +577,7 @@ const MARCH_SIZE_DATA = {
             yaraQueen: {
                 name: "Yara Greyjoy",
                 title: "Queen of the Iron Islands",
+                shortDisplay: "Yara Greyjoy (QOII)",
                 img: "heroes/yara_b.png",
                 positions: ["commander"],
                 maxLevel: 60,
@@ -589,6 +599,7 @@ const MARCH_SIZE_DATA = {
             viserys: {
                 name: "Viserys Targaryen",
                 title: "The Wise King",
+                shortDisplay: "Viserys (TWK)",
                 img: "heroes/viserys.png",
                 positions: ["maester"],
                 maxLevel: 60,

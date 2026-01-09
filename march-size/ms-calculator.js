@@ -364,7 +364,14 @@
             prevBtn: document.getElementById('msPrev'),
             nextBtn: document.getElementById('msNext'),
             calculateBtn: document.getElementById('msCalculate'),
-            newCalcBtn: document.getElementById('msNewCalc')
+            newCalcBtn: document.getElementById('msNewCalc'),
+            
+            // Base March Size Verification
+            calculatedBase: document.getElementById('msCalculatedBase'),
+            overrideBaseToggle: document.getElementById('msOverrideBaseToggle'),
+            overrideInputGroup: document.getElementById('msOverrideInputGroup'),
+            overrideBase: document.getElementById('msOverrideBase'),
+            overrideDiff: document.getElementById('msOverrideDiff')
         };
     }
 
@@ -439,10 +446,29 @@
         // Add listeners for inputs that affect base march size (for hero bonus calculations)
         setupBaseMarchSizeListeners();
         
-        // Title selection listener
+        // Title selection listener (if title selector exists)
         const titleSelect = document.getElementById('msTitleSelect');
         if (titleSelect) {
             titleSelect.addEventListener('change', updateTitleDisplay);
+        }
+        
+        // Base verification override toggle
+        if (elements.overrideBaseToggle) {
+            elements.overrideBaseToggle.addEventListener('change', function() {
+                if (elements.overrideInputGroup) {
+                    elements.overrideInputGroup.style.display = this.checked ? 'block' : 'none';
+                }
+                // Clear override diff when toggling off
+                if (!this.checked && elements.overrideDiff) {
+                    elements.overrideDiff.textContent = '';
+                    elements.overrideDiff.className = 'ms-override-diff';
+                }
+            });
+        }
+        
+        // Base verification override input
+        if (elements.overrideBase) {
+            elements.overrideBase.addEventListener('input', updateOverrideDiff);
         }
     }
     
@@ -458,6 +484,93 @@
         if (titleBonusEl) {
             titleBonusEl.textContent = `+${formatNumber(titleData.marchSize)}`;
         }
+    }
+    
+    // Update the base march size verification display
+    // This should match exactly what "Your Account Stats" shows in Step 1
+    function updateBaseVerificationDisplay() {
+        // Use the same calculation as updateBaseMarchSizeTotal for consistency
+        const buildingsTotal = calculateBuildingsTotal();
+        const enhancementsTotal = calculateEnhancementsTotal();
+        const armoriesTotal = calculateArmoriesTotalAggregate();
+        const researchTotal = calculateResearchTotal();
+        const heroesTotal = calculateHeroesTotal();
+        
+        // Sum all flat bonuses (same as Account Stats)
+        const flatTotal = buildingsTotal.current + 
+                         enhancementsTotal.current + 
+                         armoriesTotal.current + 
+                         researchTotal.current +
+                         heroesTotal.current;
+        
+        // Sum all percentage bonuses (same as Account Stats)
+        const pctTotal = (enhancementsTotal.currentPct || 0) + 
+                        (heroesTotal.currentPct || 0);
+        
+        // Calculate the bonus from percentages
+        const pctBonus = Math.floor(flatTotal * pctTotal / 100);
+        
+        // Total = flat + percentage bonus
+        const grandTotal = flatTotal + pctBonus;
+        
+        // Update main calculated value
+        if (elements.calculatedBase) {
+            elements.calculatedBase.textContent = formatNumber(grandTotal);
+        }
+        
+        // Update breakdown display (base + pct bonus)
+        const breakdownEl = document.getElementById('msVerificationBreakdown');
+        if (breakdownEl) {
+            breakdownEl.innerHTML = `
+                <span class="ms-verification__flat">${formatNumber(flatTotal)} base</span>
+                <span class="ms-verification__plus">+</span>
+                <span class="ms-verification__pct">${formatNumber(pctBonus)} (${pctTotal.toFixed(2)}%)</span>
+            `;
+        }
+        
+        // Update percentage total display
+        const pctTotalEl = document.getElementById('msVerificationPctTotal');
+        if (pctTotalEl) {
+            pctTotalEl.textContent = `+${pctTotal.toFixed(2)}%`;
+        }
+        
+        // Update override diff if toggle is enabled and there's a value
+        if (elements.overrideBaseToggle?.checked) {
+            updateOverrideDiff();
+        }
+        
+        // Store calculated base for use in gear calculations
+        window.calculatedBaseMarchSize = grandTotal;
+    }
+    
+    // Update the override difference display
+    function updateOverrideDiff() {
+        if (!elements.overrideBase || !elements.overrideDiff) return;
+        
+        const overrideValue = parseInt(elements.overrideBase.value) || 0;
+        const calculatedValue = window.calculatedBaseMarchSize || 0;
+        
+        if (overrideValue > 0 && calculatedValue > 0) {
+            const diff = overrideValue - calculatedValue;
+            const diffFormatted = diff >= 0 ? `+${formatNumber(diff)}` : formatNumber(diff);
+            
+            elements.overrideDiff.textContent = `Difference from calculated: ${diffFormatted}`;
+            elements.overrideDiff.className = `ms-override-diff ${diff >= 0 ? 'positive' : 'negative'}`;
+        } else {
+            elements.overrideDiff.textContent = '';
+            elements.overrideDiff.className = 'ms-override-diff';
+        }
+    }
+    
+    // Get the effective base march size (override or calculated)
+    function getEffectiveBaseMarchSize() {
+        if (elements.overrideBaseToggle?.checked && elements.overrideBase) {
+            const overrideValue = parseInt(elements.overrideBase.value) || 0;
+            if (overrideValue > 0) {
+                return overrideValue;
+            }
+        }
+        return window.calculatedBaseMarchSize || 0;
     }
     
     function setupBaseMarchSizeListeners() {
@@ -3241,6 +3354,9 @@
         // Update base march size total
         updateBaseMarchSizeTotal();
         
+        // Update base verification display
+        updateBaseVerificationDisplay();
+        
         // Trigger auto-save (debounced)
         triggerAutoSave();
     }
@@ -3815,23 +3931,74 @@
         let lastScrollPosition = column.scrollTop;
         
         column.addEventListener('scroll', () => {
-            // Debounce the selection update - only update when scrolling has completely stopped
             clearTimeout(scrollTimeout);
             scrollTimeout = setTimeout(() => {
-                // Check if scroll position has stabilized (scrolling has stopped)
-                const currentScroll = column.scrollTop;
-                const scrollDiff = Math.abs(currentScroll - lastScrollPosition);
-                
-                if (scrollDiff < 2) {
-                    // Scrolling has stopped, update selection
-                    handlePickerScroll(column, buildingId, buildingType);
-                }
-                lastScrollPosition = currentScroll;
-            }, 200);
+                handlePickerScroll(column, buildingId, buildingType);
+            }, 150);
         }, { passive: true });
         
         // Sync picker to current input value on initialization
         syncPickerToSlider(buildingId, buildingType);
+    }
+    
+    // ============================================
+    // CLOSE ALL PICKERS HELPER
+    // Closes any open picker when opening a new one
+    // ============================================
+    function closeAllPickers(exceptElement = null) {
+        // Close building pickers
+        document.querySelectorAll('.ms-building-card--expanded').forEach(card => {
+            if (card !== exceptElement) {
+                card.classList.remove('ms-building-card--expanded');
+                const picker = card.querySelector('.ms-building-card__picker-container');
+                if (picker) picker.style.display = 'none';
+            }
+        });
+        
+        // Close research pickers
+        document.querySelectorAll('.ms-research-slider-item--expanded').forEach(item => {
+            if (item !== exceptElement) {
+                item.classList.remove('ms-research-slider-item--expanded');
+                const picker = item.querySelector('.ms-research-slider-item__picker-container');
+                if (picker) picker.style.display = 'none';
+            }
+        });
+        
+        // Close hero pickers (council heroes)
+        document.querySelectorAll('.ms-hero-slot--expanded').forEach(slot => {
+            if (slot !== exceptElement) {
+                slot.classList.remove('ms-hero-slot--expanded');
+                const picker = slot.querySelector('.ms-hero-slot__picker-container');
+                if (picker) picker.style.display = 'none';
+            }
+        });
+        
+        // Close armory pickers
+        document.querySelectorAll('.ms-armory-item--expanded').forEach(item => {
+            if (item !== exceptElement) {
+                item.classList.remove('ms-armory-item--expanded');
+                const picker = item.querySelector('.ms-armory-item__picker-container');
+                if (picker) picker.style.display = 'none';
+            }
+        });
+        
+        // Close marching hero picker
+        document.querySelectorAll('.ms-marching-slider-group--expanded').forEach(group => {
+            if (group !== exceptElement) {
+                group.classList.remove('ms-marching-slider-group--expanded');
+                const picker = group.querySelector('.ms-marching-slider-group__picker-container');
+                if (picker) picker.style.display = 'none';
+            }
+        });
+        
+        // Close hall of heroes picker
+        document.querySelectorAll('.ms-hall-slider-group--expanded').forEach(group => {
+            if (group !== exceptElement) {
+                group.classList.remove('ms-hall-slider-group--expanded');
+                const picker = group.querySelector('.ms-hall-slider-group__picker-container');
+                if (picker) picker.style.display = 'none';
+            }
+        });
     }
     
     // Toggle picker open/closed
@@ -3846,6 +4013,8 @@
             buildingCard.classList.remove('ms-building-card--expanded');
             pickerContainer.style.display = 'none';
         } else {
+            // Close all other pickers first
+            closeAllPickers(buildingCard);
             // Open picker
             buildingCard.classList.add('ms-building-card--expanded');
             pickerContainer.style.display = 'block';
@@ -3887,10 +4056,12 @@
         const column = document.getElementById(columnId);
         if (!column) return;
         
-        // Wait for column to be rendered
-        setTimeout(() => {
-            selectPickerItem(column, level, buildingId, buildingType);
-        }, 50);
+        // Use requestAnimationFrame to ensure layout is computed
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                selectPickerItem(column, level, buildingId, buildingType);
+            }, 100);
+        });
     }
     
     // Handle picker scroll and update input value
@@ -4016,14 +4187,8 @@
         column.addEventListener('scroll', () => {
             clearTimeout(scrollTimeout);
             scrollTimeout = setTimeout(() => {
-                const currentScroll = column.scrollTop;
-                const scrollDiff = Math.abs(currentScroll - lastScrollPosition);
-                
-                if (scrollDiff < 2) {
-                    handleResearchPickerScroll(column, researchId, researchKey);
-                }
-                lastScrollPosition = currentScroll;
-            }, 200);
+                handleResearchPickerScroll(column, researchId, researchKey);
+            }, 150);
         }, { passive: true });
         
         // Sync picker to current input value on initialization
@@ -4041,6 +4206,8 @@
             researchItem.classList.remove('ms-research-slider-item--expanded');
             pickerContainer.style.display = 'none';
         } else {
+            // Close all other pickers first
+            closeAllPickers(researchItem);
             researchItem.classList.add('ms-research-slider-item--expanded');
             pickerContainer.style.display = 'block';
             syncResearchPickerToInput(researchId, researchKey);
@@ -4077,9 +4244,11 @@
         const column = document.getElementById(columnId);
         if (!column) return;
         
-        setTimeout(() => {
-            selectResearchPickerItem(column, level, researchId, researchKey);
-        }, 50);
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                selectResearchPickerItem(column, level, researchId, researchKey);
+            }, 100);
+        });
     }
     
     // Handle research picker scroll
@@ -4165,18 +4334,12 @@
         column.addEventListener('scroll', () => {
             clearTimeout(scrollTimeout);
             scrollTimeout = setTimeout(() => {
-                const currentScroll = column.scrollTop;
-                const scrollDiff = Math.abs(currentScroll - lastScrollPosition);
-                
-                if (scrollDiff < 2) {
-                    if (type === 'hero') {
-                        handleHeroPickerScroll(column, position);
-                    } else {
-                        handleHeroLevelPickerScroll(column, position);
-                    }
+                if (type === 'hero') {
+                    handleHeroPickerScroll(column, position);
+                } else {
+                    handleHeroLevelPickerScroll(column, position);
                 }
-                lastScrollPosition = currentScroll;
-            }, 200);
+            }, 150);
         }, { passive: true });
     }
     
@@ -4208,9 +4371,9 @@
                 item.className = 'ms-picker-wheel__item';
                 item.dataset.heroId = heroId;
                 
-                // Display name with title (if available)
-                let displayText = heroData.name;
-                if (heroData.title) {
+                // Use shortDisplay if available, otherwise name with title
+                let displayText = heroData.shortDisplay || heroData.name;
+                if (!heroData.shortDisplay && heroData.title) {
                     displayText += ` - ${heroData.title}`;
                 }
                 item.textContent = displayText;
@@ -4278,6 +4441,8 @@
             heroSlot.classList.remove('ms-hero-slot--expanded');
             pickerContainer.style.display = 'none';
         } else {
+            // Close all other pickers first
+            closeAllPickers(heroSlot);
             heroSlot.classList.add('ms-hero-slot--expanded');
             pickerContainer.style.display = 'block';
             syncHeroPickerToInput(position);
@@ -4549,14 +4714,9 @@
         column.addEventListener('scroll', () => {
             clearTimeout(scrollTimeout);
             scrollTimeout = setTimeout(() => {
-                const currentScroll = column.scrollTop;
-                const scrollDiff = Math.abs(currentScroll - lastScrollPosition);
-                
-                if (scrollDiff < 2) {
-                    handleArmoryPickerScroll(column, armoryId, armoryKey);
-                }
-                lastScrollPosition = currentScroll;
-            }, 200);
+                // Always handle scroll after debounce period
+                handleArmoryPickerScroll(column, armoryId, armoryKey);
+            }, 150);
         }, { passive: true });
         
         // Populate picker wheel
@@ -4619,6 +4779,8 @@
             armoryItem.classList.remove('ms-armory-item--expanded');
             pickerContainer.style.display = 'none';
         } else {
+            // Close all other pickers first
+            closeAllPickers(armoryItem);
             armoryItem.classList.add('ms-armory-item--expanded');
             pickerContainer.style.display = 'block';
             syncArmoryPickerToInput(armoryId, armoryKey);
@@ -4655,9 +4817,12 @@
         const column = document.getElementById(columnId);
         if (!column) return;
         
-        setTimeout(() => {
-            selectArmoryPickerItem(column, level, armoryId, armoryKey);
-        }, 50);
+        // Use requestAnimationFrame to ensure layout is computed
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                selectArmoryPickerItem(column, level, armoryId, armoryKey);
+            }, 100);
+        });
     }
     
     // Handle armory picker scroll
@@ -4715,12 +4880,26 @@
         const input = document.getElementById('msMarchingHeroLevel');
         if (!input) return;
         
-        // Set up click handler for slider group
+        // Make the entire marching hero container clickable
+        const heroContainer = document.querySelector('.ms-marching-hero-container');
+        if (heroContainer) {
+            heroContainer.style.cursor = 'pointer';
+            heroContainer.addEventListener('click', (e) => {
+                // Don't toggle if clicking inside the picker
+                if (e.target.closest('.ms-marching-slider-group__picker-container')) {
+                    return;
+                }
+                toggleMarchingHeroPicker(sliderGroup);
+            });
+        }
+        
+        // Set up click handler for slider group (keep as fallback)
         sliderGroup.addEventListener('click', (e) => {
             // Don't toggle if clicking inside the picker
             if (e.target.closest('.ms-marching-slider-group__picker-container')) {
                 return;
             }
+            e.stopPropagation(); // Prevent double trigger from container
             toggleMarchingHeroPicker(sliderGroup);
         });
         
@@ -4731,14 +4910,8 @@
         column.addEventListener('scroll', () => {
             clearTimeout(scrollTimeout);
             scrollTimeout = setTimeout(() => {
-                const currentScroll = column.scrollTop;
-                const scrollDiff = Math.abs(currentScroll - lastScrollPosition);
-                
-                if (scrollDiff < 2) {
-                    handleMarchingHeroPickerScroll(column);
-                }
-                lastScrollPosition = currentScroll;
-            }, 200);
+                handleMarchingHeroPickerScroll(column);
+            }, 150);
         }, { passive: true });
         
         // Populate picker wheel (0-60 levels)
@@ -4800,6 +4973,8 @@
             sliderGroup.classList.remove('ms-marching-slider-group--expanded');
             pickerContainer.style.display = 'none';
         } else {
+            // Close all other pickers first
+            closeAllPickers(sliderGroup);
             sliderGroup.classList.add('ms-marching-slider-group--expanded');
             pickerContainer.style.display = 'block';
             syncMarchingHeroPickerToInput();
@@ -4835,9 +5010,11 @@
         const column = document.getElementById('msMarchingHeroLevelPicker');
         if (!column) return;
         
-        setTimeout(() => {
-            selectMarchingHeroPickerItem(column, level);
-        }, 50);
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                selectMarchingHeroPickerItem(column, level);
+            }, 100);
+        });
     }
     
     // Handle marching hero picker scroll
@@ -4894,12 +5071,26 @@
         const input = document.getElementById('msHallLevel');
         if (!input) return;
         
-        // Set up click handler for slider group
+        // Make the Rising Adventurer card clickable
+        const adventurerCard = document.querySelector('.ms-rising-adventurer-card');
+        if (adventurerCard) {
+            adventurerCard.style.cursor = 'pointer';
+            adventurerCard.addEventListener('click', (e) => {
+                // Don't toggle if clicking inside the picker
+                if (e.target.closest('.ms-hall-slider-group__picker-container')) {
+                    return;
+                }
+                toggleHallPicker(sliderGroup);
+            });
+        }
+        
+        // Set up click handler for slider group (keep as fallback)
         sliderGroup.addEventListener('click', (e) => {
             // Don't toggle if clicking inside the picker
             if (e.target.closest('.ms-hall-slider-group__picker-container')) {
                 return;
             }
+            e.stopPropagation(); // Prevent double trigger
             toggleHallPicker(sliderGroup);
         });
         
@@ -4910,14 +5101,8 @@
         column.addEventListener('scroll', () => {
             clearTimeout(scrollTimeout);
             scrollTimeout = setTimeout(() => {
-                const currentScroll = column.scrollTop;
-                const scrollDiff = Math.abs(currentScroll - lastScrollPosition);
-                
-                if (scrollDiff < 2) {
-                    handleHallPickerScroll(column);
-                }
-                lastScrollPosition = currentScroll;
-            }, 200);
+                handleHallPickerScroll(column);
+            }, 150);
         }, { passive: true });
         
         // Populate picker wheel (0-21 levels)
@@ -4986,6 +5171,8 @@
             sliderGroup.classList.remove('ms-hall-slider-group--expanded');
             pickerContainer.style.display = 'none';
         } else {
+            // Close all other pickers first
+            closeAllPickers(sliderGroup);
             sliderGroup.classList.add('ms-hall-slider-group--expanded');
             pickerContainer.style.display = 'block';
             syncHallPickerToInput();
@@ -5021,9 +5208,11 @@
         const column = document.getElementById('msHallLevelPicker');
         if (!column) return;
         
-        setTimeout(() => {
-            selectHallPickerItem(column, level);
-        }, 50);
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                selectHallPickerItem(column, level);
+            }, 100);
+        });
     }
     
     // Handle hall picker scroll
